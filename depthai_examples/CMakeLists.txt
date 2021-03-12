@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.0.2)
 
-get_filename_component (DEPTHAI_CORE "${CMAKE_CURRENT_LIST_DIR}/../external/depthai-core" REALPATH)
-include ("${DEPTHAI_CORE}/cmake/HunterGate.cmake")
+# get_filename_component (DEPTHAI_CORE "${CMAKE_CURRENT_LIST_DIR}/../external/depthai-core" REALPATH)
+# include ("${DEPTHAI_CORE}/cmake/HunterGate.cmake")
 
 set (CMAKE_POSITION_INDEPENDENT_CODE ON)
-set (HUNTER_CONFIGURATION_TYPES "Release" CACHE STRING "Hunter dependencies list of build configurations")
+# set (HUNTER_CONFIGURATION_TYPES "Release" CACHE STRING "Hunter dependencies list of build configurations")
 
 
-HunterGate (
-    URL "https://github.com/cpp-pm/hunter/archive/v0.23.258.tar.gz"
-    SHA1 "062a19ab13ce8dffa9a882b6ce3e43bdabdf75d3"
-    FILEPATH ${DEPTHAI_CORE}/cmake/Hunter/config.cmake # Add depthai-core config  (hunter limitation)
-)
+# HunterGate (
+#     URL "https://github.com/cpp-pm/hunter/archive/v0.23.258.tar.gz"
+#     SHA1 "062a19ab13ce8dffa9a882b6ce3e43bdabdf75d3"
+#     FILEPATH ${DEPTHAI_CORE}/cmake/Hunter/config.cmake # Add depthai-core config  (hunter limitation)
+# )
 # add_compile_options(-std=c++11)
 project(depthai_examples)
 # add_compile_options(-std=c++14)
@@ -41,8 +41,9 @@ if(NOT OpenCV_FOUND)
   message(STATUS "Did not find OpenCV 4, trying OpenCV 3")
   set(_opencv_version 3)
 endif()
+find_package(depthai REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake")
 
-add_subdirectory(${DEPTHAI_CORE} depthai-core)
+# add_subdirectory(${DEPTHAI_CORE} depthai-core)
 
 catkin_package(
  INCLUDE_DIRS include
@@ -58,9 +59,9 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# message(STATUS "Include directoires ------------->")
-# message(STATUS "libraries directoires ------------->")
-# message(${catkin_INCLUDE_DIRS})
+message(STATUS "Include directoires ------------->")
+message(STATUS "libraries directoires ------------->")
+message(${catkin_INCLUDE_DIRS})
 message(${catkin_LIBRARIES})
 include_directories(
   include
@@ -75,12 +76,12 @@ FILE(GLOB EXAMPLE_LIB
 add_library(${PROJECT_NAME} ${EXAMPLE_LIB})
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS} depthai-core
+  ${catkin_EXPORTED_TARGETS} 
 )
 
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  depthai-core
+  depthai::core
   ${OpenCV_LIBRARIES}
 )
 
@@ -88,24 +89,34 @@ target_link_libraries(${PROJECT_NAME}
 add_library(nodelet_stereo src/stereo_nodelet.cpp)
 
 add_dependencies(nodelet_stereo ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS} depthai-core
+  ${catkin_EXPORTED_TARGETS} 
   ${PROJECT_NAME}
 )
 
 target_link_libraries(nodelet_stereo
   ${catkin_LIBRARIES}
-  depthai-core
+  depthai::core
   ${PROJECT_NAME}
   ${OpenCV_LIBRARIES}
 )
 
 
-hunter_private_data(
-    URL "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob"
-    SHA1 "f0e14978b3f77a4f93b9f969cd39e58bb7aef490"
-    FILE "mobilenet-ssd_openvino_2021.2_6shave.blob"
-    LOCATION mobilenet_blob
-)
+# hunter_private_data(
+#     URL "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob"
+#     SHA1 "f0e14978b3f77a4f93b9f969cd39e58bb7aef490"
+#     FILE "mobilenet-ssd_openvino_2021.2_6shave.blob"
+#     LOCATION mobilenet_blob
+# )
+set(mobilenet_blob "${PROJECT_SOURCE_DIR}/resources/mobilenet-ssd_openvino_2021.2_6shave.blob")
+file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob" 
+${mobilenet_blob}
+TIMEOUT 60  # seconds
+EXPECTED_HASH SHA1=f0e14978b3f77a4f93b9f969cd39e58bb7aef490
+TLS_VERIFY ON)
+
+
+message("-----------------------------------------------mobilenet_blob-------------------------")
+message(mobilenet_blob)
 
 macro(dai_add_node node_name node_src)
     add_executable("${node_name}" "${node_src}")
@@ -118,8 +129,8 @@ macro(dai_add_node node_name node_src)
 
     target_link_libraries("${node_name}" 
       ${catkin_LIBRARIES}
+      depthai::core
       ${PROJECT_NAME}
-      depthai-core
     )
     
 endmacro() 
