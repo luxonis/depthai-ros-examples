@@ -59,10 +59,10 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-message(STATUS "Include directoires ------------->")
-message(STATUS "libraries directoires ------------->")
-message(${catkin_INCLUDE_DIRS})
-message(${catkin_LIBRARIES})
+# message(STATUS "Include directoires ------------->")
+# message(STATUS "libraries directoires ------------->")
+# message(${catkin_INCLUDE_DIRS})
+# message(${catkin_LIBRARIES})
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -141,6 +141,7 @@ dai_add_node(rgb_node src/rgb_publisher.cpp)
 dai_add_node(mobilenet_node src/mobilenet_publisher.cpp)
 dai_add_node(rgb_stereo_node src/rgb_stereo_node.cpp)
 dai_add_node(stereo_mimic_node src/stereo_mimic_node.cpp)
+dai_add_node(rgb_subscriber_node src/rgb_video_subscriber.cpp)
 
 target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
 

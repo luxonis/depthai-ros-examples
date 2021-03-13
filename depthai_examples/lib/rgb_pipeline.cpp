@@ -20,7 +20,7 @@ void RgbCameraPipelineExample::initDepthaiDev(){
     _dev = std::make_unique<dai::Device>(_p);
     // Start the pipeline
     _dev->startPipeline();
-    _opImageStreams.push_back(_dev->getOutputQueue("video"));
+    _opImageStreams.push_back(_dev->getOutputQueue("video", 30, false));
 }
 
 
