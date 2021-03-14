@@ -41,7 +41,8 @@ if(NOT OpenCV_FOUND)
   message(STATUS "Did not find OpenCV 4, trying OpenCV 3")
   set(_opencv_version 3)
 endif()
-find_package(depthai REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake")
+find_package(depthai REQUIRED)
+# find_package(depthai REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake")
 
 # add_subdirectory(${DEPTHAI_CORE} depthai-core)
 
@@ -59,10 +60,6 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# message(STATUS "Include directoires ------------->")
-# message(STATUS "libraries directoires ------------->")
-# message(${catkin_INCLUDE_DIRS})
-# message(${catkin_LIBRARIES})
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
