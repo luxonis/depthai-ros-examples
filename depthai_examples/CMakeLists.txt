@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 
 
 set (CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -10,18 +10,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(ament_cmake REQUIRED)
 
-# find_package(catkin REQUIRED COMPONENTS
-#   camera_info_manager
-#   depthai_ros_msgs
-#   roscpp
-#   sensor_msgs
-#   std_msgs
-#   cv_bridge
-#   vision_msgs
-#   depthai_bridge
-#   message_filters
-# )
-
 set(_opencv_version 4)
 find_package(OpenCV 4 QUIET)
 if(NOT OpenCV_FOUND)
@@ -29,15 +17,20 @@ if(NOT OpenCV_FOUND)
   set(_opencv_version 3)
 endif()
 
-find_package(depthai_ros_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(depthai_ros_msgs REQUIRED)
-find_package(depthai CONFIG REQUIRED)
+find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai") 
 
-
+set(dependencies
+rclcpp
+sensor_msgs
+std_msgs
+vision_msgs
+depthai_ros_msgs
+)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
@@ -55,8 +48,8 @@ add_library(${PROJECT_NAME} ${EXAMPLE_LIB})
 
 ament_target_dependencies(${PROJECT_NAME}
   ${dependencies}
-  depthai::core
 )
+target_link_libraries(${PROJECT_NAME} depthai::core)
 
 # target_link_libraries(${PROJECT_NAME}
 #   ${catkin_LIBRARIES}
@@ -106,6 +99,7 @@ ament_target_dependencies("${node_name}"
 endmacro() 
 
 
+ament_package()
 
 # dai_add_node(stereo_node src/stereo_publisher.cpp)
 # dai_add_node(rgb_node src/rgb_publisher.cpp)
