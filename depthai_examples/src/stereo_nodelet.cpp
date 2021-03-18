@@ -36,7 +36,7 @@ namespace depthai_examples{
                 throw std::runtime_error("Couldn't find one of the parameters");
             }
 
-            StereoExampe stero_pipeline;
+            StereoExample stero_pipeline;
             stero_pipeline.initDepthaiDev();
             std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
             

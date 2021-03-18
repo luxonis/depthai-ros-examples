@@ -1,7 +1,7 @@
 #include <depthai_examples/stereo_pipeline.hpp>
 
 
-void StereoExampe::initDepthaiDev(){
+void StereoExample::initDepthaiDev(){
     
 
     bool withDepth = true;
@@ -90,6 +90,6 @@ void StereoExampe::initDepthaiDev(){
     
 }
 
-std::vector<std::shared_ptr<dai::DataOutputQueue>> StereoExampe::getExposedImageStreams(){
+std::vector<std::shared_ptr<dai::DataOutputQueue>> StereoExample::getExposedImageStreams(){
         return _opImageStreams;
 }

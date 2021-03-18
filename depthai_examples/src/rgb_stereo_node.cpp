@@ -34,7 +34,7 @@ int main(int argc, char** argv){
         throw std::runtime_error("Couldn't find one of the parameters");
     }
 
-    RGBStereoExampe rgbstero_pipeline;
+    RGBStereoExample rgbstero_pipeline;
     rgbstero_pipeline.initDepthaiDev();
     std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = rgbstero_pipeline.getExposedImageStreams();
        

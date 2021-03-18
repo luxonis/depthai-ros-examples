@@ -22,6 +22,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(depthai_ros_msgs REQUIRED)
+find_package(depthai_bridge REQUIRED)
 find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai") 
 
 set(dependencies
@@ -30,6 +31,7 @@ sensor_msgs
 std_msgs
 vision_msgs
 depthai_ros_msgs
+depthai_bridge
 )
 
 ## Specify additional locations of header files
@@ -40,15 +42,14 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
 )
 
-FILE(GLOB EXAMPLE_LIB
-   "lib/*.cpp"
-)
+# FILE(GLOB EXAMPLE_LIB
+#    "lib/stere.cpp"
+# )
 
-add_library(${PROJECT_NAME} ${EXAMPLE_LIB})
+add_library(${PROJECT_NAME} 
+              lib/stereo_pipeline.cpp)
+# ament_target_dependencies(stereo_node ${dependencies})    
 
-ament_target_dependencies(${PROJECT_NAME}
-  ${dependencies}
-)
 target_link_libraries(${PROJECT_NAME} depthai::core)
 
 # target_link_libraries(${PROJECT_NAME}
@@ -90,13 +91,18 @@ TLS_VERIFY ON)
 # message("-----------------------------------------------mobilenet_blob-------------------------")
 # message(mobilenet_blob)
 
-macro(dai_add_node node_name node_src)
-add_executable("${node_name}" "${node_src}")
-ament_target_dependencies("${node_name}" 
-                          std_msgs
-                          depthai::core
-                        )    
-endmacro() 
+add_executable(stereo_node src/stereo_publisher.cpp)
+ament_target_dependencies(stereo_node 
+                          ${dependencies} 
+                          )    
+
+target_link_libraries(stereo_node 
+                      depthai::core 
+                      ${OpenCV_LIBRARIES} 
+                      ${PROJECT_NAME})
+
+# endmacro() 
+# dai_add_node(stereo_node src/stereo_publisher.cpp)
 
 
 ament_package()

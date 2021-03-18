@@ -5,10 +5,10 @@
 #include "depthai/depthai.hpp"
 
 
-class RGBStereoExampe{
+class RGBStereoExample{
     public:
-    RGBStereoExampe() = default;
-    ~RGBStereoExampe() = default;
+    RGBStereoExample() = default;
+    ~RGBStereoExample() = default;
 
     void initDepthaiDev();
 

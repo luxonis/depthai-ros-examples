@@ -1,7 +1,7 @@
 #include <depthai_examples/rgb_stereo_pipeline.hpp>
 
 
-void RGBStereoExampe::initDepthaiDev(){
+void RGBStereoExample::initDepthaiDev(){
     
 
     bool outputDepth = true;
@@ -68,6 +68,6 @@ void RGBStereoExampe::initDepthaiDev(){
 
 }
 
-std::vector<std::shared_ptr<dai::DataOutputQueue>> RGBStereoExampe::getExposedImageStreams(){
+std::vector<std::shared_ptr<dai::DataOutputQueue>> RGBStereoExample::getExposedImageStreams(){
         return _opImageStreams;
 }
