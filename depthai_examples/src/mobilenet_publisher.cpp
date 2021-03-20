@@ -4,7 +4,6 @@
 #include <iostream>
 #include <cstdio>
 // #include "utility.hpp"
-#include <depthai_examples/daiUtility.hpp>
 #include <depthai_examples/nn_pipeline.hpp>
 
 #include "sensor_msgs/Image.h"
@@ -13,7 +12,7 @@
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
-#include <depthai_bridge/DetectionConverter.hpp>
+#include <depthai_bridge/ImgDetectionConverter.hpp>
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
@@ -63,16 +62,16 @@ int main(int argc, char** argv){
                                                                                      "color");
 
 
-    dai::rosBridge::DetectionConverter<vision_msgs::Detection2DArray> detConverter(deviceName + "_rgb_camera_optical_frame", 300, 300, false);
+    dai::rosBridge::ImgDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 300, 300, false);
     dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueues[0],
-                                                                                     pnh, 
-                                                                                     std::string("color/mobilenet_detections"),
-                                                                                     std::bind(static_cast<void(dai::rosBridge::DetectionConverter<vision_msgs::Detection2DArray>::*)(std::shared_ptr<dai::ImgDetections>, 
-                                                                                     vision_msgs::Detection2DArray&)>(&dai::rosBridge::DetectionConverter<vision_msgs::Detection2DArray>::toRosMsg), 
-                                                                                     &detConverter,
-                                                                                     std::placeholders::_1, 
-                                                                                     std::placeholders::_2) , 
-                                                                                     30);
+                                                                                                         pnh, 
+                                                                                                         std::string("color/mobilenet_detections"),
+                                                                                                         std::bind(static_cast<void(dai::rosBridge::ImgDetectionConverter::*)(std::shared_ptr<dai::ImgDetections>, 
+                                                                                                         vision_msgs::Detection2DArray&)>(&dai::rosBridge::ImgDetectionConverter::toRosMsg), 
+                                                                                                         &detConverter,
+                                                                                                         std::placeholders::_1, 
+                                                                                                         std::placeholders::_2) , 
+                                                                                                         30);
 
     // rgbPublish.startPublisherThread();
     detectionPublish.startPublisherThread(); // addPubisherCallback works only when the dataqueue is non blocking.
