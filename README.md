@@ -17,6 +17,8 @@ noetic-devel branch also works on melodic(tested). Might also work on kinetic to
 10. `cd ros_ws/src`
 11. `git clone https://github.com/luxonis/depthai-ros.git --branch noetic-devel`
 12. `git clone https://github.com/luxonis/depthai-ros-examples.git --branch noetic-devel`
-13. `cd ~/ros_ws`
-14. `source /opt/ros/<ros-distro>/setup.zsh`     
-15. `catkin_make_isolated --cmake-args -D depthai_DIR=${depthai-core insall directory}/lib/cmake/depthai`
+13. `git clone https://github.com/ros-perception/vision_msgs.git --branch noetic-devel`
+14. `cd ~/ros_ws`
+15. `source /opt/ros/<ros-distro>/setup.bash` or `source /opt/ros/<ros-distro>/setup.zsh` if using zsh instead of bash
+16. `catkin_make_isolated --cmake-args -D depthai_DIR=${depthai-core insall directory}/lib/cmake/depthai`
+
