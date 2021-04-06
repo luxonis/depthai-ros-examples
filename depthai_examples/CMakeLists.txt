@@ -48,7 +48,6 @@ include_directories(
 
 add_library(${PROJECT_NAME} 
               lib/stereo_pipeline.cpp)
-# ament_target_dependencies(stereo_node ${dependencies})    
 
 target_link_libraries(${PROJECT_NAME} depthai::core)
 
@@ -101,10 +100,17 @@ target_link_libraries(stereo_node
                       ${OpenCV_LIBRARIES} 
                       ${PROJECT_NAME})
 
-# endmacro() 
-# dai_add_node(stereo_node src/stereo_publisher.cpp)
+ament_export_include_directories(include)
+ament_export_libraries(depthai_examples)
+ament_export_dependencies(${dependencies}
+                          depthai::core
+                          ${OpenCV_LIBRARIES})
+ament_export_interfaces(export_rl2_com HAS_LIBRARY_TARGET)
 
 
+install(TARGETS
+        stereo_node
+        DESTINATION lib/${PROJECT_NAME})
 ament_package()
 
 # dai_add_node(stereo_node src/stereo_publisher.cpp)
