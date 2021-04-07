@@ -7,6 +7,7 @@ project(depthai_examples)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(ament_cmake REQUIRED)
 
@@ -87,6 +88,8 @@ EXPECTED_HASH SHA1=f0e14978b3f77a4f93b9f969cd39e58bb7aef490
 TLS_VERIFY ON)
 
 
+# link_directories(${CMAKE_SOURCE_DIR}/lib)
+
 # message("-----------------------------------------------mobilenet_blob-------------------------")
 # message(mobilenet_blob)
 
@@ -105,7 +108,7 @@ ament_export_libraries(depthai_examples)
 ament_export_dependencies(${dependencies}
                           depthai::core
                           ${OpenCV_LIBRARIES})
-ament_export_interfaces(export_rl2_com HAS_LIBRARY_TARGET)
+# ament_export_interfaces(export_rl2_com HAS_LIBRARY_TARGET)
 
 
 install(TARGETS

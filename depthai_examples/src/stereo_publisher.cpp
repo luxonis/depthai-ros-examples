@@ -16,28 +16,38 @@
 
 // using namespace std::placeholders;
 int main(int argc, char** argv){
+    std::cout << "Spinning 1 contd... " << std::endl;
 
     rclcpp::init(argc, argv);
+
+    std::cout << "Spinning 1 contd... " << std::endl;
+
     auto node = rclcpp::Node::make_shared("stereo_node");
-    // ros::init(argc, argv, "stereo_node");
-    // ros::NodeHandle pnh("~");
+ 
+    RCLCPP_INFO(node->get_logger(), "This is my log message");
+
+    std::cout << "Spinning 1 contd... " << std::endl;
+    std::string deviceName = "oak-d";
+    std::string camera_param_uri = "package://depthai_examples/params/camera";
+    // int bad_params = 0;
+
+    // bad_params += !node->get_parameter("camera_name", deviceName);
+    // bad_params += !node->get_parameter("camera_param_uri", camera_param_uri);
+
+    // std::cout << "Spinning 1 contd... " << std::endl;
+    // if (bad_params > 0)
+    // {
+
+    // std::cout << "Spinning 2 contd... " << std::endl;
+    //     throw std::runtime_error("Couldn't find one of the parameters");
+    // }
+std::cout << "Spinning 2 - contd... " << std::endl;
     
-    std::string deviceName;
-    std::string camera_param_uri;
-    int bad_params = 0;
-
-    bad_params += !node->get_parameter("camera_name", deviceName);
-    bad_params += !node->get_parameter("camera_param_uri", camera_param_uri);
-
-    if (bad_params > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
-
     StereoExample stero_pipeline;
-    stero_pipeline.initDepthaiDev();
-    std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
-    
+    // stero_pipeline.initDepthaiDev();
+    // std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
+    /**
+    std::cout << "Spinning 3 contd... " << std::endl;
     // std::vector<ros::Publisher> imgPubList;
     // std::vector<std::string> frameNames;
     
@@ -78,7 +88,7 @@ int main(int argc, char** argv){
                                                                                      "right");
 
     rightPublish.addPubisherCallback();
-
+    
     // dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame");
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(imageDataQueues[2],
                                                                                      node, 
@@ -96,8 +106,12 @@ int main(int argc, char** argv){
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
+*/
+    std::cout << "Spinning 2contd... " << std::endl;
 
     rclcpp::spin(node);
+
+    std::cout << "Spinning contd... " << std::endl;
     return 0;
 }
 
