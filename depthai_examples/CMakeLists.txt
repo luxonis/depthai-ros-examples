@@ -36,7 +36,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 set(_opencv_version 4)
-find_package(OpenCV 4 QUIET)
+find_package(OpenCV 4 QUIET COMPONENTS core)
 if(NOT OpenCV_FOUND)
   message(STATUS "Did not find OpenCV 4, trying OpenCV 3")
   set(_opencv_version 3)
@@ -79,7 +79,7 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   depthai::core
-  ${OpenCV_LIBRARIES}
+  opencv_core
 )
 
 
@@ -94,7 +94,7 @@ target_link_libraries(nodelet_stereo
   ${catkin_LIBRARIES}
   depthai::core
   ${PROJECT_NAME}
-  ${OpenCV_LIBRARIES}
+  opencv_core
 )
 
 
@@ -128,6 +128,7 @@ macro(dai_add_node node_name node_src)
       ${catkin_LIBRARIES}
       depthai::core
       ${PROJECT_NAME}
+      opencv_core
     )
     
 endmacro() 
