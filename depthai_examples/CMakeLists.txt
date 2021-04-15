@@ -36,11 +36,11 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 set(_opencv_version 4)
-find_package(OpenCV 4 QUIET COMPONENTS core)
+find_package(OpenCV 4 QUIET COMPONENTS imgproc highgui)
 if(NOT OpenCV_FOUND)
   message(STATUS "----------------Did not find OpenCV 4, trying OpenCV 3--------------")
   set(_opencv_version 3)
-  find_package(OpenCV 3 REQUIRED COMPONENTS core)
+  find_package(OpenCV 3 REQUIRED COMPONENTS imgproc highgui)
 endif()
 find_package(depthai REQUIRED)
 # find_package(depthai REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake")
@@ -80,7 +80,8 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   depthai::core
-  opencv_core
+  opencv_imgproc
+  opencv_highgui
 )
 
 
@@ -95,7 +96,8 @@ target_link_libraries(nodelet_stereo
   ${catkin_LIBRARIES}
   depthai::core
   ${PROJECT_NAME}
-  opencv_core
+  opencv_imgproc
+  opencv_highgui
 )
 
 
@@ -129,7 +131,8 @@ macro(dai_add_node node_name node_src)
       ${catkin_LIBRARIES}
       depthai::core
       ${PROJECT_NAME}
-      opencv_core
+      opencv_imgproc
+      opencv_highgui
     )
     
 endmacro() 
