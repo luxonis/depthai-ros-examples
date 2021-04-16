@@ -146,32 +146,3 @@ dai_add_node(stereo_mimic_node src/stereo_mimic_node.cpp)
 dai_add_node(rgb_subscriber_node src/rgb_video_subscriber.cpp)
 
 target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
-
-# add_executable(stereo_node
-#   src/stereo_publisher.cpp
-# )
-
-# add_dependencies(stereo_node
-#   ${catkin_EXPORTED_TARGETS} 
-#   ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#   ${PROJECT_NAME} 
-# )
-
-# target_link_libraries(stereo_node 
-#   ${catkin_LIBRARIES}
-#   ${PROJECT_NAME}
-#   depthai-core
-# )
-
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_depthai_examples.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
