@@ -62,7 +62,7 @@
         args="load depth_image_proc/point_cloud_xyz nodelet_manager">
         <remap from="camera_info" to="/stereo_publisher/stereo/camera_info"/>
         <remap from="image_rect" to="/stereo_publisher/stereo/image"/>    
-        <remap from="points" to="/stereo/points"/>
+        <remap from="points" to="/stereo_publisher/stereo/points"/>
     </node>
 
     <!-- Rviz configuration -->
