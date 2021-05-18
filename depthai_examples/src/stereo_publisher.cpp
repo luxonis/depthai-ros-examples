@@ -44,12 +44,11 @@ int main(int argc, char** argv){
 std::cout << "Spinning 2 - contd... " << std::endl;
     
     StereoExample stero_pipeline;
-    // stero_pipeline.initDepthaiDev();
-    // std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
-    /**
+    stero_pipeline.initDepthaiDev();
+    std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
+
     std::cout << "Spinning 3 contd... " << std::endl;
-    // std::vector<ros::Publisher> imgPubList;
-    // std::vector<std::string> frameNames;
+
     
     // this part would be removed once we have calibration-api
     std::string left_uri = camera_param_uri +"/" + "left.yaml";
@@ -106,7 +105,7 @@ std::cout << "Spinning 2 - contd... " << std::endl;
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
-*/
+
     std::cout << "Spinning 2contd... " << std::endl;
 
     rclcpp::spin(node);

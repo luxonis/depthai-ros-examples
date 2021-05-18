@@ -11,11 +11,10 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(ament_cmake REQUIRED)
 
-set(_opencv_version 4)
-find_package(OpenCV 4 QUIET)
+find_package(OpenCV 4 QUIET COMPONENTS imgproc highgui)
 if(NOT OpenCV_FOUND)
   message(STATUS "Did not find OpenCV 4, trying OpenCV 3")
-  set(_opencv_version 3)
+  find_package(OpenCV 3 REQUIRED COMPONENTS imgproc highgui)
 endif()
 
 find_package(rclcpp REQUIRED)
@@ -24,7 +23,9 @@ find_package(std_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(depthai_ros_msgs REQUIRED)
 find_package(depthai_bridge REQUIRED)
-find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai") 
+# find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/depthai-core/build/install/lib/cmake/depthai") 
+
+find_package(depthai CONFIG REQUIRED) 
 
 set(dependencies
 rclcpp
@@ -40,46 +41,17 @@ depthai_bridge
 include_directories(
   include
   ${ament_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
 )
-
-# FILE(GLOB EXAMPLE_LIB
-#    "lib/stere.cpp"
-# )
 
 add_library(${PROJECT_NAME} 
               lib/stereo_pipeline.cpp)
 
-target_link_libraries(${PROJECT_NAME} depthai::core)
-
-# target_link_libraries(${PROJECT_NAME}
-#   ${catkin_LIBRARIES}
-#   depthai::core
-#   ${OpenCV_LIBRARIES}
-# )
+target_link_libraries(${PROJECT_NAME}
+                      depthai::core 
+                      opencv_imgproc
+                      opencv_highgui) 
 
 
-# add_library(nodelet_stereo src/stereo_nodelet.cpp)
-
-# add_dependencies(nodelet_stereo ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#   ${catkin_EXPORTED_TARGETS} 
-#   ${PROJECT_NAME}
-# )
-
-# target_link_libraries(nodelet_stereo
-#   ${catkin_LIBRARIES}
-#   depthai::core
-#   ${PROJECT_NAME}
-#   ${OpenCV_LIBRARIES}
-# )
-
-
-# hunter_private_data(
-#     URL "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob"
-#     SHA1 "f0e14978b3f77a4f93b9f969cd39e58bb7aef490"
-#     FILE "mobilenet-ssd_openvino_2021.2_6shave.blob"
-#     LOCATION mobilenet_blob
-# )
 set(mobilenet_blob "${PROJECT_SOURCE_DIR}/resources/mobilenet-ssd_openvino_2021.2_6shave.blob")
 file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob" 
 ${mobilenet_blob}
@@ -88,10 +60,6 @@ EXPECTED_HASH SHA1=f0e14978b3f77a4f93b9f969cd39e58bb7aef490
 TLS_VERIFY ON)
 
 
-# link_directories(${CMAKE_SOURCE_DIR}/lib)
-
-# message("-----------------------------------------------mobilenet_blob-------------------------")
-# message(mobilenet_blob)
 
 add_executable(stereo_node src/stereo_publisher.cpp)
 ament_target_dependencies(stereo_node 
@@ -108,8 +76,9 @@ ament_export_libraries(depthai_examples)
 ament_export_dependencies(${dependencies}
                           depthai::core
                           ${OpenCV_LIBRARIES})
-# ament_export_interfaces(export_rl2_com HAS_LIBRARY_TARGET)
 
+
+install(DIRECTORY params DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
         stereo_node
