@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <cstdio>
-// #include "utility.hpp"
 #include <depthai_examples/nn_pipeline.hpp>
 
 #include "sensor_msgs/Image.h"
@@ -29,7 +28,6 @@ int main(int argc, char** argv){
     int bad_params = 0;
 
     bad_params += !pnh.getParam("camera_name", deviceName);
-    // bad_params += !pnh.getParam("nnPath", nnPath);
     bad_params += !pnh.getParam("camera_param_uri", camera_param_uri);
 
     if (bad_params > 0)
@@ -41,10 +39,6 @@ int main(int argc, char** argv){
     detectionPipeline.initDepthaiDev(nnPath);
     std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = detectionPipeline.getExposedImageStreams();
     std::vector<std::shared_ptr<dai::DataOutputQueue>> nNetDataQueues = detectionPipeline.getExposedNnetStreams();;
-
-    // std::vector<ros::Publisher> imgPubList;
-    // std::vector<ros::Publisher> nNetPubList;
-    // std::vector<std::string> frameNames;
 
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
 
@@ -73,10 +67,8 @@ int main(int argc, char** argv){
                                                                                                          std::placeholders::_2) , 
                                                                                                          30);
 
-    // rgbPublish.startPublisherThread();
-    detectionPublish.startPublisherThread(); // addPubisherCallback works only when the dataqueue is non blocking.
-    rgbPublish.addPubisherCallback();
-    // detectionPublish.addPubisherCallback();
+    detectionPublish.startPublisherThread();
+    rgbPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
 
     ros::spin();
 

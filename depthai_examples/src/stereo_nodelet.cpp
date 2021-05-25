@@ -7,7 +7,6 @@
 #include <depthai_examples/stereo_pipeline.hpp>
 #include <functional>
 
-// #include <depthai_examples/daiUtility.hpp>
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
 
@@ -64,7 +63,6 @@ namespace depthai_examples{
                                                                                             left_uri,
                                                                                             "left");
 
-            // bridgePublish.startPublisherThread();
             leftPublish.addPubisherCallback();
 
             dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
@@ -81,7 +79,6 @@ namespace depthai_examples{
 
             rightPublish.addPubisherCallback();
 
-            // dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame");
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(imageDataQueues[2],
                                                                                             pnh, 
                                                                                             std::string("stereo/depth"),
@@ -106,10 +103,4 @@ namespace depthai_examples{
 };
 
 PLUGINLIB_EXPORT_CLASS(depthai_examples::StereoNodelet, nodelet::Nodelet)
-
-
 }   // namespace depthai_examples
-// PLUGINLIB_EXPORT_CLASS(depthai_examples::StereoNodelet, nodelet::Nodelet)
-
-
-

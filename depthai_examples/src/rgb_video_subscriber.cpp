@@ -4,9 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-// #include <depthai_examples/daiUtility.hpp>
 // Inludes common necessary includes for development using depthai library
-
 
 dai::rosBridge::ImageConverter inputConverter(true);
 

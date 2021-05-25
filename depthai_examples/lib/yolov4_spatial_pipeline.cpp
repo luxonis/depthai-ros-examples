@@ -28,13 +28,9 @@ void YoloSpatialDetectionExample::initDepthaiDev(std::string nnPath){
     // create xlink connections
     auto xoutRgb = _p.create<dai::node::XLinkOut>();
     auto xoutNN =  _p.create<dai::node::XLinkOut>();
-    //auto xoutBoundingBoxDepthMapping = _p.create<dai::node::XLinkOut>();
-    //auto xoutDepth = _p.create<dai::node::XLinkOut>();
 
     xoutRgb->setStreamName("preview");
     xoutNN->setStreamName("detections");
-    //xoutBoundingBoxDepthMapping->setStreamName("boundingBoxDepthMapping");
-    //xoutDepth->setStreamName("depth");
 
     colorCam->setPreviewSize(416, 416);
     colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
@@ -76,17 +72,14 @@ void YoloSpatialDetectionExample::initDepthaiDev(std::string nnPath){
         colorCam->preview.link(xoutRgb->input);
 
     spatialDetectionNetwork->out.link(xoutNN->input);
-    //spatialDetectionNetwork->boundingBoxMapping.link(xoutBoundingBoxDepthMapping->input);
 
     stereo->depth.link(spatialDetectionNetwork->inputDepth);
-    //spatialDetectionNetwork->passthroughDepth.link(xoutDepth->input);
 
     _dev = std::make_unique<dai::Device>(_p);
     _dev->startPipeline();
 
     _opImageStreams.push_back(_dev->getOutputQueue("preview", 30, false));
     _opNNetStreams.push_back(_dev->getOutputQueue("detections", 30, false));
-    // _opSpatialStreams.push_back(_dev->getOutputQueue("boundingBoxDepthMapping", 30, false));
 }
 
 
@@ -99,6 +92,3 @@ std::vector<std::shared_ptr<dai::DataOutputQueue>> YoloSpatialDetectionExample::
     return _opNNetStreams;
 }
 
-// std::vector<std::shared_ptr<dai::DataOutputQueue>> YoloSpatialDetectionExample::getExposedSpatialStreams(){
-//     return _opSpatialStreams;
-// }
