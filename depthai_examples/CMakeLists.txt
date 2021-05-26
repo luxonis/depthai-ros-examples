@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
+# set(CMAKE_BUILD_TYPE Debug)
 
 # get_filename_component (DEPTHAI_CORE "${CMAKE_CURRENT_LIST_DIR}/../external/depthai-core" REALPATH)
 # include ("${DEPTHAI_CORE}/cmake/HunterGate.cmake")

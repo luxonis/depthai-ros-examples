@@ -36,7 +36,7 @@ namespace depthai_examples{
             }
 
             StereoExampe stero_pipeline;
-            stero_pipeline.initDepthaiDev();
+            stero_pipeline.initDepthaiDev(true);
             std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
             
             std::vector<ros::Publisher> imgPubList;
@@ -79,7 +79,7 @@ namespace depthai_examples{
 
             rightPublish.addPubisherCallback();
 
-            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(imageDataQueues[2],
+            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(imageDataQueues[4],
                                                                                             pnh, 
                                                                                             std::string("stereo/depth"),
                                                                                             std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 

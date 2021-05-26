@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdio>
 #include "sensor_msgs/Image.h"
+#include "stereo_msgs/DisparityImage.h"
 #include <camera_info_manager/camera_info_manager.h>
 #include <depthai_examples/stereo_pipeline.hpp>
 #include <functional>
@@ -12,18 +13,20 @@
 #include "depthai/depthai.hpp"
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
+#include <depthai_bridge/DisparityConverter.hpp>
 
 int main(int argc, char** argv){
 
     ros::init(argc, argv, "stereo_node");
     ros::NodeHandle pnh("~");
     
-    std::string deviceName;
+    std::string deviceName, mode;
     std::string camera_param_uri;
     int bad_params = 0;
-
+    
     bad_params += !pnh.getParam("camera_name", deviceName);
     bad_params += !pnh.getParam("camera_param_uri", camera_param_uri);
+    bad_params += !pnh.getParam("mode", mode);
 
     if (bad_params > 0)
     {
@@ -31,7 +34,12 @@ int main(int argc, char** argv){
     }
 
     StereoExampe stero_pipeline;
-    stero_pipeline.initDepthaiDev();
+    if(mode == "depth"){
+        stero_pipeline.initDepthaiDev(true);
+    }
+    else{
+        stero_pipeline.initDepthaiDev(false);
+    }
     std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
 
     // this part would be removed once we have calibration-api
@@ -71,7 +79,9 @@ int main(int argc, char** argv){
 
     rightPublish.addPubisherCallback();
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(imageDataQueues[2],
+     if(mode == "depth"){
+         std::cout << "In depth";
+        dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(imageDataQueues[4],
                                                                                      pnh, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -82,12 +92,28 @@ int main(int argc, char** argv){
                                                                                      30,
                                                                                      stereo_uri,
                                                                                      "stereo");
-
-    depthPublish.addPubisherCallback();
+        depthPublish.addPubisherCallback();
+        ros::spin();
+    }
+   else{
+        dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
+        dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(imageDataQueues[4],
+                                                                                     pnh, 
+                                                                                     std::string("stereo/disparity"),
+                                                                                     std::bind(&dai::rosBridge::DisparityConverter::toRosMsg, 
+                                                                                     &dispConverter, 
+                                                                                     std::placeholders::_1, 
+                                                                                     std::placeholders::_2) , 
+                                                                                     30,
+                                                                                     stereo_uri,
+                                                                                     "stereo");
+        dispPublish.addPubisherCallback();
+        ros::spin();
+    }
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
 
-    ros::spin();
+    
     return 0;
 }
