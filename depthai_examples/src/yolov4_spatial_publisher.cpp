@@ -25,7 +25,7 @@ int main(int argc, char** argv){
     
     std::string deviceName;
     std::string camera_param_uri;
-    std::string nnPath("/home/luis/Projs_Software/INESC_projects/AOK/YoloV4_Models/depthai_official/tiny-yolo-v4_openvino_2021.2_6shave.blob"); // Set your path for the model here
+    std::string nnPath(BLOB_PATH); // Set your path for the model here
     int bad_params = 0;
 
     bad_params += !pnh.getParam("camera_name", deviceName);

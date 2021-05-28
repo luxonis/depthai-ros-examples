@@ -13,18 +13,6 @@
 
     <arg name="camera_param_uri"      default="package://depthai_examples/params/camera" />
 
-    <!-- Yolo Model Paths and Classes -->
-    <!-- <arg name="model_path"      default="$(find depthai_examples)/models/tiny-yolo-v4_openvino_2021.2_6shave.blob" />
-    <arg name="class_file"      default="$(find depthai_examples)/models/coco_labels.txt" /> -->
-
-    <arg name="model_path"      default="$(find depthai_examples)/models/OID_fruit.blob" />
-    <arg name="class_file"      default="$(find depthai_examples)/models/OID_fruit.txt" />
-
-    <!-- <arg name="model_path"      default="$(find depthai_examples)/models/tomato_416.blob" />
-    <arg name="class_file"      default="$(find depthai_examples)/models/tomato_416.txt" /> -->
-
-    <arg name="cv_window_flag"      default="1"  />
-
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
         <arg name="camera_model"    value="$(arg  camera_model)"/>
@@ -40,13 +28,7 @@
     <node name="mobilenet_publisher" pkg="depthai_examples" type="yolov4_node" output="screen" required="true">
         <param name="camera_name"      value="$(arg camera_name)"     />
         <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
-        <param name="model_path"      value="$(arg model_path)"     />
-        <param name="class_file"      value="$(arg class_file)"     />
-    </node>
 
-    <node name="detection_visualizer" pkg="depthai_examples" type="draw_nn_detections" output="screen" required="true">
-        <param name="cv_window_flag"      value="$(arg cv_window_flag)"  type="bool" />
-        <param name="class_file"      value="$(arg class_file)"  />
     </node>
 
 </launch>
