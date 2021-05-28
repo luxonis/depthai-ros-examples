@@ -25,7 +25,7 @@
         <arg name="cam_yaw"         value="$(arg  cam_yaw)"     />
     </include>
 
-    <node name="mobilenet_publisher" pkg="depthai_examples" type="yolov4_node" output="screen" required="true">
+    <node name="yolov4_publisher" pkg="depthai_examples" type="yolov4_spatial_node" output="screen" required="true">
         <param name="camera_name"      value="$(arg camera_name)"     />
         <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
 
