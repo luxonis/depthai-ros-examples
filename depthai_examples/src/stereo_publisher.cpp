@@ -3,20 +3,16 @@
 
 #include <iostream>
 #include <cstdio>
-// #include "utility.hpp"
 #include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
 #include <depthai_examples/stereo_pipeline.hpp>
 #include <functional>
 
-// #include <depthai_examples/daiUtility.hpp>
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
-
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-// using namespace std::placeholders;
 int main(int argc, char** argv){
 
     ros::init(argc, argv, "stereo_node");
@@ -37,10 +33,7 @@ int main(int argc, char** argv){
     StereoExampe stero_pipeline;
     stero_pipeline.initDepthaiDev();
     std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
-    
-    // std::vector<ros::Publisher> imgPubList;
-    // std::vector<std::string> frameNames;
-    
+
     // this part would be removed once we have calibration-api
     std::string left_uri = camera_param_uri +"/" + "left.yaml";
   
@@ -62,7 +55,6 @@ int main(int argc, char** argv){
                                                                                      left_uri,
                                                                                      "left");
 
-    // bridgePublish.startPublisherThread();
     leftPublish.addPubisherCallback();
 
     dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
@@ -79,7 +71,6 @@ int main(int argc, char** argv){
 
     rightPublish.addPubisherCallback();
 
-    // dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame");
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(imageDataQueues[2],
                                                                                      pnh, 
                                                                                      std::string("stereo/depth"),
@@ -100,4 +91,3 @@ int main(int argc, char** argv){
     ros::spin();
     return 0;
 }
-

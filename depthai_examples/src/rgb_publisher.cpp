@@ -7,7 +7,7 @@
 #include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
 #include <depthai_examples/rgb_pipeline.hpp>
-// #include <depthai_examples/daiUtility.hpp>
+
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
 #include <depthai_bridge/BridgePublisher.hpp>
@@ -35,12 +35,6 @@ int main(int argc, char** argv){
     rgbPipeline.initDepthaiDev();
     std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = rgbPipeline.getExposedImageStreams();
     
-    // for (auto op_que : imageDataQueues){
-    //     if (op_que->getName().find("video") != std::string::npos){
-    //             imgPubList.push_back(pnh.advertise<sensor_msgs::Image>("color/image", 30));
-    //             frameNames.push_back(deviceName + "_rgb_camera_optical_frame");
-    //     }
-    // }
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
@@ -56,22 +50,7 @@ int main(int argc, char** argv){
                                                                                   color_uri,
                                                                                   "color");
 
-
     rgbPublish.startPublisherThread();
-
-
-    // while(ros::ok()){
-    //     for(int i = 0; i < imageDataQueues.size(); ++i){
-    //         if(imgPubList[i].getNumSubscribers() == 0) continue;
-    //         auto imgData = imageDataQueues[i]->get<dai::ImgFrame>();
-    //         // std::cout << "id num ->" << i << imageDataQueues[i]->getName() << std::endl;
-            
-    //         sensor_msgs::Image imageMsg;
-    //         dai::rosImageBridge(imgData, frameNames[i], imageMsg);
-    //         imgPubList[i].publish(imageMsg);
-    //     }
-    //     ros::spinOnce();
-    // }
     ros::spin();
 
     return 0;

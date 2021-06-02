@@ -7,7 +7,6 @@
 #include <depthai_examples/stereo_pipeline.hpp>
 #include <functional>
 
-// #include <depthai_examples/daiUtility.hpp>
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
 
@@ -108,11 +107,5 @@ namespace depthai_examples{
         }
 };
 
-//PLUGINLIB_EXPORT_CLASS(depthai_examples::StereoNodelet, nodelet::Nodelet)
-
-
-}   // namespace depthai_examples
 PLUGINLIB_EXPORT_CLASS(depthai_examples::StereoNodelet, nodelet::Nodelet)
-
-
-
+}   // namespace depthai_examples

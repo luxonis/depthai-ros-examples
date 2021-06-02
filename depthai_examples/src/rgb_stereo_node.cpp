@@ -9,14 +9,12 @@
 #include <depthai_examples/rgb_stereo_pipeline.hpp>
 #include <functional>
 
-// #include <depthai_examples/daiUtility.hpp>
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-// using namespace std::placeholders;
 int main(int argc, char** argv){
 
     ros::init(argc, argv, "rgb_stereo_node");
@@ -70,8 +68,8 @@ int main(int argc, char** argv){
                                                                                      color_uri,
                                                                                      "color");
 
-    depthPublish.addPubisherCallback();
-    rgbPublish.startPublisherThread(); // addPubisherCallback works only when the dataqueue is non blocking.
+    depthPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
+    rgbPublish.startPublisherThread();
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing

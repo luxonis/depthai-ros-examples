@@ -7,7 +7,6 @@
 #include <functional>
 #include <depthai_examples/stereo_from_host.hpp>
 
-// #include <depthai_examples/daiUtility.hpp>
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
 #include <depthai_bridge/ImageConverter.hpp>
@@ -94,11 +93,7 @@ int main(int argc, char** argv){
     ros::NodeHandle nh;
     StereoMimicNode nodeImp(nh);
 
-    // std::cout << "------------HI HI----------: " << std::endl;
-
     ros::spin();
 
     return 0;
 }
-
-

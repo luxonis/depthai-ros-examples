@@ -3,7 +3,8 @@
 
 #include <iostream>
 #include <cstdio>
-#include <depthai_examples/nn_pipeline.hpp>
+// #include "utility.hpp"
+#include <depthai_examples/yolov4_spatial_pipeline.hpp>
 
 #include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
@@ -11,7 +12,7 @@
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
-#include <depthai_bridge/ImgDetectionConverter.hpp>
+#include <depthai_bridge/SpatialDetectionConverter.hpp>
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
@@ -24,7 +25,7 @@ int main(int argc, char** argv){
     
     std::string deviceName;
     std::string camera_param_uri;
-    std::string nnPath(BLOB_PATH);
+    std::string nnPath(BLOB_PATH); // Set your path for the model here
     int bad_params = 0;
 
     bad_params += !pnh.getParam("camera_name", deviceName);
@@ -35,12 +36,13 @@ int main(int argc, char** argv){
         throw std::runtime_error("Couldn't find one of the parameters");
     }
 
-    MobileNetDetectionExample detectionPipeline;
+    YoloSpatialDetectionExample detectionPipeline;
     detectionPipeline.initDepthaiDev(nnPath);
     std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = detectionPipeline.getExposedImageStreams();
-    std::vector<std::shared_ptr<dai::DataOutputQueue>> nNetDataQueues = detectionPipeline.getExposedNnetStreams();;
+    std::vector<std::shared_ptr<dai::DataOutputQueue>> nNetDataQueues = detectionPipeline.getExposedNnetStreams();
 
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
+     std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(imageDataQueues[0],
@@ -56,22 +58,34 @@ int main(int argc, char** argv){
                                                                                      "color");
 
 
-    dai::rosBridge::ImgDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 300, 300, false);
-    dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueues[0],
+    dai::rosBridge::SpatialDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 416, 416, false);
+    dai::rosBridge::BridgePublisher<depthai_ros_msgs::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(nNetDataQueues[0],
                                                                                                          pnh, 
-                                                                                                         std::string("color/mobilenet_detections"),
-                                                                                                         std::bind(static_cast<void(dai::rosBridge::ImgDetectionConverter::*)(std::shared_ptr<dai::ImgDetections>, 
-                                                                                                         vision_msgs::Detection2DArray&)>(&dai::rosBridge::ImgDetectionConverter::toRosMsg), 
+                                                                                                         std::string("color/yolov4_Spatial_detections"),
+                                                                                                         std::bind(static_cast<void(dai::rosBridge::SpatialDetectionConverter::*)(std::shared_ptr<dai::SpatialImgDetections>, 
+                                                                                                         depthai_ros_msgs::SpatialDetectionArray&)>(&dai::rosBridge::SpatialDetectionConverter::toRosMsg), 
                                                                                                          &detConverter,
                                                                                                          std::placeholders::_1, 
                                                                                                          std::placeholders::_2) , 
                                                                                                          30);
+    dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
+    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(imageDataQueues[1],
+                                                                                     pnh, 
+                                                                                     std::string("stereo/depth"),
+                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+                                                                                     &depthConverter, 
+                                                                                     std::placeholders::_1, 
+                                                                                     std::placeholders::_2) , 
+                                                                                     30,
+                                                                                     stereo_uri,
+                                                                                     "stereo");
 
-    detectionPublish.startPublisherThread();
+    depthPublish.addPubisherCallback();
+
+    detectionPublish.startPublisherThread(); 
     rgbPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
 
     ros::spin();
 
     return 0;
 }
-

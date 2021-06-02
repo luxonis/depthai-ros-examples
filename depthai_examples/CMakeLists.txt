@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
+# set(CMAKE_BUILD_TYPE Debug)
 
 # get_filename_component (DEPTHAI_CORE "${CMAKE_CURRENT_LIST_DIR}/../external/depthai-core" REALPATH)
 # include ("${DEPTHAI_CORE}/cmake/HunterGate.cmake")
@@ -116,6 +117,7 @@ target_link_options(${PROJECT_NAME} PRIVATE
 #     FILE "mobilenet-ssd_openvino_2021.2_6shave.blob"
 #     LOCATION mobilenet_blob
 # )
+
 set(mobilenet_blob "${PROJECT_SOURCE_DIR}/resources/mobilenet-ssd_openvino_2021.2_6shave.blob")
 file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob" 
 ${mobilenet_blob}
@@ -123,9 +125,13 @@ TIMEOUT 60  # seconds
 EXPECTED_HASH SHA1=f0e14978b3f77a4f93b9f969cd39e58bb7aef490
 TLS_VERIFY ON)
 
+set(tiny_yolo_v4_blob "${PROJECT_SOURCE_DIR}/resources/tiny-yolo-v4_openvino_2021.2_6shave.blob")
+file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/tiny-yolo-v4_openvino_2021.2_6shave.blob"
+${tiny_yolo_v4_blob}
+TIMEOUT 60  # seconds
+EXPECTED_HASH SHA1=219d949610a5760e62a8458941e1300b81c3fe4a
+TLS_VERIFY ON)
 
-message("-----------------------------------------------mobilenet_blob-------------------------")
-message(mobilenet_blob)
 
 macro(dai_add_node node_name node_src)
     add_executable("${node_name}" "${node_src}")
@@ -153,5 +159,8 @@ dai_add_node(mobilenet_node src/mobilenet_publisher.cpp)
 dai_add_node(rgb_stereo_node src/rgb_stereo_node.cpp)
 dai_add_node(stereo_mimic_node src/stereo_mimic_node.cpp)
 dai_add_node(rgb_subscriber_node src/rgb_video_subscriber.cpp)
+dai_add_node(yolov4_spatial_node src/yolov4_spatial_publisher.cpp)
+
 
 target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
+target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
