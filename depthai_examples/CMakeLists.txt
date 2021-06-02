@@ -34,6 +34,7 @@ find_package(catkin REQUIRED COMPONENTS
   vision_msgs
   depthai_bridge
   message_filters
+  nodelet
 )
 
 set(_opencv_version 4)
@@ -99,6 +100,14 @@ target_link_libraries(nodelet_stereo
   ${PROJECT_NAME}
   opencv_imgproc
   opencv_highgui
+)
+
+target_link_options(nodelet_stereo PRIVATE
+  -Wl,--no-undefined
+)
+
+target_link_options(${PROJECT_NAME} PRIVATE
+  -Wl,--no-undefined
 )
 
 
