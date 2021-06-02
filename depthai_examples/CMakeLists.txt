@@ -33,6 +33,7 @@ find_package(catkin REQUIRED COMPONENTS
   vision_msgs
   depthai_bridge
   message_filters
+  nodelet
 )
 
 set(_opencv_version 4)
