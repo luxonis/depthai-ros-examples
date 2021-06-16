@@ -19,7 +19,7 @@ const std::vector<std::string> YoloSpatialDetectionExample::label_map = {"person
 void YoloSpatialDetectionExample::initDepthaiDev(std::string nnPath){
 
     bool syncNN = true;
-    bool subpixel = true;
+    bool subpixel = false;
     auto colorCam = _p.create<dai::node::ColorCamera>();
     auto spatialDetectionNetwork = _p.create<dai::node::YoloSpatialDetectionNetwork>();
     auto monoLeft =  _p.create<dai::node::MonoCamera>();
