@@ -15,6 +15,63 @@
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/DisparityConverter.hpp>
 
+
+dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel){
+    dai::Pipeline pipeline;
+
+    auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
+    auto monoRight   = pipeline.create<dai::node::MonoCamera>();
+    auto xoutLeft    = pipeline.create<dai::node::XLinkOut>();
+    auto xoutRight   = pipeline.create<dai::node::XLinkOut>();
+    auto stereo      = pipeline.create<dai::node::StereoDepth>();
+    auto xoutDepth   = pipeline.create<dai::node::XLinkOut>();
+
+    // XLinkOut
+    xoutLeft->setStreamName("left");
+    xoutRight->setStreamName("right");
+
+    if (withDepth) {
+        xoutDepth->setStreamName("depth");
+    }
+    else {
+        xoutDepth->setStreamName("disparity");
+    }
+
+    // MonoCamera
+    monoLeft->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
+    monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
+    monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
+    monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
+
+    // int maxDisp = 96;
+    // if (extended) maxDisp *= 2;
+    // if (subpixel) maxDisp *= 32; // 5 bits fractional disparity
+
+    // StereoDepth
+    stereo->setConfidenceThreshold(200);
+    stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
+
+    stereo->setLeftRightCheck(lrcheck);
+    stereo->setExtendedDisparity(extended);
+    stereo->setSubpixel(subpixel);
+
+    // Link plugins CAM -> STEREO -> XLINK
+    monoLeft->out.link(stereo->left);
+    monoRight->out.link(stereo->right);
+
+    stereo->syncedLeft.link(xoutLeft->input);
+    stereo->syncedRight.link(xoutRight->input);
+
+    if(withDepth){
+        stereo->depth.link(xoutDepth->input);
+    }
+    else{
+        stereo->disparity.link(xoutDepth->input);
+    }
+
+    return pipeline;
+}
+
 int main(int argc, char** argv){
 
     ros::init(argc, argv, "stereo_node");
@@ -23,10 +80,15 @@ int main(int argc, char** argv){
     std::string deviceName, mode;
     std::string camera_param_uri;
     int bad_params = 0;
-    
+    bool lrcheck, extended, subpixel, enableDepth;
+
     bad_params += !pnh.getParam("camera_name", deviceName);
     bad_params += !pnh.getParam("camera_param_uri", camera_param_uri);
     bad_params += !pnh.getParam("mode", mode);
+    bad_params += !pnh.getParam("lrcheck",  lrcheck);
+    bad_params += !pnh.getParam("extended",  extended);
+    bad_params += !pnh.getParam("subpixel",  subpixel);
+    
 
     if (bad_params > 0)
     {
@@ -35,12 +97,28 @@ int main(int argc, char** argv){
 
     StereoExampe stereo_pipeline;
     if(mode == "depth"){
-        stereo_pipeline.initDepthaiDev(true);
+        enableDepth = true;
     }
     else{
-        stereo_pipeline.initDepthaiDev(false);
+        enableDepth = false;
+    }
+
+    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel);
+
+    dai::Device device(pipeline);
+
+
+    auto leftQueue = device.getOutputQueue("left", 30, false);
+    auto rightQueue = device.getOutputQueue("right", 30, false);
+    std::shared_ptr<dai::DataOutputQueue> stereoQueue;
+    if (enableDepth) {
+        stereoQueue = device.getOutputQueue("depth", 30, false);
+    }else{
+        stereoQueue = device.getOutputQueue("disparity", 30, false);
     }
     std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stereo_pipeline.getExposedImageStreams();
+
+
 
     // this part would be removed once we have calibration-api
     std::string left_uri = camera_param_uri +"/" + "left.yaml";
@@ -52,7 +130,7 @@ int main(int argc, char** argv){
 
    
     dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(imageDataQueues[0],
+    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
                                                                                      pnh, 
                                                                                      std::string("left/image"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -66,7 +144,7 @@ int main(int argc, char** argv){
     leftPublish.addPubisherCallback();
 
     dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rightPublish(imageDataQueues[1],
+    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rightPublish(rightQueue,
                                                                                      pnh, 
                                                                                      std::string("right/image"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -81,7 +159,7 @@ int main(int argc, char** argv){
 
      if(mode == "depth"){
          std::cout << "In depth";
-        dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(imageDataQueues[4],
+        dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      pnh, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -97,7 +175,7 @@ int main(int argc, char** argv){
     }
    else{
         dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
-        dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(imageDataQueues[4],
+        dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
                                                                                      pnh, 
                                                                                      std::string("stereo/disparity"),
                                                                                      std::bind(&dai::rosBridge::DisparityConverter::toRosMsg, 
