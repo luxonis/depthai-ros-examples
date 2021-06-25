@@ -34,6 +34,7 @@ find_package(catkin REQUIRED COMPONENTS
   vision_msgs
   depthai_bridge
   message_filters
+  nodelet
 )
 
 set(_opencv_version 4)
@@ -101,6 +102,14 @@ target_link_libraries(nodelet_stereo
   opencv_highgui
 )
 
+target_link_options(nodelet_stereo PRIVATE
+  -Wl,--no-undefined
+)
+
+target_link_options(${PROJECT_NAME} PRIVATE
+  -Wl,--no-undefined
+)
+
 
 # hunter_private_data(
 #     URL "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob"
@@ -108,6 +117,7 @@ target_link_libraries(nodelet_stereo
 #     FILE "mobilenet-ssd_openvino_2021.2_6shave.blob"
 #     LOCATION mobilenet_blob
 # )
+
 set(mobilenet_blob "${PROJECT_SOURCE_DIR}/resources/mobilenet-ssd_openvino_2021.2_6shave.blob")
 file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob" 
 ${mobilenet_blob}
@@ -115,9 +125,13 @@ TIMEOUT 60  # seconds
 EXPECTED_HASH SHA1=f0e14978b3f77a4f93b9f969cd39e58bb7aef490
 TLS_VERIFY ON)
 
+set(tiny_yolo_v4_blob "${PROJECT_SOURCE_DIR}/resources/tiny-yolo-v4_openvino_2021.2_6shave.blob")
+file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/tiny-yolo-v4_openvino_2021.2_6shave.blob"
+${tiny_yolo_v4_blob}
+TIMEOUT 60  # seconds
+EXPECTED_HASH SHA1=219d949610a5760e62a8458941e1300b81c3fe4a
+TLS_VERIFY ON)
 
-message("-----------------------------------------------mobilenet_blob-------------------------")
-message(mobilenet_blob)
 
 macro(dai_add_node node_name node_src)
     add_executable("${node_name}" "${node_src}")
@@ -147,6 +161,6 @@ dai_add_node(stereo_mimic_node src/stereo_mimic_node.cpp)
 dai_add_node(rgb_subscriber_node src/rgb_video_subscriber.cpp)
 dai_add_node(yolov4_spatial_node src/yolov4_spatial_publisher.cpp)
 
- 
 
 target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
+target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")

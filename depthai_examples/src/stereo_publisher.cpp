@@ -33,14 +33,14 @@ int main(int argc, char** argv){
         throw std::runtime_error("Couldn't find one of the parameters");
     }
 
-    StereoExampe stero_pipeline;
+    StereoExampe stereo_pipeline;
     if(mode == "depth"){
-        stero_pipeline.initDepthaiDev(true);
+        stereo_pipeline.initDepthaiDev(true);
     }
     else{
-        stero_pipeline.initDepthaiDev(false);
+        stereo_pipeline.initDepthaiDev(false);
     }
-    std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stero_pipeline.getExposedImageStreams();
+    std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stereo_pipeline.getExposedImageStreams();
 
     // this part would be removed once we have calibration-api
     std::string left_uri = camera_param_uri +"/" + "left.yaml";
