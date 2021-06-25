@@ -10,7 +10,7 @@ class StereoExampe{
     StereoExampe() = default;
     ~StereoExampe() = default;
 
-    void initDepthaiDev();
+    void initDepthaiDev(bool withDepth);
 
     std::vector<std::shared_ptr<dai::DataOutputQueue>> getExposedImageStreams();
 

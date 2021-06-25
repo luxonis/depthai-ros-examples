@@ -3,7 +3,7 @@
     <!-- <args for urdf/> -->
     <arg name="camera_model"         default="BW1098OAK" /> <!-- 'zed' or 'zedm' -->
     <arg name="camera_name"          default="oak" />
-
+    <arg name="mode"                 default="depth" />
     <arg name="base_frame"           default="oak-d_frame" />
 
     <arg name="cam_pos_x"             default="0.0" /> <!-- Position respect to base frame (i.e. "base_link) -->
@@ -33,17 +33,12 @@
         <arg name="cam_pitch"       value="$(arg  cam_pitch)"   />
         <arg name="cam_yaw"         value="$(arg  cam_yaw)"     />
     </include>
-
+    <!-- launch-prefix="xterm -e gdb -->
     <node name="stereo_publisher" pkg="depthai_examples" type="stereo_node" output="screen" required="true">
         <param name="camera_name" value="$(arg camera_name)"/>
         <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
+        <param name="mode" value="$(arg mode)"/>
     </node>            
 
-
- <!-- <param name="outputDepth" value="$(arg outputDepth)"/>
-        <param name="outputRectified" value="$(arg outputRectified)"/>
-        <param name="lrcheck" value="$(arg lrcheck)"/>
-        <param name="extended" value="$(arg extended)"/>
-        <param name="subpixel" value="$(arg subpixel)"/> -->
-
 </launch>
+

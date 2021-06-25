@@ -29,12 +29,13 @@ namespace depthai_examples{
 
             auto& pnh = getPrivateNodeHandle();
             
-            std::string deviceName;
+            std::string deviceName, mode;
             std::string camera_param_uri;
             int bad_params = 0;
 
             bad_params += !pnh.getParam("camera_name", deviceName);
             bad_params += !pnh.getParam("camera_param_uri", camera_param_uri);
+            bad_params += !pnh.getParam("mode", mode);
 
             if (bad_params > 0)
             {
@@ -42,7 +43,12 @@ namespace depthai_examples{
             }
 
             stereo_pipeline = std::make_unique<StereoExampe>();
-            stereo_pipeline->initDepthaiDev();
+            if(mode == "depth"){    
+                stereo_pipeline->initDepthaiDev(true);
+            }
+            else{
+                stereo_pipeline->initDepthaiDev(false);
+            }
             imageDataQueues = stereo_pipeline->getExposedImageStreams();
             
             std::vector<ros::Publisher> imgPubList;
@@ -88,17 +94,17 @@ namespace depthai_examples{
 
             // dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame");
             depthPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
-                (imageDataQueues[2],
-                pnh, 
-                std::string("stereo/depth"),
-                std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                rightConverter.get(), // since the converter has the same frame name
-                                // and image type is also same we can reuse it
-                std::placeholders::_1, 
-                std::placeholders::_2) , 
-                1,
-                stereo_uri,
-                "stereo");
+                                                                            (imageDataQueues[2],
+                                                                            pnh, 
+                                                                            std::string("stereo/depth"),
+                                                                            std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+                                                                            rightConverter.get(), // since the converter has the same frame name
+                                                                                            // and image type is also same we can reuse it
+                                                                            std::placeholders::_1, 
+                                                                            std::placeholders::_2) , 
+                                                                            1,
+                                                                            stereo_uri,
+                                                                            "stereo");
 
             depthPublish->addPubisherCallback();
 
