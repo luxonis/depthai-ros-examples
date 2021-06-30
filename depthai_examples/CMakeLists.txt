@@ -23,9 +23,9 @@ find_package(std_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(depthai_ros_msgs REQUIRED)
 find_package(depthai_bridge REQUIRED)
-# find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/depthai-core/build/install/lib/cmake/depthai") 
+find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/depthai-core/build/install/lib/cmake/depthai") 
 
-find_package(depthai CONFIG REQUIRED) 
+# find_package(depthai CONFIG REQUIRED) 
 
 set(dependencies
 rclcpp
@@ -44,7 +44,8 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME} 
-              lib/stereo_pipeline.cpp)
+              lib/stereo_pipeline.cpp
+              lib/nn_pipeline.cpp)
 
 target_link_libraries(${PROJECT_NAME}
                       depthai::core 
@@ -71,6 +72,18 @@ target_link_libraries(stereo_node
                       ${OpenCV_LIBRARIES} 
                       ${PROJECT_NAME})
 
+add_executable(mobilenet_node src/mobilenet_publisher.cpp)
+ament_target_dependencies(mobilenet_node 
+                          ${dependencies} 
+                          )    
+
+target_link_libraries(mobilenet_node 
+                      depthai::core 
+                      ${OpenCV_LIBRARIES} 
+                      ${PROJECT_NAME})
+target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
+                      
+                      
 ament_export_include_directories(include)
 ament_export_libraries(depthai_examples)
 ament_export_dependencies(${dependencies}
@@ -82,6 +95,7 @@ install(DIRECTORY params DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
         stereo_node
+        mobilenet_node
         DESTINATION lib/${PROJECT_NAME})
 ament_package()
 
