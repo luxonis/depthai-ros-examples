@@ -35,7 +35,6 @@ void MobileNetDetectionExample::initDepthaiDev(std::string nnPath){
     detectionNetwork->out.link(nnOut->input);
 
     _dev = std::make_unique<dai::Device>(_p);
-    _dev->startPipeline();
 
     _opImageStreams.push_back(_dev->getOutputQueue("preview", 30, false));
     _opNNetStreams.push_back(_dev->getOutputQueue("detections", 30, false));
