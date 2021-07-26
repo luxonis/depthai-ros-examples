@@ -48,7 +48,7 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
     // if (subpixel) maxDisp *= 32; // 5 bits fractional disparity
 
     // StereoDepth
-    stereo->setConfidenceThreshold(200);
+    stereo->initialConfig.setConfidenceThreshold(200);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
 
     stereo->setLeftRightCheck(lrcheck);
@@ -78,19 +78,19 @@ int main(int argc, char** argv){
     ros::NodeHandle pnh("~");
     
     std::string deviceName, mode;
-    std::string camera_param_uri;
-    int bad_params = 0;
+    std::string cameraParamUri;
+    int badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
 
-    bad_params += !pnh.getParam("camera_name", deviceName);
-    bad_params += !pnh.getParam("camera_param_uri", camera_param_uri);
-    bad_params += !pnh.getParam("mode", mode);
-    bad_params += !pnh.getParam("lrcheck",  lrcheck);
-    bad_params += !pnh.getParam("extended",  extended);
-    bad_params += !pnh.getParam("subpixel",  subpixel);
+    badParams += !pnh.getParam("camera_name", deviceName);
+    badParams += !pnh.getParam("cameraParamUri", cameraParamUri);
+    badParams += !pnh.getParam("mode", mode);
+    badParams += !pnh.getParam("lrcheck",  lrcheck);
+    badParams += !pnh.getParam("extended",  extended);
+    badParams += !pnh.getParam("subpixel",  subpixel);
     
 
-    if (bad_params > 0)
+    if (badParams > 0)
     {
         throw std::runtime_error("Couldn't find one of the parameters");
     }
@@ -118,32 +118,34 @@ int main(int argc, char** argv){
     }
     std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stereo_pipeline.getExposedImageStreams();
 
-
+    auto calibrationHandler = device.readCalibration();
 
     // this part would be removed once we have calibration-api
-    std::string left_uri = camera_param_uri +"/" + "left.yaml";
+    std::string leftUri = cameraParamUri +"/" + "left.yaml";
   
-     std::string right_uri = camera_param_uri + "/" + "right.yaml";
+     std::string rightUri = cameraParamUri + "/" + "right.yaml";
     
-     std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
+     std::string stereoUri = cameraParamUri + "/" + "right.yaml";
     
-
-   
+    
     dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
+    auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
-                                                                                     pnh, 
-                                                                                     std::string("left/image"),
-                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                                                                                     &converter, 
-                                                                                     std::placeholders::_1, 
-                                                                                     std::placeholders::_2) , 
-                                                                                     30,
-                                                                                     left_uri,
-                                                                                     "left");
+                                                                                    pnh, 
+                                                                                    std::string("left/image"),
+                                                                                    std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+                                                                                    &converter, 
+                                                                                    std::placeholders::_1, 
+                                                                                    std::placeholders::_2) , 
+                                                                                    30,
+                                                                                    leftCameraInfo,
+                                                                                    "left");
 
     leftPublish.addPubisherCallback();
 
     dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
+    auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
+
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rightPublish(rightQueue,
                                                                                      pnh, 
                                                                                      std::string("right/image"),
@@ -152,7 +154,7 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
-                                                                                     right_uri,
+                                                                                     rightCameraInfo,
                                                                                      "right");
 
     rightPublish.addPubisherCallback();
@@ -168,12 +170,12 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
-                                                                                     stereo_uri,
+                                                                                     rightCameraInfo,
                                                                                      "stereo");
         depthPublish.addPubisherCallback();
         ros::spin();
     }
-   else{
+    else{
         dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
         dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
                                                                                      pnh, 
@@ -183,7 +185,7 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
-                                                                                     stereo_uri,
+                                                                                     rightCameraInfo,
                                                                                      "stereo");
         dispPublish.addPubisherCallback();
         ros::spin();
