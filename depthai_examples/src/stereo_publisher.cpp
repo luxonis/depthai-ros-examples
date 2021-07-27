@@ -83,7 +83,7 @@ int main(int argc, char** argv){
     bool lrcheck, extended, subpixel, enableDepth;
 
     badParams += !pnh.getParam("camera_name", deviceName);
-    badParams += !pnh.getParam("cameraParamUri", cameraParamUri);
+    badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
     badParams += !pnh.getParam("mode", mode);
     badParams += !pnh.getParam("lrcheck",  lrcheck);
     badParams += !pnh.getParam("extended",  extended);
@@ -91,8 +91,9 @@ int main(int argc, char** argv){
     
 
     if (badParams > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
+    {   
+        std::cout << " Bad parameters -> " << badParams << std::endl;
+        throw std::runtime_error("Couldn't find %d of the parameters");
     }
 
     StereoExampe stereo_pipeline;
@@ -107,7 +108,6 @@ int main(int argc, char** argv){
 
     dai::Device device(pipeline);
 
-
     auto leftQueue = device.getOutputQueue("left", 30, false);
     auto rightQueue = device.getOutputQueue("right", 30, false);
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
@@ -121,13 +121,13 @@ int main(int argc, char** argv){
     auto calibrationHandler = device.readCalibration();
 
     // this part would be removed once we have calibration-api
-    std::string leftUri = cameraParamUri +"/" + "left.yaml";
-  
+    /*     
+     std::string leftUri = cameraParamUri +"/" + "left.yaml";
+
      std::string rightUri = cameraParamUri + "/" + "right.yaml";
-    
+
      std::string stereoUri = cameraParamUri + "/" + "right.yaml";
-    
-    
+    */        
     dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
