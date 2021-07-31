@@ -116,7 +116,6 @@ int main(int argc, char** argv){
     }else{
         stereoQueue = device.getOutputQueue("disparity", 30, false);
     }
-    std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stereo_pipeline.getExposedImageStreams();
 
     auto calibrationHandler = device.readCalibration();
 
