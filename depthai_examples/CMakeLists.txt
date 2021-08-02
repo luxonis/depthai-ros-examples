@@ -153,6 +153,7 @@ macro(dai_add_node node_name node_src)
 endmacro() 
 
 
+dai_add_node(crop_control_service src/crop_control_service.cpp)
 dai_add_node(stereo_node src/stereo_publisher.cpp)
 dai_add_node(rgb_node src/rgb_publisher.cpp)
 dai_add_node(mobilenet_node src/mobilenet_publisher.cpp)
