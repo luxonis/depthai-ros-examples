@@ -6,7 +6,6 @@
 #include "sensor_msgs/Image.h"
 #include "stereo_msgs/DisparityImage.h"
 #include <camera_info_manager/camera_info_manager.h>
-#include <depthai_examples/stereo_pipeline.hpp>
 #include <functional>
 
 // Inludes common necessary includes for development using depthai library
@@ -95,7 +94,6 @@ int main(int argc, char** argv){
         throw std::runtime_error("Couldn't find one of the parameters");
     }
 
-    StereoExampe stereo_pipeline;
     if(mode == "depth"){
         enableDepth = true;
     }
@@ -107,7 +105,6 @@ int main(int argc, char** argv){
 
     dai::Device device(pipeline);
 
-
     auto leftQueue = device.getOutputQueue("left", 30, false);
     auto rightQueue = device.getOutputQueue("right", 30, false);
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
@@ -116,18 +113,11 @@ int main(int argc, char** argv){
     }else{
         stereoQueue = device.getOutputQueue("disparity", 30, false);
     }
-    std::vector<std::shared_ptr<dai::DataOutputQueue>> imageDataQueues = stereo_pipeline.getExposedImageStreams();
-
-
 
     // this part would be removed once we have calibration-api
     std::string left_uri = camera_param_uri +"/" + "left.yaml";
-  
-     std::string right_uri = camera_param_uri + "/" + "right.yaml";
-    
-     std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
-    
-
+    std::string right_uri = camera_param_uri + "/" + "right.yaml";
+    std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
    
     dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
