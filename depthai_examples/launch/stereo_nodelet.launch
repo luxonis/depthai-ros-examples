@@ -42,6 +42,7 @@
         args="load depthai_examples/StereoNodelet nodelet_manager">
         <param name="camera_name" value="$(arg camera_name)"/>
         <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
+        <param name="mode" value="depth"/>
     </node>
 
     <node pkg="nodelet" type="nodelet" name="depth_image_convertion_nodelet"
