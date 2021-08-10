@@ -31,9 +31,9 @@
         <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
     </node>            
     
-    <node name="rgb_subscriber" pkg="depthai_examples" type="rgb_subscriber_node" output="screen" required="true">
+    <!-- <node name="rgb_subscriber" pkg="depthai_examples" type="rgb_subscriber_node" output="screen" required="true">
         <remap from="rgb_image" to="/rgb_publisher/color/image"/>
-    </node>            
+    </node>             -->
     
 
 rgb_subscriber_node
