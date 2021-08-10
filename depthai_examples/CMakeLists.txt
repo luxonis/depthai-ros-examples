@@ -85,7 +85,7 @@ FILE(GLOB EXAMPLE_LIB
 add_library(${PROJECT_NAME} ${EXAMPLE_LIB})
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS} 
+  ${catkin_EXPORTED_TARGETS}
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -99,7 +99,7 @@ target_link_libraries(${PROJECT_NAME}
 add_library(nodelet_stereo src/stereo_nodelet.cpp)
 
 add_dependencies(nodelet_stereo ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS} 
+  ${catkin_EXPORTED_TARGETS}
   ${PROJECT_NAME}
 )
 
@@ -128,7 +128,7 @@ target_link_options(${PROJECT_NAME} PRIVATE
 # )
 
 set(mobilenet_blob "${PROJECT_SOURCE_DIR}/resources/mobilenet-ssd_openvino_2021.2_6shave.blob")
-file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob" 
+file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob"
 ${mobilenet_blob}
 TIMEOUT 60  # seconds
 EXPECTED_HASH SHA1=f0e14978b3f77a4f93b9f969cd39e58bb7aef490
@@ -144,22 +144,22 @@ TLS_VERIFY ON)
 
 macro(dai_add_node node_name node_src)
     add_executable("${node_name}" "${node_src}")
-    
+
     add_dependencies("${node_name}"
-      ${catkin_EXPORTED_TARGETS} 
+      ${catkin_EXPORTED_TARGETS}
       ${${PROJECT_NAME}_EXPORTED_TARGETS}
-      ${PROJECT_NAME} 
+      ${PROJECT_NAME}
     )
 
-    target_link_libraries("${node_name}" 
+    target_link_libraries("${node_name}"
       ${catkin_LIBRARIES}
       depthai::core
       ${PROJECT_NAME}
       opencv_imgproc
       opencv_highgui
     )
-    
-endmacro() 
+
+endmacro()
 
 
 dai_add_node(stereo_node src/stereo_publisher.cpp)
