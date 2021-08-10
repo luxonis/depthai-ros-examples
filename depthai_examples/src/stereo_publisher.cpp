@@ -49,7 +49,7 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
     // StereoDepth
     stereo->initialConfig.setConfidenceThreshold(200);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-
+    stereo->initialConfig.setLeftRightCheckThreshold(1);
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
