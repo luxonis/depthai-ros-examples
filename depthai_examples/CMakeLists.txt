@@ -102,15 +102,6 @@ target_link_libraries(nodelet_stereo
   opencv_highgui
 )
 
-target_link_options(nodelet_stereo PRIVATE
-  -Wl,--no-undefined
-)
-
-target_link_options(${PROJECT_NAME} PRIVATE
-  -Wl,--no-undefined
-)
-
-
 # hunter_private_data(
 #     URL "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob"
 #     SHA1 "f0e14978b3f77a4f93b9f969cd39e58bb7aef490"
