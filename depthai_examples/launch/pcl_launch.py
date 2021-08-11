@@ -23,6 +23,24 @@ def generate_launch_description():
             package='depthai_examples', executable='stereo_node',
             output='screen'),
 
+        launch_ros.actions.ComposableNodeContainer(
+            name='container',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container',
+            composable_node_descriptions=[
+                # Driver itself
+                launch_ros.descriptions.ComposableNode(
+                    package='depth_image_proc',
+                    plugin='depth_image_proc::ConvertMetricNode',
+                    name='convert_metric_node',
+                    remappings=[('image_raw', '/stereo/depth'),
+                                ('camera_info', '/stereo/camera_info'),
+                                ('image', '/stereo/converted_depth')]
+                ),
+            ],
+            output='screen',
+        ),
             launch_ros.actions.ComposableNodeContainer(
             name='container',
             namespace='',
@@ -35,7 +53,7 @@ def generate_launch_description():
                     plugin='depth_image_proc::PointCloudXyziNode',
                     name='point_cloud_xyzi',
 
-                    remappings=[('depth/image_rect', '/stereo/depth'),
+                    remappings=[('depth/image_rect', '/stereo/converted_depth'),
                                 ('intensity/image_rect', '/right/image'),
                                 ('intensity/camera_info', '/right/camera_info'),
                                 ('points', '/stereo/points')]
