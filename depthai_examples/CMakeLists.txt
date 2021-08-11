@@ -26,15 +26,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   camera_info_manager
+  cv_bridge
+  depthai_bridge
   depthai_ros_msgs
+  message_filters
+  nodelet
   roscpp
   sensor_msgs
   std_msgs
-  cv_bridge
   vision_msgs
-  depthai_bridge
-  message_filters
-  nodelet
 )
 
 set(_opencv_version 4)
@@ -52,9 +52,18 @@ find_package(depthai REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ${PROJECT_NAME}
- CATKIN_DEPENDS depthai_ros_msgs roscpp sensor_msgs std_msgs camera_info_manager depthai_bridge vision_msgs cv_bridge message_filters
+ CATKIN_DEPENDS
+   camera_info_manager
+   cv_bridge
+   depthai_bridge
+   depthai_ros_msgs
+   message_filters
+   roscpp
+   sensor_msgs
+   std_msgs
+   vision_msgs
  DEPENDS
- OpenCV
+   OpenCV
  )
 
 ###########
@@ -76,7 +85,7 @@ FILE(GLOB EXAMPLE_LIB
 add_library(${PROJECT_NAME} ${EXAMPLE_LIB})
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS} 
+  ${catkin_EXPORTED_TARGETS}
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -90,7 +99,7 @@ target_link_libraries(${PROJECT_NAME}
 add_library(nodelet_stereo src/stereo_nodelet.cpp)
 
 add_dependencies(nodelet_stereo ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS} 
+  ${catkin_EXPORTED_TARGETS}
   ${PROJECT_NAME}
 )
 
@@ -110,7 +119,7 @@ target_link_libraries(nodelet_stereo
 # )
 
 set(mobilenet_blob "${PROJECT_SOURCE_DIR}/resources/mobilenet-ssd_openvino_2021.2_6shave.blob")
-file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob" 
+file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob"
 ${mobilenet_blob}
 TIMEOUT 60  # seconds
 EXPECTED_HASH SHA1=f0e14978b3f77a4f93b9f969cd39e58bb7aef490
@@ -126,22 +135,22 @@ TLS_VERIFY ON)
 
 macro(dai_add_node node_name node_src)
     add_executable("${node_name}" "${node_src}")
-    
+
     add_dependencies("${node_name}"
-      ${catkin_EXPORTED_TARGETS} 
+      ${catkin_EXPORTED_TARGETS}
       ${${PROJECT_NAME}_EXPORTED_TARGETS}
-      ${PROJECT_NAME} 
+      ${PROJECT_NAME}
     )
 
-    target_link_libraries("${node_name}" 
+    target_link_libraries("${node_name}"
       ${catkin_LIBRARIES}
       depthai::core
       ${PROJECT_NAME}
       opencv_imgproc
       opencv_highgui
     )
-    
-endmacro() 
+
+endmacro()
 
 
 dai_add_node(crop_control_service src/crop_control_service.cpp)
@@ -156,3 +165,37 @@ dai_add_node(yolov4_spatial_node src/yolov4_spatial_publisher.cpp)
 
 target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
 target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
+
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.hpp"
+)
+
+install(TARGETS ${PROJECT_NAME} nodelet_stereo
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+install(TARGETS
+  mobilenet_node
+  rgb_node
+  rgb_stereo_node
+  rgb_subscriber_node
+  stereo_mimic_node
+  stereo_node
+  yolov4_spatial_node
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES
+  nodelet_plugins.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(DIRECTORY
+  launch
+  params
+  rviz
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
