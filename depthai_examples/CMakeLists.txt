@@ -23,7 +23,7 @@ find_package(std_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(depthai_ros_msgs REQUIRED)
 find_package(depthai_bridge REQUIRED)
-find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/depthai-core/build/install/lib/cmake/depthai") 
+find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai") 
 
 # find_package(depthai CONFIG REQUIRED) 
 
@@ -92,6 +92,7 @@ ament_export_dependencies(${dependencies}
 
 
 install(DIRECTORY params DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
         stereo_node

@@ -18,7 +18,7 @@
   <author>Sachin Guruswamy</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-
+  <exec_depend>depth_image_proc</exec_depend>
   <depend>rclcpp</depend>
   <depend>vision_msgs</depend>
   <depend>sensor_msgs</depend>
