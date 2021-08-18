@@ -23,4 +23,3 @@ def generate_launch_description():
 
     ld.add_action(rsp_node)
     return ld
-

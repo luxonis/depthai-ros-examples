@@ -255,6 +255,6 @@
   </joint>
   <link name="camera_rgb_optical_frame"/>
 
-  <xacro:depthai_camera camera_name = "oak" parent = "base_link" camera_model = "BW1098OAK" base_frame = "oak-d_frame" cam_pos_x = "0.102" cam_pos_y = "0.0" cam_pos_z = "0.13" cam_roll = "0" cam_pitch = "0" cam_yaw = "0"/>
+  <xacro:depthai_camera camera_name = "oak-d" parent = "base_link" camera_model = "BW1098OAK" base_frame = "oak-d_frame" cam_pos_x = "0.102" cam_pos_y = "0.0" cam_pos_z = "0.13" cam_roll = "0" cam_pitch = "0" cam_yaw = "0"/>
 
 </robot>

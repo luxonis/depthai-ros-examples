@@ -18,6 +18,12 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+
+find_package(OpenCV 4 QUIET COMPONENTS imgproc highgui)
+if(NOT OpenCV_FOUND)
+  message(STATUS "Did not find OpenCV 4, trying OpenCV 3")
+  find_package(OpenCV 3 REQUIRED COMPONENTS imgproc highgui)
+endif()
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -68,12 +74,14 @@ ament_target_dependencies(dynamic_tracker
                           ${dependencies})    
 
 target_link_libraries(dynamic_tracker 
-                      depthai::core)
+                      depthai::core
+                      ${OpenCV_LIBRARIES})
 
 target_compile_definitions(dynamic_tracker PRIVATE BLOB_PATH="${mobilenet_blob}")
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY urdf DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY rviz DESTINATION share/${PROJECT_NAME})
 install(TARGETS
         dynamic_tracker
         DESTINATION lib/${PROJECT_NAME})

@@ -1,7 +1,9 @@
 #include <chrono>
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+
 #include <depthai_bridge/BridgePublisher.hpp>
+#include <depthai_bridge/ImageConverter.hpp>
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
@@ -55,10 +57,10 @@ int main(int argc, char** argv) {
     auto stereo = pipeline.create<dai::node::StereoDepth>();
     auto objectTracker = pipeline.create<dai::node::ObjectTracker>();
 
-    auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
+    auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
     auto trackerOut = pipeline.create<dai::node::XLinkOut>();
 
-    xoutRgb->setStreamName("preview");
+    xoutDepth->setStreamName("depth");
     trackerOut->setStreamName("tracklets");
 
     // Properties
@@ -93,7 +95,7 @@ int main(int argc, char** argv) {
     monoRight->out.link(stereo->right);
 
     camRgb->preview.link(spatialDetectionNetwork->input);
-    objectTracker->passthroughTrackerFrame.link(xoutRgb->input);
+    // objectTracker->passthroughTrackerFrame.link(xoutRgb->input);
     objectTracker->out.link(trackerOut->input);
 
     if(fullFrameTracking) {
@@ -109,81 +111,39 @@ int main(int argc, char** argv) {
     spatialDetectionNetwork->passthrough.link(objectTracker->inputDetectionFrame);
     spatialDetectionNetwork->out.link(objectTracker->inputDetections);
     stereo->depth.link(spatialDetectionNetwork->inputDepth);
-
+    stereo->depth.link(xoutDepth->input);
     // Connect to device and start pipeline
     dai::Device device(pipeline);
 
-    auto preview = device.getOutputQueue("preview", 4, false);
+    auto depthQueue = device.getOutputQueue("depth", 4, false);
     auto trackletsQueue = device.getOutputQueue("tracklets", 4, false);
 
+    std::string camera_param_uri = "package://depthai_examples/params/camera";
+    std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
+    
     dai::rosBridge::BridgePublisher<geometry_msgs::msg::PoseStamped, dai::Tracklets> trackerPublish(trackletsQueue,
-                                                                                                      node, 
-                                                                                                      std::string("tracked_point"),
-                                                                                                      toRosMsg, 
-                                                                                                      rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
+                                                                                                    node, 
+                                                                                                    std::string("tracked_point"),
+                                                                                                    toRosMsg, 
+                                                                                                    rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
 
     trackerPublish.addPubisherCallback();
+
+    dai::rosBridge::ImageConverter depthConverter("oak-d_right_camera_optical_frame", true);
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(depthQueue,
+                                                                                     node, 
+                                                                                     std::string("stereo/depth"),
+                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+                                                                                     &depthConverter, // since the converter has the same frame name
+                                                                                                      // and image type is also same we can reuse it
+                                                                                     std::placeholders::_1, 
+                                                                                     std::placeholders::_2) , 
+                                                                                     rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
+                                                                                     stereo_uri,
+                                                                                     "stereo");
+
+    depthPublish.addPubisherCallback();
     rclcpp::spin(node);
 
-/*     while(true) {
-        auto imgFrame = preview->get<dai::ImgFrame>();
-        auto track = tracklets->get<dai::Tracklets>();
-
-        counter++;
-        auto currentTime = steady_clock::now();
-        auto elapsed = duration_cast<duration<float>>(currentTime - startTime);
-        if(elapsed > seconds(1)) {
-            fps = counter / elapsed.count();
-            counter = 0;
-            startTime = currentTime;
-        }
-
-        cv::Mat frame = imgFrame->getCvFrame();
-        auto trackletsData = track->tracklets;
-        for(auto& t : trackletsData) {
-            auto roi = t.roi.denormalize(frame.cols, frame.rows);
-            int x1 = roi.topLeft().x;
-            int y1 = roi.topLeft().y;
-            int x2 = roi.bottomRight().x;
-            int y2 = roi.bottomRight().y;
-
-            int labelIndex = t.label;
-            std::string labelStr = to_string(labelIndex);
-            if(labelIndex < labelMap.size()) {
-                labelStr = labelMap[labelIndex];
-            }
-            cv::putText(frame, labelStr, cv::Point(x1 + 10, y1 + 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, 255);
-
-            std::stringstream idStr;
-            idStr << "ID: " << t.id;
-            cv::putText(frame, idStr.str(), cv::Point(x1 + 10, y1 + 35), cv::FONT_HERSHEY_TRIPLEX, 0.5, 255);
-            std::stringstream statusStr;
-            statusStr << "Status: " << t.status;
-            cv::putText(frame, statusStr.str(), cv::Point(x1 + 10, y1 + 50), cv::FONT_HERSHEY_TRIPLEX, 0.5, 255);
-
-            std::stringstream depthX;
-            depthX << "X: " << (int)t.spatialCoordinates.x << " mm";
-            cv::putText(frame, depthX.str(), cv::Point(x1 + 10, y1 + 65), cv::FONT_HERSHEY_TRIPLEX, 0.5, 255);
-            std::stringstream depthY;
-            depthY << "Y: " << (int)t.spatialCoordinates.y << " mm";
-            cv::putText(frame, depthY.str(), cv::Point(x1 + 10, y1 + 80), cv::FONT_HERSHEY_TRIPLEX, 0.5, 255);
-            std::stringstream depthZ;
-            depthZ << "Z: " << (int)t.spatialCoordinates.z << " mm";
-            cv::putText(frame, depthZ.str(), cv::Point(x1 + 10, y1 + 95), cv::FONT_HERSHEY_TRIPLEX, 0.5, 255);
-
-            cv::rectangle(frame, cv::Rect(cv::Point(x1, y1), cv::Point(x2, y2)), color, cv::FONT_HERSHEY_SIMPLEX);
-        }
-
-        std::stringstream fpsStr;
-        fpsStr << "NN fps: " << std::fixed << std::setprecision(2) << fps;
-        cv::putText(frame, fpsStr.str(), cv::Point(2, imgFrame->getHeight() - 4), cv::FONT_HERSHEY_TRIPLEX, 0.4, color);
-
-        cv::imshow("tracker", frame);
-
-        int key = cv::waitKey(1);
-        if(key == 'q') {
-            return 0;
-        }
-    } */
     return 0;
 }
