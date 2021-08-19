@@ -54,6 +54,6 @@ def generate_launch_description():
     ld.add_action(turtlebot_state_pub)
     ld.add_action(turtlebot_node)
     ld.add_action(dynamic_tracker)
-    ld.add_action(turtlebot_rviz) 
+#     ld.add_action(turtlebot_rviz) 
     return ld
 
