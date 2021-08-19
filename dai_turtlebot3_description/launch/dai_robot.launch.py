@@ -1,6 +1,6 @@
 from launch import LaunchDescription, launch_description_sources
-from launch.actions import DeclareLaunchArgument
-from launch_ros.actions import Node, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration, Command, ThisLaunchFileDir
 from ament_index_python.packages import get_package_share_directory
 import os
@@ -33,10 +33,9 @@ def generate_launch_description():
             executable='dynamic_tracker',
             output='screen')
 
-    turtlebot_rviz = IncludeLaunchDescription(
+    """ turtlebot_rviz = IncludeLaunchDescription(
             launch_description_sources.PythonLaunchDescriptionSource(
-                [ThisLaunchFileDir(), '/turtlebot_rviz.launch.py']))
-    print('Adding turtlebot_rviz-------------------')
+                [ThisLaunchFileDir(), '/turtlebot_rviz.launch.py'])) """
     """     
     depth_to_scan = Node(
             package='depthimage_to_laserscan',
