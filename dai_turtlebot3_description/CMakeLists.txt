@@ -28,8 +28,8 @@ find_package(geometry_msgs REQUIRED)
 find_package(depthai_ros_msgs REQUIRED)
 find_package(depthai_bridge REQUIRED)
 
-find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai") 
-# find_package(depthai CONFIG REQUIRED) 
+# find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai") 
+find_package(depthai CONFIG REQUIRED)
 
 set(dependencies
 rclcpp
