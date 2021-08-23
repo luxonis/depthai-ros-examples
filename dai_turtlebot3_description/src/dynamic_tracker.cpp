@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
     
     dai::rosBridge::BridgePublisher<geometry_msgs::msg::PoseStamped, dai::Tracklets> trackerPublish(trackletsQueue,
                                                                                                     node, 
-                                                                                                    std::string("tracked_point"),
+                                                                                                    std::string("goal_update"),
                                                                                                     toRosMsg, 
                                                                                                     rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
 
