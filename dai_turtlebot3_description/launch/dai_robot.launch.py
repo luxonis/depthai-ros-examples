@@ -6,10 +6,15 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
 from ament_index_python.packages import get_package_share_directory
 import os
+from launch.actions import LogInfo
 
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
-    
+    print(ThisLaunchFileDir())
+    # dai_launch_dir = ThisLaunchFileDir()
+
+    # lg = LogInfo(msg=[
+    #         'Including launch file located at: ', ThisLaunchFileDir(), '/dai_robot.launch.py'])
     bringup_dir = get_package_share_directory('nav2_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
@@ -72,7 +77,12 @@ def generate_launch_description():
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='true',
         description='Automatically startup the nav2 stack')
-
+    # print("The second")
+    # print(ThisLaunchFileDir().perform)
+    
+    turtlebot_state_pub = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [ThisLaunchFileDir(), '/dai_turtlebot3_state_publisher.launch.py']))
 
     bringup_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'bringup_launch.py')),
@@ -80,14 +90,12 @@ def generate_launch_description():
                           'use_namespace': use_namespace,
                           'slam': slam,
                           'map': map_yaml_file,
-                          'use_sim_time': False,
+                          'use_sim_time': 'false',
                           'params_file': params_file,
                           'default_bt_xml_filename': default_bt_xml_filename,
                           'autostart': autostart}.items())
 
-    turtlebot_state_pub = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [ThisLaunchFileDir(), '/dai_turtlebot3_state_publisher.launch.py']))
+    
 
     turtlebot_node = Node(
             package='turtlebot3_node',
@@ -120,7 +128,6 @@ def generate_launch_description():
                        'scan:=/scan']) """
 
     ld = LaunchDescription()
-
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_namespace_cmd)
@@ -129,9 +136,10 @@ def generate_launch_description():
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_bt_xml_cmd)
     ld.add_action(declare_autostart_cmd)
+    # ld.add_action(lg)
+    ld.add_action(turtlebot_state_pub)
 
     ld.add_action(bringup_cmd)
-    ld.add_action(turtlebot_state_pub)
     ld.add_action(turtlebot_node)
     ld.add_action(dynamic_tracker)
 
