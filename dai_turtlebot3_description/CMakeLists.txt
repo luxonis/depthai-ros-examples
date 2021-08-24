@@ -81,6 +81,7 @@ target_compile_definitions(dynamic_tracker PRIVATE BLOB_PATH="${mobilenet_blob}"
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY urdf DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY param DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY rviz DESTINATION share/${PROJECT_NAME})
 install(TARGETS
         dynamic_tracker

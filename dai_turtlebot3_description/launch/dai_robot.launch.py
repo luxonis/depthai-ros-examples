@@ -19,13 +19,21 @@ def generate_launch_description():
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
+    param_file_name = TURTLEBOT3_MODEL + '.yaml'
 
     tb3_param_dir = LaunchConfiguration(
         'tb3_param_dir',
         default=os.path.join(
             get_package_share_directory('turtlebot3_bringup'),
             'param',
-            TURTLEBOT3_MODEL + '.yaml'))
+            param_file_name))
+
+    nav2_param_dir = LaunchConfiguration(
+        'nav2_params_file',
+        default=os.path.join(
+            get_package_share_directory('dai_turtlebot3_description'),
+            'param',
+            param_file_name))
 
         # Create the launch configuration variables
     slam = LaunchConfiguration('slam')
@@ -64,7 +72,7 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
+        default_value = nav2_param_dir,
         description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_bt_xml_cmd = DeclareLaunchArgument(
@@ -95,8 +103,6 @@ def generate_launch_description():
                           'default_bt_xml_filename': default_bt_xml_filename,
                           'autostart': autostart}.items())
 
-    
-
     turtlebot_node = Node(
             package='turtlebot3_node',
             executable='turtlebot3_ros',
@@ -108,8 +114,6 @@ def generate_launch_description():
             package='dai_turtlebot3_description', 
             executable='dynamic_tracker',
             output='screen')
-
-
 
     """ turtlebot_rviz = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
