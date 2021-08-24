@@ -52,8 +52,8 @@ def generate_launch_description():
 
     depth_to_scan = Node(
             package='depthimage_to_laserscan',
-            node_executable='depthimage_to_laserscan_node',
-            node_name='depthimage_to_laserscan_node',
+            executable='depthimage_to_laserscan_node',
+            name='depthimage_to_laserscan_node',
             output='screen',
             parameters=[{'output_frame': output_frame},
                         {'range_min': range_min},
@@ -69,6 +69,6 @@ def generate_launch_description():
 
     ld.add_action(turtlebot_node)
     ld.add_action(dynamic_tracker)
-
+    ld.add_action(depth_to_scan)
     return ld
 
