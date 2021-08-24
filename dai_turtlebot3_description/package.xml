@@ -11,6 +11,7 @@
   <!-- <exec_depend>depthai_bridge</exec_depend> -->
   <exec_depend>turtlebot3_description</exec_depend>
   <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>depthimage_to_laserscan</exec_depend>
   
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
