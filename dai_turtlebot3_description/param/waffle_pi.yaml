@@ -37,7 +37,8 @@ amcl:
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
-
+    scan_topic: scan
+    
 amcl_map_client:
   ros__parameters:
     use_sim_time: False
@@ -130,6 +131,7 @@ controller_server:
       RotateToGoal.scale: 32.0
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
+      publish_cost_grid_pc: True
 
 controller_server_rclcpp_node:
   ros__parameters:

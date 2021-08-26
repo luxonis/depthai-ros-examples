@@ -1,4 +1,4 @@
-from launch_ros.actions import Node
+from launch_ros.actions import Node, ComposableNodeContainer
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -7,6 +7,7 @@ from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
 from ament_index_python.packages import get_package_share_directory
 import os
 from launch.actions import LogInfo
+import launch_ros.descriptions
 
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
@@ -94,6 +95,45 @@ def generate_launch_description():
                           'default_bt_xml_filename': default_bt_xml_filename,
                           'autostart': autostart}.items())
 
+    pointCloud_converter = ComposableNodeContainer(
+            name='container',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container',
+            composable_node_descriptions=[
+                # Driver itself
+                launch_ros.descriptions.ComposableNode(
+                    package='depth_image_proc',
+                    plugin='depth_image_proc::ConvertMetricNode',
+                    name='convert_metric_node',
+                    remappings=[('image_raw', '/stereo/depth'),
+                                ('camera_info', '/stereo/camera_info'),
+                                ('image', '/stereo/converted_depth')]
+                ),
+                launch_ros.descriptions.ComposableNode(
+                    package='depth_image_proc',
+                    plugin='depth_image_proc::PointCloudXyziNode',
+                    name='point_cloud_xyzi',
+
+                    remappings=[('depth/image_rect', '/stereo/converted_depth'),
+                                ('intensity/image_rect', '/right/image'),
+                                ('intensity/camera_info', '/right/camera_info'),
+                                ('points', '/stereo/points')]
+                ),
+            ],
+            output='screen',
+        )
+            # prefix=['xterm -e gdb -ex run --args'],
+
+    pcl_to_scan_cmd = launch_ros.actions.Node(
+            package='pointcloud_to_laserscan',
+            executable='pointcloud_to_laserscan_node',
+            name='pointcloud_to_laserscan_node',
+            output='screen',
+            parameters=[{'target_frame': "oak-d_right_camera_frame"},
+                        {'range_min': 0.7},
+                        {'range_max': 7.2}],
+            remappings=[('cloud_in','/stereo/points')])
     rviz_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'rviz_launch.py')))
 
@@ -124,7 +164,9 @@ def generate_launch_description():
     ld.add_action(declare_autostart_cmd)
     # ld.add_action(lg)
 
-    ld.add_action(bringup_cmd)
-    ld.add_action(rviz_cmd)
+    # ld.add_action(bringup_cmd)
+    ld.add_action(pointCloud_converter)
+    ld.add_action(pcl_to_scan_cmd)
+    # ld.add_action(rviz_cmd)
     return ld
 
