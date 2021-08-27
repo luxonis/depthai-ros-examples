@@ -19,7 +19,7 @@ dai::Pipeline createPipeline(){
     xlinkOut->setStreamName("video");
     
     colorCam->setPreviewSize(300, 300);
-    colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+    colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_12_MP);
     colorCam->setInterleaved(false);
 
     // Link plugins CAM -> XLINK

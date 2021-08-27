@@ -26,7 +26,7 @@ dai::Pipeline createPipeline(bool syncNN, std::string nnPath){
     nnOut->setStreamName("detections");
 
     colorCam->setPreviewSize(300, 300);
-    colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+    colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_12_MP);
     colorCam->setInterleaved(false);
     colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
     colorCam->setFps(40);
