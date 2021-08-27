@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
                                                                                                     node, 
                                                                                                     std::string("goal_update"),
                                                                                                     toRosMsg, 
-                                                                                                    rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
+                                                                                                    rclcpp::QoS(rclcpp::KeepLast(1)).best_effort());
 
     trackerPublish.addPubisherCallback();
 
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
                                                                                                       // and image type is also same we can reuse it
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
-                                                                                     rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
+                                                                                     rclcpp::QoS(rclcpp::KeepLast(1)).best_effort(),
                                                                                      stereo_uri,
                                                                                      "stereo");
                                                                                      
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
                                                                                                       // and image type is also same we can reuse it
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
-                                                                                     rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
+                                                                                     rclcpp::QoS(rclcpp::KeepLast(1)).best_effort(),
                                                                                      stereo_uri,
                                                                                      "right");
     depthPublish.addPubisherCallback();
