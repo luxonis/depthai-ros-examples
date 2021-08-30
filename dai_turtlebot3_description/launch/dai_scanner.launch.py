@@ -12,8 +12,8 @@ import launch_ros.descriptions
 def generate_launch_description():
     print(ThisLaunchFileDir())
     # dai_launch_dir = ThisLaunchFileDir()
-    default_rviz = os.path.join(get_package_share_directory('depthai_bridge'),
-                                'rviz', 'pointCloud.rviz')
+    # default_rviz = os.path.join(get_package_share_directory('depthai_bridge'),
+    #                             'rviz', 'pointCloud.rviz')
     output_frame = substitutions.LaunchConfiguration('output_frame', default='base_scan')
     range_max = substitutions.LaunchConfiguration('range_max', default='2.0')
     range_min = substitutions.LaunchConfiguration('range_min', default='0.2')
@@ -84,9 +84,9 @@ def generate_launch_description():
                         {'range_min': 0.7},
                         {'range_max': 5.2}],
             remappings=[('cloud_in','/stereo/points')])
-    rviz_node = launch_ros.actions.Node(
-            package='rviz2', executable='rviz2', output='screen',
-            arguments=['--display-config', default_rviz])
+    # rviz_node = launch_ros.actions.Node(
+    #         package='rviz2', executable='rviz2', output='screen',
+    #         arguments=['--display-config', default_rviz])
     ld = LaunchDescription()
     # Declare the launch options
     # ld.add_action(lg)
@@ -95,7 +95,7 @@ def generate_launch_description():
     # ld.add_action(pointCloud_converter)
     # ld.add_action(pcl_to_scan)
 
-    ld.add_action(rviz_node)
+    # ld.add_action(rviz_node)
 #     ld.add_action(depth_to_scan)
     return ld
 

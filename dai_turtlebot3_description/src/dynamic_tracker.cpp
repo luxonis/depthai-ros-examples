@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
                                                                                      rclcpp::QoS(rclcpp::KeepLast(10)).best_effort(),
                                                                                      stereo_uri,
                                                                                      "stereo");
-                                                                                     
+
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
                                                                                      node, 
                                                                                      std::string("right/image"),
