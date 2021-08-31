@@ -34,8 +34,8 @@ find_package(geometry_msgs REQUIRED)
 find_package(depthai_ros_msgs REQUIRED)
 find_package(depthai_bridge REQUIRED)
 
-# find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai") 
-find_package(depthai CONFIG REQUIRED) 
+find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai") 
+# find_package(depthai CONFIG REQUIRED) 
 
 set(dependencies
 rclcpp
@@ -77,6 +77,10 @@ target_link_libraries(dynamic_tracker
                       depthai::core
                       ${OpenCV_LIBRARIES})
 
+add_executable(img_subscriber src/dai_image_subscriber.cpp)
+ament_target_dependencies(img_subscriber 
+                          ${dependencies})    
+
 target_compile_definitions(dynamic_tracker PRIVATE BLOB_PATH="${mobilenet_blob}")
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
@@ -85,6 +89,7 @@ install(DIRECTORY param DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY rviz DESTINATION share/${PROJECT_NAME})
 install(TARGETS
         dynamic_tracker
+        img_subscriber
         DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

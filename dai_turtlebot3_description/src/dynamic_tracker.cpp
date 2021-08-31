@@ -69,14 +69,14 @@ int main(int argc, char** argv) {
     camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     camRgb->setInterleaved(false);
     camRgb->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
-    camRgb->setFps(5);
+    // camRgb->setFps(5);
 
     monoLeft->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
     monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
-    monoLeft->setFps(5);
-    monoRight->setFps(5);
+    // monoLeft->setFps(5);
+    // monoRight->setFps(5);
     
     /// setting node configs
     stereo->initialConfig.setConfidenceThreshold(255);
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
                                                                                                     node, 
                                                                                                     std::string("goal_update"),
                                                                                                     toRosMsg, 
-                                                                                                    rclcpp::QoS(rclcpp::KeepLast(10)).best_effort());
+                                                                                                    rclcpp::QoS(rclcpp::KeepLast(10)));
 
     trackerPublish.addPubisherCallback();
 
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
                                                                                                       // and image type is also same we can reuse it
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
-                                                                                     rclcpp::QoS(rclcpp::KeepLast(10)).best_effort(),
+                                                                                     rclcpp::QoS(rclcpp::KeepLast(10)),
                                                                                      stereo_uri,
                                                                                      "stereo");
 
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
                                                                                                       // and image type is also same we can reuse it
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
-                                                                                     rclcpp::QoS(rclcpp::KeepLast(10)).best_effort(),
+                                                                                     rclcpp::QoS(rclcpp::KeepLast(10)),
                                                                                      stereo_uri,
                                                                                      "right");
     depthPublish.addPubisherCallback();
