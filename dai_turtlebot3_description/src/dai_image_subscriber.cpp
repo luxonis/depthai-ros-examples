@@ -14,7 +14,7 @@ class MinimalSubscriber : public rclcpp::Node
     : Node("minimal_subscriber")
     {
       subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-      "right/image", rclcpp::SensorDataQoS(), std::bind(&MinimalSubscriber::topic_callback, this, _1));
+      "right/image", rclcpp::SystemDefaultsQos(), std::bind(&MinimalSubscriber::topic_callback, this, _1));
     }
 
   private:
