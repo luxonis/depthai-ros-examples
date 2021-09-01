@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
                                                                                                       // and image type is also same we can reuse it
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
-                                                                                     rclcpp::SystemDefaultsQos(),
+                                                                                     rclcpp::QoS(15),
                                                                                      stereo_uri,
                                                                                      "stereo");
 
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
                                                                                                       // and image type is also same we can reuse it
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
-                                                                                     rclcpp::SystemDefaultsQos(),
+                                                                                     rclcpp::QoS(15),
                                                                                      stereo_uri,
                                                                                      "right");
     depthPublish.addPubisherCallback();
