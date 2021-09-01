@@ -69,14 +69,14 @@ int main(int argc, char** argv) {
     camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     camRgb->setInterleaved(false);
     camRgb->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
-    // camRgb->setFps(5);
+    camRgb->setFps(15);
 
     monoLeft->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
     monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
-    // monoLeft->setFps(5);
-    // monoRight->setFps(5);
+    monoLeft->setFps(15);
+    monoRight->setFps(15);
     
     /// setting node configs
     stereo->initialConfig.setConfidenceThreshold(255);
