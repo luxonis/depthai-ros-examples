@@ -116,6 +116,6 @@ def generate_launch_description():
             arguments=['-d', rviz_config_dir],
             parameters=[{'use_sim_time': use_sim_time}],
             output='screen'),
-        pointCloud_converter,
-        pcl_to_scan_cmd
+        # pointCloud_converter,
+        # pcl_to_scan_cmd
     ])

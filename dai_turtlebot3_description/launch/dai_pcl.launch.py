@@ -79,7 +79,7 @@ def generate_launch_description():
             executable='pointcloud_to_laserscan_node',
             name='pointcloud_to_laserscan_node',
             output='screen',
-            parameters=[{'target_frame': "oak-d_right_camera_frame"},
+            parameters=[{'target_frame': "base_scan"},
                         {'angle_min': -0.7},
                         {'angle_max': 0.7},
                         {'angle_increment': 0.002},

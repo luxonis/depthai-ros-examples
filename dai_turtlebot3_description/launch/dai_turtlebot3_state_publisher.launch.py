@@ -19,7 +19,8 @@ def generate_launch_description():
             executable='robot_state_publisher',
             name='tb_wafflle_description',
             parameters=[{'robot_description': Command(
-                ['xacro', ' ', xacro_path])}],
+                ['xacro', ' ', xacro_path])},
+                {'use_sim_time': 'false'}],
                 remappings = remappings)
     
     ld = LaunchDescription()
