@@ -81,6 +81,11 @@ add_executable(img_subscriber src/dai_image_subscriber.cpp)
 ament_target_dependencies(img_subscriber 
                           ${dependencies})    
 
+
+add_executable(scanner_subscriber src/dai_scanner_subscriber.cpp)
+ament_target_dependencies(scanner_subscriber 
+                          ${dependencies})    
+                          
 target_compile_definitions(dynamic_tracker PRIVATE BLOB_PATH="${mobilenet_blob}")
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
@@ -90,6 +95,7 @@ install(DIRECTORY rviz DESTINATION share/${PROJECT_NAME})
 install(TARGETS
         dynamic_tracker
         img_subscriber
+        scanner_subscriber
         DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

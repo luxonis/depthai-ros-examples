@@ -58,12 +58,12 @@ int main(int argc, char** argv) {
     auto objectTracker = pipeline.create<dai::node::ObjectTracker>();
 
     auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
-    auto xoutRight = pipeline.create<dai::node::XLinkOut>();
+    // auto xoutRight = pipeline.create<dai::node::XLinkOut>();
     auto trackerOut = pipeline.create<dai::node::XLinkOut>();
 
     xoutDepth->setStreamName("depth");
     trackerOut->setStreamName("tracklets");
-    xoutRight->setStreamName("right");
+    // xoutRight->setStreamName("right");
     // Properties
     camRgb->setPreviewSize(300, 300);
     camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     monoRight->setFps(15);
     
     /// setting node configs
-    stereo->initialConfig.setConfidenceThreshold(255);
+    stereo->initialConfig.setConfidenceThreshold(200);
 
     spatialDetectionNetwork->setBlobPath(nnPath);
     spatialDetectionNetwork->setConfidenceThreshold(0.5f);
@@ -116,12 +116,12 @@ int main(int argc, char** argv) {
     spatialDetectionNetwork->out.link(objectTracker->inputDetections);
     stereo->depth.link(spatialDetectionNetwork->inputDepth);
     stereo->depth.link(xoutDepth->input);
-    stereo->syncedRight.link(xoutRight->input);
+    // stereo->syncedRight.link(xoutRight->input);
     // Connect to device and start pipeline
     dai::Device device(pipeline);
 
     auto depthQueue = device.getOutputQueue("depth", 4, false);
-    auto rightQueue = device.getOutputQueue("right", 4, false);
+    // auto rightQueue = device.getOutputQueue("right", 4, false);
     auto trackletsQueue = device.getOutputQueue("tracklets", 4, false);
 
     std::string camera_param_uri = "package://depthai_examples/params/camera";
@@ -148,19 +148,19 @@ int main(int argc, char** argv) {
                                                                                      stereo_uri,
                                                                                      "stereo");
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
-                                                                                     node, 
-                                                                                     std::string("right/image"),
-                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                                                                                     &depthConverter, // since the converter has the same frame name
-                                                                                                      // and image type is also same we can reuse it
-                                                                                     std::placeholders::_1, 
-                                                                                     std::placeholders::_2) , 
-                                                                                     rclcpp::QoS(15),
-                                                                                     stereo_uri,
-                                                                                     "right");
+    // dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
+    //                                                                                  node, 
+    //                                                                                  std::string("right/image"),
+    //                                                                                  std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+    //                                                                                  &depthConverter, // since the converter has the same frame name
+    //                                                                                                   // and image type is also same we can reuse it
+    //                                                                                  std::placeholders::_1, 
+    //                                                                                  std::placeholders::_2) , 
+    //                                                                                  rclcpp::QoS(15),
+    //                                                                                  stereo_uri,
+    //                                                                                  "right");
     depthPublish.addPubisherCallback();
-    rightPublish.addPubisherCallback();
+    // rightPublish.addPubisherCallback();
     rclcpp::spin(node);
 
     return 0;
