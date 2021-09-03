@@ -13,11 +13,12 @@ def generate_launch_description():
     print(xacro_path)
     remappings = [('/tf', 'tf'),
                   ('/tf_static', 'tf_static')]
-                  
+    # name='tb_wafflle_description',
+
     rsp_node = Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
-            name='tb_wafflle_description',
+            name='robot_state_publisher',
             parameters=[{'robot_description': Command(
                 ['xacro', ' ', xacro_path])},
                 {'use_sim_time': 'false'}],
