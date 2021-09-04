@@ -20,8 +20,7 @@ def generate_launch_description():
             executable='robot_state_publisher',
             name='robot_state_publisher',
             parameters=[{'robot_description': Command(
-                ['xacro', ' ', xacro_path])},
-                {'use_sim_time': 'false'}],
+                ['xacro', ' ', xacro_path])}],
                 remappings = remappings)
     
     ld = LaunchDescription()
