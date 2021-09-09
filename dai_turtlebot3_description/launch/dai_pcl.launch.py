@@ -101,7 +101,7 @@ def generate_launch_description():
     ld.add_action(pointCloud_converter)
     ld.add_action(pcl_to_scan)
 
-    ld.add_action(rviz_node)
+#     ld.add_action(rviz_node)
     # ld.add_action(depth_to_scan)
     return ld
 
