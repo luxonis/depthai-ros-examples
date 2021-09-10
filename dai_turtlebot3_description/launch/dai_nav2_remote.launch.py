@@ -17,8 +17,8 @@ def generate_launch_description():
     map_dir = LaunchConfiguration(
         'map',
         default=os.path.join(
-            get_package_share_directory('turtlebot3_navigation2'),
-            'map',
+            get_package_share_directory('dai_turtlebot3_description'),
+            'maps',
             'map.yaml'))
 
     param_file_name = TURTLEBOT3_MODEL + '.yaml'
@@ -29,6 +29,8 @@ def generate_launch_description():
             'param',
             param_file_name))
 
+
+    # Just some debug prints....
     print("Param file prsln ---------->")
     print(os.path.join(
             get_package_share_directory('turtlebot3_navigation2'),
@@ -36,6 +38,7 @@ def generate_launch_description():
             param_file_name))
     nav2_launch_file_dir = os.path.join(get_package_share_directory('nav2_bringup'), 'launch')
     print(nav2_launch_file_dir)
+    # End of debug prints....
 
 
     rviz_config_dir = os.path.join(
