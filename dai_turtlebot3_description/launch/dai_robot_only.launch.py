@@ -54,13 +54,14 @@ def generate_launch_description():
             package='depthimage_to_laserscan',
             executable='depthimage_to_laserscan_node',
             name='depthimage_to_laserscan_node',
+            # prefix=['xterm -e gdb -ex run --args'],
             output='screen',
-            parameters=[{'output_frame': output_frame},
+            parameters=[{'output_frame': 'oak-d_right_camera_frame'},
                         {'range_min': range_min},
-                        {'range_max': range_max}],
-            arguments=['depth:=/stereo/depth',
-                       'depth_camera_info:=/stereo/camera_info',
-                       'scan:=/scan'])
+                        {'range_max': range_max},
+                        {'scan_height': 3}],
+            remappings=[('depth','/stereo/depth'),
+                        ('depth_camera_info', '/stereo/camera_info')])
 
     ld = LaunchDescription()
     # Declare the launch options
@@ -69,6 +70,6 @@ def generate_launch_description():
 
     ld.add_action(turtlebot_node)
     ld.add_action(dynamic_tracker)
-#     ld.add_action(depth_to_scan)
+    ld.add_action(depth_to_scan)
     return ld
 
