@@ -15,8 +15,8 @@ def generate_launch_description():
     default_rviz = os.path.join(get_package_share_directory('dai_turtlebot3_description'),
                                 'rviz', 'tbot_depth_scan.rviz')
     output_frame = substitutions.LaunchConfiguration('output_frame', default='base_scan')
-    range_max = substitutions.LaunchConfiguration('range_max', default='2.0')
-    range_min = substitutions.LaunchConfiguration('range_min', default='0.2')
+    range_max = substitutions.LaunchConfiguration('range_max', default='8.0')
+    range_min = substitutions.LaunchConfiguration('range_min', default='0.8')
 
     # lg = LogInfo(msg=[
     #         'Including launch file located at: ', ThisLaunchFileDir(), '/dai_robot.launch.py'])
@@ -34,17 +34,39 @@ def generate_launch_description():
             executable='dynamic_tracker',
             output='screen')
 
-    """     depth_to_scan = Node(
+
+    
+    metric_converter = ComposableNodeContainer(
+            name='container',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container',
+            composable_node_descriptions=[
+                # Driver itself
+                launch_ros.descriptions.ComposableNode(
+                    package='depth_image_proc',
+                    plugin='depth_image_proc::ConvertMetricNode',
+                    name='convert_metric_node',
+                    remappings=[('image_raw', '/stereo/depth'),
+                                ('camera_info', '/stereo/camera_info'),
+                                ('image', '/stereo/converted_depth')]
+                ),
+            ],
+            output='screen',
+        )
+
+    depth_to_scan = Node(
             package='depthimage_to_laserscan',
             executable='depthimage_to_laserscan_node',
             name='depthimage_to_laserscan_node',
-            prefix=['xterm -e gdb -ex run --args'],
+            # prefix=['xterm -e gdb -ex run --args'],
             output='screen',
-            parameters=[{'output_frame': output_frame},
+            parameters=[{'output_frame': 'oak-d_right_camera_frame'},
                         {'range_min': range_min},
-                        {'range_max': range_max}],
+                        {'range_max': range_max},
+                        {'scan_height': 5}],
             remappings=[('depth','/stereo/depth'),
-                        ('depth_camera_info', '/stereo/camera_info')]) """
+                        ('depth_camera_info', '/stereo/camera_info')])
 
     pointCloud_converter = ComposableNodeContainer(
             name='container',
@@ -98,10 +120,13 @@ def generate_launch_description():
     # ld.add_action(lg)
     # ld.add_action(urdf_launch)
     # ld.add_action(dynamic_tracker)
-    ld.add_action(pointCloud_converter)
-    ld.add_action(pcl_to_scan)
+    # ld.add_action(pointCloud_converter)
+    # ld.add_action(pcl_to_scan)
 
-#     ld.add_action(rviz_node)
+    # ld.add_action(metric_converter)
+    ld.add_action(depth_to_scan)
+
+    ld.add_action(rviz_node)
     # ld.add_action(depth_to_scan)
     return ld
 
