@@ -14,8 +14,8 @@ def generate_launch_description():
     # dai_launch_dir = ThisLaunchFileDir()
 
     output_frame = substitutions.LaunchConfiguration('output_frame', default='base_scan')
-    range_max = substitutions.LaunchConfiguration('range_max', default='2.0')
-    range_min = substitutions.LaunchConfiguration('range_min', default='0.2')
+    range_max = substitutions.LaunchConfiguration('range_max', default='8.0')
+    range_min = substitutions.LaunchConfiguration('range_min', default='0.8')
 
     # lg = LogInfo(msg=[
     #         'Including launch file located at: ', ThisLaunchFileDir(), '/dai_robot.launch.py'])
@@ -56,10 +56,10 @@ def generate_launch_description():
             name='depthimage_to_laserscan_node',
             # prefix=['xterm -e gdb -ex run --args'],
             output='screen',
-            parameters=[{'output_frame': 'oak-d_right_camera_frame'},
+            parameters=[{'output_frame': output_frame},
                         {'range_min': range_min},
                         {'range_max': range_max},
-                        {'scan_height': 3}],
+                        {'scan_height': 5}],
             remappings=[('depth','/stereo/depth'),
                         ('depth_camera_info', '/stereo/camera_info')])
 

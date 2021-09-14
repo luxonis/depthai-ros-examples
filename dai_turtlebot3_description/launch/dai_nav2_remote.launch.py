@@ -23,19 +23,19 @@ def generate_launch_description():
 
     param_file_name = TURTLEBOT3_MODEL + '.yaml'
     param_dir = LaunchConfiguration(
-        'params',
+        'params_file',
         default=os.path.join(
-            get_package_share_directory('turtlebot3_navigation2'),
+            get_package_share_directory('dai_turtlebot3_description'),
             'param',
             param_file_name))
 
 
     # Just some debug prints....
-    print("Param file prsln ---------->")
+    """ print("Param file prsln ---------->")
     print(os.path.join(
             get_package_share_directory('turtlebot3_navigation2'),
             'param',
-            param_file_name))
+            param_file_name)) """
     nav2_launch_file_dir = os.path.join(get_package_share_directory('nav2_bringup'), 'launch')
     print(nav2_launch_file_dir)
     # End of debug prints....
@@ -112,7 +112,7 @@ def generate_launch_description():
             launch_arguments={
                 'map': map_dir,
                 'use_sim_time': use_sim_time,
-                'params': param_dir}.items(),
+                'params_file': param_dir}.items(),
         ),
 
         Node(
