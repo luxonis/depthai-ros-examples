@@ -9,28 +9,27 @@ import os
 from launch.actions import LogInfo
 import launch_ros.descriptions
 
+TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
+
 def generate_launch_description():
-    TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
     print(ThisLaunchFileDir())
     # dai_launch_dir = ThisLaunchFileDir()
 
     # lg = LogInfo(msg=[
     #         'Including launch file located at: ', ThisLaunchFileDir(), '/dai_robot.launch.py'])
-    bringup_dir = get_package_share_directory('nav2_bringup')
-    launch_dir = os.path.join(bringup_dir, 'launch')
+    nav2_launch_file_dir = os.path.join(get_package_share_directory('nav2_bringup'), 'launch')
 
     param_file_name = TURTLEBOT3_MODEL + '.yaml'
-    
     nav2_param_path = os.path.join(
             get_package_share_directory('dai_turtlebot3_description'),
-            'param',
+            'params_file',
             param_file_name)
     
     nav2_param_dir = LaunchConfiguration(
         'nav2_params_file',
         default=nav2_param_path)
-    print("--------------------------------------------------------------------")
-    map_file = os.path.join(bringup_dir, 'maps', 'turtlebot3_world.yaml')
+
+    map_file = os.path.join(get_package_share_directory('dai_turtlebot3_description'), 'maps', 'map.yaml')
     print(map_file)
         # Create the launch configuration variables
     slam = LaunchConfiguration('slam')
@@ -63,7 +62,7 @@ def generate_launch_description():
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(bringup_dir, 'maps', 'turtlebot3_world.yaml'),
+        default_value=map_file,
         description='Full path to map file to load')
 
 
@@ -87,7 +86,7 @@ def generate_launch_description():
     # print(ThisLaunchFileDir().perform)
     
     bringup_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'bringup_launch.py')),
+        PythonLaunchDescriptionSource(os.path.join(nav2_launch_file_dir, 'bringup_launch.py')),
         launch_arguments={'namespace': namespace,
                           'use_namespace': use_namespace,
                           'slam': slam,
@@ -97,49 +96,9 @@ def generate_launch_description():
                           'default_bt_xml_filename': default_bt_xml_filename,
                           'autostart': autostart}.items())
 
-    pointCloud_converter = ComposableNodeContainer(
-            name='container',
-            namespace='',
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
-                # Driver itself
-                launch_ros.descriptions.ComposableNode(
-                    package='depth_image_proc',
-                    plugin='depth_image_proc::ConvertMetricNode',
-                    name='convert_metric_node',
-                    remappings=[('image_raw', '/stereo/depth'),
-                                ('camera_info', '/stereo/camera_info'),
-                                ('image', '/stereo/converted_depth')]
-                ),
-                launch_ros.descriptions.ComposableNode(
-                    package='depth_image_proc',
-                    plugin='depth_image_proc::PointCloudXyzNode',
-                    name='point_cloud_xyz',
-
-                    remappings=[('image_rect', '/stereo/converted_depth'),
-                                ('camera_info', '/stereo/camera_info'),
-                                ('points', '/stereo/points')]
-                ),
-            ],
-            output='screen',
-        )
-            # prefix=['xterm -e gdb -ex run --args'],
-
-    pcl_to_scan_cmd = launch_ros.actions.Node(
-            package='pointcloud_to_laserscan',
-            executable='pointcloud_to_laserscan_node',
-            name='pointcloud_to_laserscan_node',
-            output='screen',
-            parameters=[{'target_frame': "base_scan"},
-                        {'range_min' : 0.7},
-                        {'range_max' : 7.2},
-                        {'min_height': 0.5},
-                        {'max_height': 5.5}],
-            remappings=[('cloud_in','/stereo/points')])
 
     rviz_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'rviz_launch.py')))
+        PythonLaunchDescriptionSource(os.path.join(nav2_launch_file_dir, 'rviz_launch.py')))
 
     """ turtlebot_rviz = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -169,8 +128,6 @@ def generate_launch_description():
     # ld.add_action(lg)
 
     ld.add_action(bringup_cmd)
-    ld.add_action(pointCloud_converter)
-    ld.add_action(pcl_to_scan_cmd)
     ld.add_action(rviz_cmd)
     return ld
 
