@@ -1,32 +1,29 @@
 #include <depthai_examples/stereo_pipeline.hpp>
 
-
-void StereoExample::initDepthaiDev(){
-    
-
+void StereoExample::initDepthaiDev() {
     bool withDepth = true;
     bool outputDepth = true;
     bool outputRectified = true;
-    bool lrcheck  = false;
+    bool lrcheck = false;
     bool extended = false;
     bool subpixel = false;
 
-    auto monoLeft    = _p.create<dai::node::MonoCamera>();
-    auto monoRight   = _p.create<dai::node::MonoCamera>();
-    auto xoutLeft    = _p.create<dai::node::XLinkOut>();
-    auto xoutRight   = _p.create<dai::node::XLinkOut>();
-    auto stereo      = withDepth ? _p.create<dai::node::StereoDepth>() : nullptr;
+    auto monoLeft = _p.create<dai::node::MonoCamera>();
+    auto monoRight = _p.create<dai::node::MonoCamera>();
+    auto xoutLeft = _p.create<dai::node::XLinkOut>();
+    auto xoutRight = _p.create<dai::node::XLinkOut>();
+    auto stereo = withDepth ? _p.create<dai::node::StereoDepth>() : nullptr;
     // auto xoutDisp    = _p.create<dai::node::XLinkOut>();
-    auto xoutDepth   = _p.create<dai::node::XLinkOut>();
+    auto xoutDepth = _p.create<dai::node::XLinkOut>();
     auto xoutRectifL = _p.create<dai::node::XLinkOut>();
     auto xoutRectifR = _p.create<dai::node::XLinkOut>();
 
     // XLinkOut
     xoutLeft->setStreamName("left");
     xoutRight->setStreamName("right");
-    if (withDepth) {
+    if(withDepth) {
         // xoutDisp   ->setStreamName("disparity");
-        xoutDepth  ->setStreamName("depth");
+        xoutDepth->setStreamName("depth");
         xoutRectifL->setStreamName("rectified_left");
         xoutRectifR->setStreamName("rectified_right");
     }
@@ -34,24 +31,24 @@ void StereoExample::initDepthaiDev(){
     // MonoCamera
     monoLeft->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
-    //monoLeft->setFps(5.0);
+    // monoLeft->setFps(5.0);
     monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
-    //monoRight->setFps(5.0);
+    // monoRight->setFps(5.0);
 
     int maxDisp = 96;
-    if (extended) maxDisp *= 2;
-    if (subpixel) maxDisp *= 32; // 5 bits fractional disparity
+    if(extended) maxDisp *= 2;
+    if(subpixel) maxDisp *= 32;  // 5 bits fractional disparity
 
-    if (withDepth) {
+    if(withDepth) {
         // StereoDepth
         // stereo->setOutputDepth(outputDepth);
         // stereo->setOutputRectified(outputRectified);
         stereo->setConfidenceThreshold(200);
-        stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-        //stereo->loadCalibrationFile("../../../../depthai/resources/depthai.calib");
-        //stereo->setInputResolution(1280, 720);
-        //stereo->setMedianFilter(dai::StereoDepthProperties::MedianFilter::MEDIAN_OFF);
+        stereo->setRectifyEdgeFillColor(0);  // black, to better see the cutout
+        // stereo->loadCalibrationFile("../../../../depthai/resources/depthai.calib");
+        // stereo->setInputResolution(1280, 720);
+        // stereo->setMedianFilter(dai::StereoDepthProperties::MedianFilter::MEDIAN_OFF);
         stereo->setLeftRightCheck(lrcheck);
         stereo->setExtendedDisparity(extended);
         stereo->setSubpixel(subpixel);
@@ -62,8 +59,7 @@ void StereoExample::initDepthaiDev(){
 
         stereo->syncedLeft.link(xoutLeft->input);
         stereo->syncedRight.link(xoutRight->input);
-        if(outputRectified)
-        {
+        if(outputRectified) {
             stereo->rectifiedLeft.link(xoutRectifL->input);
             stereo->rectifiedRight.link(xoutRectifR->input);
         }
@@ -77,18 +73,17 @@ void StereoExample::initDepthaiDev(){
     }
 
     // CONNECT TO DEVICE
-     _dev = std::make_unique<dai::Device>(_p);
+    _dev = std::make_unique<dai::Device>(_p);
     //  _dev->startPipeline();
 
-     _opImageStreams.push_back(_dev->getOutputQueue("left", 30, false));
-     _opImageStreams.push_back(_dev->getOutputQueue("right", 30, false));
+    _opImageStreams.push_back(_dev->getOutputQueue("left", 30, false));
+    _opImageStreams.push_back(_dev->getOutputQueue("right", 30, false));
     //  if (withDepth) _opImageStreams.push_back(_dev->getOutputQueue("disparity", 30, false));
-     if (withDepth) _opImageStreams.push_back(_dev->getOutputQueue("depth", 30, false));
-     if (withDepth) _opImageStreams.push_back(_dev->getOutputQueue("rectified_left", 30, false));
-     if (withDepth) _opImageStreams.push_back(_dev->getOutputQueue("rectified_right", 30, false));
-    
+    if(withDepth) _opImageStreams.push_back(_dev->getOutputQueue("depth", 30, false));
+    if(withDepth) _opImageStreams.push_back(_dev->getOutputQueue("rectified_left", 30, false));
+    if(withDepth) _opImageStreams.push_back(_dev->getOutputQueue("rectified_right", 30, false));
 }
 
-std::vector<std::shared_ptr<dai::DataOutputQueue>> StereoExample::getExposedImageStreams(){
-        return _opImageStreams;
+std::vector<std::shared_ptr<dai::DataOutputQueue>> StereoExample::getExposedImageStreams() {
+    return _opImageStreams;
 }

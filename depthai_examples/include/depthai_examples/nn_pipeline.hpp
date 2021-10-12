@@ -1,13 +1,12 @@
 #pragma once
 
 #include <vector>
+
 #include "depthai/depthai.hpp"
 
-class MobileNetDetectionExample{
-
-    public:
-
-    static const std::vector<std::string> label_map ;
+class MobileNetDetectionExample {
+   public:
+    static const std::vector<std::string> label_map;
 
     MobileNetDetectionExample() = default;
     ~MobileNetDetectionExample() = default;
@@ -16,12 +15,11 @@ class MobileNetDetectionExample{
 
     std::vector<std::shared_ptr<dai::DataOutputQueue>> getExposedImageStreams();
     std::vector<std::shared_ptr<dai::DataOutputQueue>> getExposedNnetStreams();
-    
-    private:
+
+   private:
     std::vector<std::shared_ptr<dai::DataOutputQueue>> _opImageStreams;
     std::vector<std::shared_ptr<dai::DataOutputQueue>> _opNNetStreams;
 
     std::unique_ptr<dai::Device> _dev;
     dai::Pipeline _p;
-
 };

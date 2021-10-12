@@ -1,13 +1,13 @@
 
 #include <depthai_examples/nn_pipeline.hpp>
+
 #include "depthai/depthai.hpp"
 
-const std::vector<std::string> MobileNetDetectionExample::label_map = {"background",  "aeroplane", "bicycle", "bird", "boat", "bottle", "bus",   "car",  "cat",   "chair",    "cow",
-                                  "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"};
+const std::vector<std::string> MobileNetDetectionExample::label_map = {"background", "aeroplane", "bicycle",     "bird",  "boat",        "bottle", "bus",
+                                                                       "car",        "cat",       "chair",       "cow",   "diningtable", "dog",    "horse",
+                                                                       "motorbike",  "person",    "pottedplant", "sheep", "sofa",        "train",  "tvmonitor"};
 
-
-void MobileNetDetectionExample::initDepthaiDev(std::string nnPath){
-
+void MobileNetDetectionExample::initDepthaiDev(std::string nnPath) {
     bool syncNN = true;
     auto colorCam = _p.create<dai::node::ColorCamera>();
     auto xlinkOut = _p.create<dai::node::XLinkOut>();
@@ -29,8 +29,10 @@ void MobileNetDetectionExample::initDepthaiDev(std::string nnPath){
 
     // Link plugins CAM -> NN -> XLINK
     colorCam->preview.link(detectionNetwork->input);
-    if(syncNN) detectionNetwork->passthrough.link(xlinkOut->input);
-    else colorCam->preview.link(xlinkOut->input);
+    if(syncNN)
+        detectionNetwork->passthrough.link(xlinkOut->input);
+    else
+        colorCam->preview.link(xlinkOut->input);
 
     detectionNetwork->out.link(nnOut->input);
 
@@ -38,15 +40,12 @@ void MobileNetDetectionExample::initDepthaiDev(std::string nnPath){
 
     _opImageStreams.push_back(_dev->getOutputQueue("preview", 30, false));
     _opNNetStreams.push_back(_dev->getOutputQueue("detections", 30, false));
-
 }
 
-
-std::vector<std::shared_ptr<dai::DataOutputQueue>> MobileNetDetectionExample::getExposedImageStreams(){
+std::vector<std::shared_ptr<dai::DataOutputQueue>> MobileNetDetectionExample::getExposedImageStreams() {
     return _opImageStreams;
 }
 
-
-std::vector<std::shared_ptr<dai::DataOutputQueue>> MobileNetDetectionExample::getExposedNnetStreams(){
+std::vector<std::shared_ptr<dai::DataOutputQueue>> MobileNetDetectionExample::getExposedNnetStreams() {
     return _opNNetStreams;
 }

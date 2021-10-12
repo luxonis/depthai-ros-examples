@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include <iostream> // do I need this ?
+#include <iostream>  // do I need this ?
+
 #include "depthai/depthai.hpp"
 
-
-class RGBStereoExample{
-    public:
+class RGBStereoExample {
+   public:
     RGBStereoExample() = default;
     ~RGBStereoExample() = default;
 
@@ -14,13 +14,11 @@ class RGBStereoExample{
 
     std::vector<std::shared_ptr<dai::DataOutputQueue>> getExposedImageStreams();
 
-    private:
+   private:
     std::vector<std::shared_ptr<dai::DataOutputQueue>> _opImageStreams;
     std::unique_ptr<dai::Device> _dev;
     dai::Pipeline _p;
-
 };
-
 
 // void stereo_node(){
 
@@ -33,7 +31,7 @@ class RGBStereoExample{
 //     bool extended;
 //     bool subpixel;
 //     bool withDepth = true;
-    
+
 //     dai::Pipeline p;
 
 //     auto monoLeft    = p.create<dai::node::MonoCamera>();
@@ -63,8 +61,6 @@ class RGBStereoExample{
 //     monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
 //     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 //     //monoRight->setFps(5.0);
-
-
 
 //     int maxDisp = 96;
 //     if (extended) maxDisp *= 2;
@@ -115,21 +111,21 @@ class RGBStereoExample{
 //     auto depthQueue = withDepth ? d.getOutputQueue("depth", 30, false) : nullptr;
 //     auto rectifLeftQueue = withDepth ? d.getOutputQueue("rectified_left", 30, false) : nullptr;
 //     auto rectifRightQueue = withDepth ? d.getOutputQueue("rectified_right", 30, false) : nullptr;
-    
+
 //     // ros publisher init
 //     bool latched_cam_info = true;
-//     ros::Publisher leftPub          = pnh.advertise<sensor_msgs::Image>("left/image", 30);    
-//     ros::Publisher leftCamInfoPub   = pnh.advertise<sensor_msgs::CameraInfo>("left/camera_info", 30, latched_cam_info);    
-    
-//     ros::Publisher rightPub         = pnh.advertise<sensor_msgs::Image>("right/image", 30);    
-//     ros::Publisher rightCamInfoPub  = pnh.advertise<sensor_msgs::CameraInfo>("right/camera_info", 30, latched_cam_info);    
-    
-//     ros::Publisher dispPub          = pnh.advertise<sensor_msgs::Image>("stereo/disparity", 30);    
-//     ros::Publisher depthPub         = pnh.advertise<sensor_msgs::Image>("stereo/depth_raw", 30);    
-//     ros::Publisher stereoCamInfoPub = pnh.advertise<sensor_msgs::CameraInfo>("stereo/camera_info", 30, latched_cam_info);    
-    
-//     ros::Publisher rectiLeftPub     = pnh.advertise<sensor_msgs::Image>("left/image_rect", 30);    
-//     ros::Publisher rectiRightPub    = pnh.advertise<sensor_msgs::Image>("right/image_rect", 30);    
+//     ros::Publisher leftPub          = pnh.advertise<sensor_msgs::Image>("left/image", 30);
+//     ros::Publisher leftCamInfoPub   = pnh.advertise<sensor_msgs::CameraInfo>("left/camera_info", 30, latched_cam_info);
+
+//     ros::Publisher rightPub         = pnh.advertise<sensor_msgs::Image>("right/image", 30);
+//     ros::Publisher rightCamInfoPub  = pnh.advertise<sensor_msgs::CameraInfo>("right/camera_info", 30, latched_cam_info);
+
+//     ros::Publisher dispPub          = pnh.advertise<sensor_msgs::Image>("stereo/disparity", 30);
+//     ros::Publisher depthPub         = pnh.advertise<sensor_msgs::Image>("stereo/depth_raw", 30);
+//     ros::Publisher stereoCamInfoPub = pnh.advertise<sensor_msgs::CameraInfo>("stereo/camera_info", 30, latched_cam_info);
+
+//     ros::Publisher rectiLeftPub     = pnh.advertise<sensor_msgs::Image>("left/image_rect", 30);
+//     ros::Publisher rectiRightPub    = pnh.advertise<sensor_msgs::Image>("right/image_rect", 30);
 
 //     const std::string left_uri = camera_param_uri +"/" + "left.yaml";
 //     std::string name = "left";
@@ -143,29 +139,28 @@ class RGBStereoExample{
 //     camera_info_manager::CameraInfoManager right_cam_manager(ros::NodeHandle{pnh, name}, name, right_uri);
 //     auto right_camera_info = right_cam_manager.getCameraInfo();
 //     rightCamInfoPub.publish(right_camera_info);
-    
+
 // // camera_info_manager::CameraInfoManager left_cam_manager  =std::make_unique<camera_info_manager::CameraInfoManager>(ros::NodeHandle{nh, name}, name, uri);
-    
+
 //     while (ros::ok()) {
 //         auto left = leftQueue->get<dai::ImgFrame>();
-//         std::string frameName = deviceName + "_left_camera_optical_frame";      
+//         std::string frameName = deviceName + "_left_camera_optical_frame";
 //         leftPub.publish(dai::rosImageBridge(left, frameName););
 
 //         auto right = rightQueue->get<dai::ImgFrame>();
-//         frameName = deviceName + "_right_camera_optical_frame"; 
+//         frameName = deviceName + "_right_camera_optical_frame";
 //         rightPub.publish(dai::rosImageBridge(right, frameName));
-        
+
 //         if (withDepth) {
 //             // Note: in some configurations (if depth is enabled), disparity may output garbage data
 //             auto disparity = dispQueue->get<dai::ImgFrame>();
-            
-//             frameName = deviceName + "_right_camera_optical_frame"; 
+
+//             frameName = deviceName + "_right_camera_optical_frame";
 //             dispPub.publish(dai::rosImageBridge(disparity, frameName));
-          
 
 //             if (outputDepth) {
 //                 auto depth = depthQueue->get<dai::ImgFrame>();
-//                 frameName = deviceName + "_right_camera_optical_frame"; 
+//                 frameName = deviceName + "_right_camera_optical_frame";
 //                 depthPub.publish(dai::rosImageBridge(depth, frameName));
 //             }
 
@@ -173,11 +168,11 @@ class RGBStereoExample{
 //                 auto rectifL = rectifLeftQueue->get<dai::ImgFrame>();
 //                 // cv::imshow("rectified_left", cv::Mat(rectifL->getHeight(), rectifL->getWidth(),
 //                 //         CV_8UC1, rectifL->getData().data()));
-//                 frameName = deviceName + "_left_camera_optical_frame"; 
+//                 frameName = deviceName + "_left_camera_optical_frame";
 //                 rectiLeftPub.publish(dai::rosImageBridge(rectifL, rectiLeftPub, frameName));
 
 //                 auto rectifR = rectifRightQueue->get<dai::ImgFrame>();
-//                 frameName = deviceName + "_right_camera_optical_frame"; 
+//                 frameName = deviceName + "_right_camera_optical_frame";
 //                 rectiRightPub.publish(dai::rosImageBridge(rectifR, rectiRightPub, frameName));
 //             }
 //         }
@@ -186,10 +181,10 @@ class RGBStereoExample{
 //     return;
 // }
 
-// THoughts. 
+// THoughts.
 
-// Create a class and pipeline in a function(constructor) followed by creating pipeline and creating threads for nodes that needs to be run on the thread in it's own loop.
-// create an another function which needs to be called in while loop on the main thread 
-// and the final streams that needs to be published will be returned by an another function from private variable may be.
-// Then main function in same file or mostly different file will initialize the class and create a while loop and call the function that needs to be run on loop in the main function. and write the code to do what they want with the external output. 
-// which in my case will be published as ros publisers.   
+// Create a class and pipeline in a function(constructor) followed by creating pipeline and creating threads for nodes that needs to be run on the thread in
+// it's own loop. create an another function which needs to be called in while loop on the main thread and the final streams that needs to be published will be
+// returned by an another function from private variable may be. Then main function in same file or mostly different file will initialize the class and create a
+// while loop and call the function that needs to be run on loop in the main function. and write the code to do what they want with the external output. which
+// in my case will be published as ros publisers.
