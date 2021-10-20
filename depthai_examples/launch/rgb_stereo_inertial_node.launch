@@ -17,7 +17,7 @@
     <arg name="extended"              default="false" /> 
     <arg name="subpixel"              default="false" />
     <arg name="rectify"               default="true"  />
-    <arg name="rgbaligned"            default="true"  />
+    <arg name="depth_aligned"            default="true"  />
    
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -39,7 +39,7 @@
         <param name="extended" value="$(arg extended)"/>
         <param name="subpixel" value="$(arg subpixel)"/>
         <param name="rectify" value="$(arg rectify)" />
-        <param name="rgbaligned" value="$(arg rgbaligned)" />
+        <param name="depth_aligned" value="$(arg depth_aligned)" />
     </node>            
 
 </launch>

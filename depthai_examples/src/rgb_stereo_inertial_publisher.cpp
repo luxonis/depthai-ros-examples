@@ -17,7 +17,7 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 
 
-dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool rgbaligned){
+dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned){
     dai::Pipeline pipeline;
 
     auto camRgb               = pipeline.create<dai::node::ColorCamera>();
@@ -52,7 +52,7 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
     //RGB
     camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
     camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
-    if(withDepth && rgbaligned){
+    if(withDepth && depth_aligned){
         // the ColorCamera is downscaled from 1080p to 720p.
         // Otherwise, the aligned depth is automatically upscaled to 1080p
         camRgb->setIspScale(2, 3);
@@ -74,7 +74,7 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
-    if(withDepth && rgbaligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
+    if(withDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     //Imu
     imu->enableIMUSensor({dai::IMUSensor::ROTATION_VECTOR, dai::IMUSensor::ACCELEROMETER_RAW, dai::IMUSensor::GYROSCOPE_RAW}, 400);
@@ -113,7 +113,7 @@ int main(int argc, char** argv){
     
     std::string deviceName, mode;
     int badParams = 0;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, rgbaligned;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
 
     badParams += !pnh.getParam("camera_name", deviceName);
     badParams += !pnh.getParam("mode", mode);
@@ -121,7 +121,7 @@ int main(int argc, char** argv){
     badParams += !pnh.getParam("extended",  extended);
     badParams += !pnh.getParam("subpixel",  subpixel);
     badParams += !pnh.getParam("rectify",  rectify);
-    badParams += !pnh.getParam("rgbaligned",  rgbaligned);
+    badParams += !pnh.getParam("depth_aligned",  depth_aligned);
 
     if (badParams > 0)
     {   
@@ -136,7 +136,7 @@ int main(int argc, char** argv){
         enableDepth = false;
     }
 
-    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, rgbaligned);
+    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned);
 
     dai::Device device(pipeline);
 
