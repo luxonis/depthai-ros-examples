@@ -62,6 +62,7 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
 
     //Imu
     imu->enableIMUSensor({dai::IMUSensor::ROTATION_VECTOR, dai::IMUSensor::ACCELEROMETER_RAW, dai::IMUSensor::GYROSCOPE_RAW}, 400);
+    imu->setMaxBatchReports(1); // Get one message only for now.
 
     // Link plugins CAM -> STEREO -> XLINK
     monoLeft->out.link(stereo->left);
@@ -128,15 +129,7 @@ int main(int argc, char** argv){
     auto imuQueue = device.getOutputQueue("imu",30,false);
 
     auto calibrationHandler = device.readCalibration();
-
-    // this part would be removed once we have calibration-api
-    /*     
-     std::string leftUri = cameraParamUri +"/" + "left.yaml";
-
-     std::string rightUri = cameraParamUri + "/" + "right.yaml";
-
-     std::string stereoUri = cameraParamUri + "/" + "right.yaml";
-    */        
+        
     dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
