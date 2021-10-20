@@ -17,6 +17,7 @@
     <arg name="extended"              default="false" /> 
     <arg name="subpixel"              default="false" />
     <arg name="rectify"               default="true"  />
+    <arg name="rgbaligned"            default="true"  />
    
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -31,13 +32,14 @@
     </include>
 
     <!-- launch-prefix="xterm -e gdb (add [- - args] without space) -->
-    <node name="stereo_inertial_publisher" pkg="depthai_examples" type="stereo_inertial_node" output="screen" required="true">
+    <node name="rgb_stereo_inertial_publisher" pkg="depthai_examples" type="rgb_stereo_inertial_node" output="screen" required="true">
         <param name="camera_name" value="$(arg camera_name)"/>
         <param name="mode" value="$(arg mode)"/>
         <param name="lrcheck" value="$(arg lrcheck)"/>
         <param name="extended" value="$(arg extended)"/>
         <param name="subpixel" value="$(arg subpixel)"/>
         <param name="rectify" value="$(arg rectify)" />
+        <param name="rgbaligned" value="$(arg rgbaligned)" />
     </node>            
 
 </launch>
