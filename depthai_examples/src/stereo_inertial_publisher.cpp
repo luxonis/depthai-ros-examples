@@ -140,7 +140,6 @@ int main(int argc, char** argv){
 
     dai::Device device(pipeline);
 
-    auto imgQueue = device.getOutputQueue("rgb", 30, false);
     auto leftQueue = device.getOutputQueue("left", 30, false);
     auto rightQueue = device.getOutputQueue("right", 30, false);
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
@@ -223,6 +222,7 @@ int main(int argc, char** argv){
         depthPublish.addPubisherCallback();
         
         if(depth_aligned){
+            auto imgQueue = device.getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
             auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1920, 1080); 
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(imgQueue,
