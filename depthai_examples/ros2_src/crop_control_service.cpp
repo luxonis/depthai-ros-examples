@@ -1,5 +1,5 @@
-#include "ros/ros.h"
-#include <depthai_ros_msgs/NormalizedImageCrop.h>
+#include "rclcpp/rclcpp.hpp"
+#include <depthai_ros_msgs/srv/NormalizedImageCrop.h>
 #include <stdio.h>
 #include <ctype.h>
 
@@ -21,10 +21,10 @@ void boundAdjuster(double& value){
 
 
 int main(int argc, char **argv)
-{
-    ros::init(argc, argv, "crop_control_service");
-    ros::NodeHandle pnh("~");
-    std::string serviceName = "test_srv";
+{   
+    rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("crop_control_service");
+    std::string serviceName = "crop_control_srv";
 
     /*     
     int badParams = 0;
@@ -36,13 +36,22 @@ int main(int argc, char **argv)
     }
     */
     
-    ros::ServiceClient client = pnh.serviceClient<depthai_ros_msgs::NormalizedImageCrop>(serviceName);
-    depthai_ros_msgs::NormalizedImageCrop srvMsg;
-    srvMsg.request.topLeft.x = 0.2; 
-    srvMsg.request.topLeft.y = 0.2; 
-    srvMsg.request.bottomRight.x = 0.2; 
-    srvMsg.request.bottomRight.y = 0.2; 
+    rclcpp::Client<depthai_ros_msgs::srv::NormalizedImageCrop>::SharedPtr client =
+    node->create_client<depthai_ros_msgs::srv::NormalizedImageCrop>(serviceName);
+
+    depthai_ros_msgs::srv::NormalizedImageCrop srvMsg;
+    srvMsg.request.top_left.x = 0.2; 
+    srvMsg.request.top_left.y = 0.2; 
+    srvMsg.request.bottom_right.x = 0.2; 
+    srvMsg.request.bottom_right.y = 0.2; 
     
+    while (!client->wait_for_service(1s)) {
+        if (!rclcpp::ok()) {
+            RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+            return 0;
+            }
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+    }
     std::cout << "Use the following keys to control the cropping region" << std::endl; 
     std::cout << "  Q/W -> Increment/Decrement the topleft X position" << std::endl;
     std::cout << "  A/S -> Increment/Decrement the topleft Y position" << std::endl;
@@ -51,51 +60,52 @@ int main(int argc, char **argv)
     std::cout << "  Preess ctrl+D to exit." << std::endl;
     char c;
     bool sendSignal = false;
-        
+
     while (ros::ok()){
         c = std::tolower(getchar());
         switch(c){
             case 'w':
-                srvMsg.request.topLeft.x -= stepSize;
-                boundAdjuster(srvMsg.request.topLeft.x);
+                srvMsg.request.top_left.x -= stepSize;
+                boundAdjuster(srvMsg.request.top_left.x);
                 sendSignal = true;
                 break;
             case 'q':
-                srvMsg.request.topLeft.x += stepSize;
-                boundAdjuster(srvMsg.request.topLeft.x);
+                srvMsg.request.top_left.x += stepSize;
+                boundAdjuster(srvMsg.request.top_left.x);
                 sendSignal = true;
                 break;
             case 'a':
-                srvMsg.request.topLeft.y += stepSize;
-                boundAdjuster(srvMsg.request.topLeft.y);
+                srvMsg.request.top_left.y += stepSize;
+                boundAdjuster(srvMsg.request.top_left.y);
                 sendSignal = true;
                 break;
             case 's':
-                srvMsg.request.topLeft.y -= stepSize;
-                boundAdjuster(srvMsg.request.topLeft.y);
+                srvMsg.request.top_left.y -= stepSize;
+                boundAdjuster(srvMsg.request.top_left.y);
                 sendSignal = true;
                 break;
             case 'e':
-                srvMsg.request.bottomRight.x += stepSize;
-                boundAdjuster(srvMsg.request.bottomRight.x);
+                srvMsg.request.bottom_right.x += stepSize;
+                boundAdjuster(srvMsg.request.bottom_right.x);
                 sendSignal = true;
                 break;
             case 'r':
-                srvMsg.request.bottomRight.x -= stepSize;
-                boundAdjuster(srvMsg.request.bottomRight.x);
+                srvMsg.request.bottom_right.x -= stepSize;
+                boundAdjuster(srvMsg.request.bottom_right.x);
                 sendSignal = true;
                 break;
             case 'd':
-                srvMsg.request.bottomRight.y += stepSize;
-                boundAdjuster(srvMsg.request.bottomRight.y);
+                srvMsg.request.bottom_right.y += stepSize;
+                boundAdjuster(srvMsg.request.bottom_right.y);
                 sendSignal = true;
                 break;
             case 'f':
-                srvMsg.request.bottomRight.y -= stepSize;
-                boundAdjuster(srvMsg.request.bottomRight.y);
+                srvMsg.request.bottom_right.y -= stepSize;
+                boundAdjuster(srvMsg.request.bottom_right.y);
                 sendSignal = true;
                 break;
             default:
+                // TODO(sachin): Use RCLCPP_INFO instead of cout.
                 std::cout << " Entered Invalid Key..!!!" << std::endl;
                 std::cout << "Use the following keys to control the cropping region" << std::endl; 
                 std::cout << "  Q/W -> Increment/Decrement the topleft X position" << std::endl;
@@ -105,11 +115,16 @@ int main(int argc, char **argv)
                 std::cout << "  Preess ctrl+D to exit." << std::endl;
         }
 
-
         if (sendSignal){
-            std::cout << "Top left Position -> (" << srvMsg.request.topLeft.x << ", " << srvMsg.request.topLeft.y << ")" << std::endl; 
-            std::cout << "Bottion right Position -> (" << srvMsg.request.bottomRight.x << ", " << srvMsg.request.bottomRight.y << ")" << std::endl; 
-            client.call(srvMsg);
+            std::cout << "Top left Position -> (" << srvMsg.request.top_left.x << ", " << srvMsg.request.top_left.y << ")" << std::endl; 
+            std::cout << "Bottion right Position -> (" << srvMsg.request.bottom_right.x << ", " << srvMsg.request.bottom_right.y << ")" << std::endl; 
+            auto result = client->async_send_request(srvMsg.request);
+            if (rclcpp::spin_until_future_complete(node, result) == rclcpp::FutureReturnCode::SUCCESS)
+            {
+                RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sum: %ld", result.get()->sum);
+            } else {
+                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service crop_control_srv");
+            }
             sendSignal = false;                   
         }
     }

@@ -2,13 +2,13 @@
  * This example shows usage of depth camera in crop mode with the possibility to move the crop.
  * Use 'WASD' in order to do it.
  */
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include <iostream>
 #include <memory>
 
-#include <depthai_ros_msgs/NormalizedImageCrop.h>
-#include "sensor_msgs/Image.h"
+#include <depthai_ros_msgs/srv/NormalizedImageCrop.hpp>
+#include <sensor_msgs/msg/Image.hpp>
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
@@ -19,29 +19,33 @@
 static constexpr float stepSize = 0.02;
 std::shared_ptr<dai::DataInputQueue> configQueue;
 
-bool cropDepthImage(depthai_ros_msgs::NormalizedImageCrop::Request request, depthai_ros_msgs::NormalizedImageCrop::Response response){
+void cropDepthImage(depthai_ros_msgs::srv::NormalizedImageCrop::Request request, depthai_ros_msgs::srv::NormalizedImageCrop::Response response){
     dai::ImageManipConfig cfg;
     cfg.setCropRect(request.topLeft.x, request.topLeft.y, request.bottomRight.x, request.bottomRight.y);
     configQueue->send(cfg);
-    return true;    
+    response->status = true;
+    return;    
 }
 
 int main() {
 
-    ros::init(argc, argv, "depth_crop_control");
-    ros::NodeHandle pnh("~");
+    rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("depth_crop_control");
     std::string cameraName;
 
     int badParams = 0;
-    badParams += !pnh.getParam("camera_name", cameraName);
+    bad_params += !node->get_parameter("camera_name", deviceName);
 
     if (badParams > 0)
-    {   
+    {
         std::cout << " Bad parameters -> " << badParams << std::endl;
-        throw std::runtime_error("Couldn't find %d of the parameters");
+        throw std::runtime_error("Couldn't find %d of the parameters", badParams);
     }
 
-    ros::ServiceServer service = n.advertiseService("crop_control_srv", cropDepthImage);
+    rclcpp::Service<depthai_ros_msgs::srv::NormalizedImageCrop>::SharedPtr service =
+    node->create_service<depthai_ros_msgs::srv::NormalizedImageCrop>("crop_control_srv", &cropDepthImage);
+
+    // ros::ServiceServer service = n.advertiseService("crop_control_srv", cropDepthImage);
 
     // Create pipeline
     dai::Pipeline pipeline;
@@ -92,7 +96,7 @@ int main() {
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(depthQueue,
-                                                                                    pnh, 
+                                                                                    node, 
                                                                                     std::string("stereo/depth"),
                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                     &depthConverter, // since the converter has the same frame name
