@@ -38,10 +38,10 @@ int main(int argc, char **argv)
     
     ros::ServiceClient client = pnh.serviceClient<depthai_ros_msgs::NormalizedImageCrop>(serviceName);
     depthai_ros_msgs::NormalizedImageCrop srvMsg;
-    srvMsg.request.topLeft.x = 0.2; 
-    srvMsg.request.topLeft.y = 0.2; 
-    srvMsg.request.bottomRight.x = 0.2; 
-    srvMsg.request.bottomRight.y = 0.2; 
+    srvMsg.request.top_left.x = 0.2; 
+    srvMsg.request.top_left.y = 0.2; 
+    srvMsg.request.bottom_right.x = 0.2; 
+    srvMsg.request.bottom_right.y = 0.2; 
     
     std::cout << "Use the following keys to control the cropping region" << std::endl; 
     std::cout << "  Q/W -> Increment/Decrement the topleft X position" << std::endl;
@@ -56,43 +56,43 @@ int main(int argc, char **argv)
         c = std::tolower(getchar());
         switch(c){
             case 'w':
-                srvMsg.request.topLeft.x -= stepSize;
-                boundAdjuster(srvMsg.request.topLeft.x);
+                srvMsg.request.top_left.x -= stepSize;
+                boundAdjuster(srvMsg.request.top_left.x);
                 sendSignal = true;
                 break;
             case 'q':
-                srvMsg.request.topLeft.x += stepSize;
-                boundAdjuster(srvMsg.request.topLeft.x);
+                srvMsg.request.top_left.x += stepSize;
+                boundAdjuster(srvMsg.request.top_left.x);
                 sendSignal = true;
                 break;
             case 'a':
-                srvMsg.request.topLeft.y += stepSize;
-                boundAdjuster(srvMsg.request.topLeft.y);
+                srvMsg.request.top_left.y += stepSize;
+                boundAdjuster(srvMsg.request.top_left.y);
                 sendSignal = true;
                 break;
             case 's':
-                srvMsg.request.topLeft.y -= stepSize;
-                boundAdjuster(srvMsg.request.topLeft.y);
+                srvMsg.request.top_left.y -= stepSize;
+                boundAdjuster(srvMsg.request.top_left.y);
                 sendSignal = true;
                 break;
             case 'e':
-                srvMsg.request.bottomRight.x += stepSize;
-                boundAdjuster(srvMsg.request.bottomRight.x);
+                srvMsg.request.bottom_right.x += stepSize;
+                boundAdjuster(srvMsg.request.bottom_right.x);
                 sendSignal = true;
                 break;
             case 'r':
-                srvMsg.request.bottomRight.x -= stepSize;
-                boundAdjuster(srvMsg.request.bottomRight.x);
+                srvMsg.request.bottom_right.x -= stepSize;
+                boundAdjuster(srvMsg.request.bottom_right.x);
                 sendSignal = true;
                 break;
             case 'd':
-                srvMsg.request.bottomRight.y += stepSize;
-                boundAdjuster(srvMsg.request.bottomRight.y);
+                srvMsg.request.bottom_right.y += stepSize;
+                boundAdjuster(srvMsg.request.bottom_right.y);
                 sendSignal = true;
                 break;
             case 'f':
-                srvMsg.request.bottomRight.y -= stepSize;
-                boundAdjuster(srvMsg.request.bottomRight.y);
+                srvMsg.request.bottom_right.y -= stepSize;
+                boundAdjuster(srvMsg.request.bottom_right.y);
                 sendSignal = true;
                 break;
             default:
@@ -107,8 +107,8 @@ int main(int argc, char **argv)
 
 
         if (sendSignal){
-            std::cout << "Top left Position -> (" << srvMsg.request.topLeft.x << ", " << srvMsg.request.topLeft.y << ")" << std::endl; 
-            std::cout << "Bottion right Position -> (" << srvMsg.request.bottomRight.x << ", " << srvMsg.request.bottomRight.y << ")" << std::endl; 
+            std::cout << "Top left Position -> (" << srvMsg.request.top_left.x << ", " << srvMsg.request.top_left.y << ")" << std::endl; 
+            std::cout << "Bottion right Position -> (" << srvMsg.request.bottom_right.x << ", " << srvMsg.request.bottom_right.y << ")" << std::endl; 
             client.call(srvMsg);
             sendSignal = false;                   
         }
