@@ -120,7 +120,7 @@ int main(int argc, char** argv){
                                                                                     "color");
 
     depthPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
-    rgbPublish.startPublisherThread();
+    rgbPublish.addPubisherCallback();
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing

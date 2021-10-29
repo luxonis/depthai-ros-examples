@@ -1,7 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
-#include <sensor_msgs/Image.h>
+#include <sensor_msgs/msg/image.hpp>
 
 #include <camera_info_manager/camera_info_manager.h>
 #include <functional>

@@ -1,10 +1,10 @@
 
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include <iostream>
 #include <cstdio>
 // #include "utility.hpp"
-#include "sensor_msgs/Image.h"
+#include <sensor_msgs/msg/image.hpp>
 #include <camera_info_manager/camera_info_manager.h>
 #include <depthai_examples/rgb_stereo_pipeline.hpp>
 #include <functional>
@@ -93,7 +93,7 @@ int main(int argc, char** argv){
 
 
     dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -107,7 +107,7 @@ int main(int argc, char** argv){
 
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", true);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(previewQueue,
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(previewQueue,
                                                                                     node, 
                                                                                     std::string("color/image"),
                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -120,12 +120,12 @@ int main(int argc, char** argv){
                                                                                     "color");
 
     depthPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
-    rgbPublish.startPublisherThread();
+    rgbPublish.addPubisherCallback();
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
 
-    ros::spin();
+    rclcpp::spin(node);
 
     return 0;
 }

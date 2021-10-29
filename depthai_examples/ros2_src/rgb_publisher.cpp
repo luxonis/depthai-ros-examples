@@ -50,7 +50,7 @@ int main(int argc, char** argv){
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(imgQueue,
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(imgQueue,
                                                                                   node, 
                                                                                   std::string("color/image"),
                                                                                   std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -62,9 +62,8 @@ int main(int argc, char** argv){
                                                                                   color_uri,
                                                                                   "color");
 
-    rgbPublish.startPublisherThread();
-    ros::spin();
-
+    rgbPublish.addPubisherCallback();
+    rclcpp::spin(node);
     return 0;
 }
 

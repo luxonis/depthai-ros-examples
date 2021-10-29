@@ -61,7 +61,7 @@ int main(int argc, char **argv)
     char c;
     bool sendSignal = false;
 
-    while (ros::ok()){
+    while (rclcpp::ok()){
         c = std::tolower(getchar());
         switch(c){
             case 'w':
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
             default:
                 // TODO(sachin): Use RCLCPP_INFO instead of cout.
                 std::cout << " Entered Invalid Key..!!!" << std::endl;
-                std::cout << "Use the following keys to control the cropping region" << std::endl; 
+                std::cout << " Use the following keys to control the cropping region" << std::endl; 
                 std::cout << "  Q/W -> Increment/Decrement the topleft X position" << std::endl;
                 std::cout << "  A/S -> Increment/Decrement the topleft Y position" << std::endl;
                 std::cout << "  E/R -> Increment/Decrement the bottomright X position" << std::endl;

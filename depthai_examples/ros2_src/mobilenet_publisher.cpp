@@ -79,7 +79,7 @@ int main(int argc, char** argv){
     std::string color_uri = cameraParamUri + "/" + "color.yaml";
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(previewQueue,
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(previewQueue,
                                                                                    node, 
                                                                                    std::string("color/image"),
                                                                                    std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -93,7 +93,7 @@ int main(int argc, char** argv){
 
 
     dai::rosBridge::ImgDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 300, 300, false);
-    dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueue,
+    dai::rosBridge::BridgePublisher<vision_msgs::msg::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueue,
                                                                                                          node, 
                                                                                                          std::string("color/mobilenet_detections"),
                                                                                                          std::bind(static_cast<void(dai::rosBridge::ImgDetectionConverter::*)(std::shared_ptr<dai::ImgDetections>, 
@@ -103,10 +103,10 @@ int main(int argc, char** argv){
                                                                                                          std::placeholders::_2), 
                                                                                                          30);
 
-    detectionPublish.startPublisherThread();
+    detectionPublish.addPubisherCallback();
     rgbPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
 
-    ros::spin();
+    rclcpp::spin(node);
 
     return 0;
 }

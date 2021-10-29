@@ -63,7 +63,7 @@ int main(int argc, char** argv){
                                                                                   color_uri,
                                                                                   "color");
 
-    rgbPublish.startPublisherThread();
+    rgbPublish.addPubisherCallback();
     ros::spin();
 
     return 0;

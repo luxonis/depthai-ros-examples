@@ -95,7 +95,7 @@ int main() {
     dai::rosBridge::ImageConverter depthConverter(cameraName + "_right_camera_optical_frame", true);
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(depthQueue,
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(depthQueue,
                                                                                     node, 
                                                                                     std::string("stereo/depth"),
                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -107,7 +107,7 @@ int main() {
                                                                                     rightCameraInfo,
                                                                                     "stereo");
     depthPublish.addPubisherCallback();
-    ros::spin();
+    rclcpp::spin(node);
 
     return 0;
 }

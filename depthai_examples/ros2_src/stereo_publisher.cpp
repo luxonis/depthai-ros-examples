@@ -90,7 +90,7 @@ int main(int argc, char** argv){
     
 
     if (badParams > 0)
-    {   
+    {
         std::cout << " Bad parameters -> " << badParams << std::endl;
         throw std::runtime_error("Couldn't find one of the parameters");
     }
@@ -127,7 +127,7 @@ int main(int argc, char** argv){
     */        
     dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(leftQueue,
                                                                                     node, 
                                                                                     std::string("left/image"),
                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -143,7 +143,7 @@ int main(int argc, char** argv){
     dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rightPublish(rightQueue,
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
                                                                                      node, 
                                                                                      std::string("right/image"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -158,7 +158,7 @@ int main(int argc, char** argv){
 
      if(mode == "depth"){
          std::cout << "In depth";
-        dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
+        dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -170,11 +170,10 @@ int main(int argc, char** argv){
                                                                                      rightCameraInfo,
                                                                                      "stereo");
         depthPublish.addPubisherCallback();
-        ros::spin();
     }
     else{
         dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
-        dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
+        dai::rosBridge::BridgePublisher<stereo_msgs::msg::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/disparity"),
                                                                                      std::bind(&dai::rosBridge::DisparityConverter::toRosMsg, 
@@ -185,9 +184,8 @@ int main(int argc, char** argv){
                                                                                      rightCameraInfo,
                                                                                      "stereo");
         dispPublish.addPubisherCallback();
-        ros::spin();
     }
-
+    rclcpp::spin(node);
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
 
