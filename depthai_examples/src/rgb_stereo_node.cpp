@@ -39,7 +39,7 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
-
+    // stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
     // // Link plugins CAM -> STEREO -> XLINK
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
@@ -48,14 +48,14 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
     // Color camers steream setup -------->
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
     auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
-    xlinkOut->setStreamName("preview");
-    
-    colorCam->setPreviewSize(1920, 1080);
+    xlinkOut->setStreamName("video");
+    colorCam->setBoardSocket(dai::CameraBoardSocket::RGB);
+
     colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     colorCam->setInterleaved(true);
 
     // Link plugins CAM -> XLINK
-    colorCam->preview.link(xlinkOut->input);
+    colorCam->video.link(xlinkOut->input);
 
     return pipeline;
 }
@@ -83,9 +83,10 @@ int main(int argc, char** argv){
     }
     dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel);
     dai::Device device(pipeline);
+    auto calibrationHandler = device.readCalibration();
 
     auto stereoQueue = device.getOutputQueue("depth", 30, false);
-    auto previewQueue = device.getOutputQueue("preview", 30, true);
+    auto previewQueue = device.getOutputQueue("video", 30, true);
 
     bool latched_cam_info = true;
     std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
@@ -93,6 +94,8 @@ int main(int argc, char** argv){
 
 
     dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
+    auto rgbCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720); 
+
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      pnh, 
                                                                                      std::string("stereo/depth"),
@@ -102,7 +105,7 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
-                                                                                     stereo_uri,
+                                                                                     rgbCameraInfo,
                                                                                      "stereo");
 
 
@@ -116,7 +119,7 @@ int main(int argc, char** argv){
                                                                                     std::placeholders::_1, 
                                                                                     std::placeholders::_2) , 
                                                                                     30,
-                                                                                    color_uri,
+                                                                                    rgbCameraInfo,
                                                                                     "color");
 
     depthPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
