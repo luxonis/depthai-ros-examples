@@ -16,8 +16,9 @@
     <arg name="lrcheck"               default="true"  /> 
     <arg name="extended"              default="false" /> 
     <arg name="subpixel"              default="false" />
-    <arg name="rectify"               default="true"  />
-    <arg name="depth_aligned"         default="true"  />
+    <arg name="rectify"               default="false"  />
+    <arg name="depth_aligned"         default="false"  />
+    <arg name="stereo_fps"            default="30"    />
    
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -40,6 +41,7 @@
         <param name="subpixel" value="$(arg subpixel)"/>
         <param name="rectify" value="$(arg rectify)" />
         <param name="depth_aligned" value="$(arg depth_aligned)" />
+        <param name="stereo_fps" value="$(arg stereo_fps)" />
     </node>            
 
 </launch>
