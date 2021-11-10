@@ -32,7 +32,7 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("rgb_node");
 
     std::string deviceName;
-    std::string camera_param_uri;
+    std::string cameraParamUri;
     int bad_params = 0;
 
     bad_params += !node->get_parameter("camera_name", deviceName);
@@ -47,7 +47,7 @@ int main(int argc, char** argv){
     dai::Device device(pipeline);
     std::shared_ptr<dai::DataOutputQueue> imgQueue = device.getOutputQueue("video", 30, false);
     
-    std::string color_uri = camera_param_uri + "/" + "color.yaml";
+    std::string color_uri = cameraParamUri + "/" + "color.yaml";
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(imgQueue,

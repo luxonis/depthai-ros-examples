@@ -58,7 +58,7 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     /// setting node configs
-    stereo->setConfidenceThreshold(255);
+    stereo->initialConfig.setConfidenceThreshold(230);
     stereo->setSubpixel(subpixel);
 
     spatialDetectionNetwork->setBlobPath(nnPath);

@@ -47,9 +47,9 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
     // if (subpixel) maxDisp *= 32; // 5 bits fractional disparity
 
     // StereoDepth
-    stereo->initialConfig.setConfidenceThreshold(200);
+    stereo->initialConfig.setConfidenceThreshold(230);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-    stereo->initialConfig.setLeftRightCheckThreshold(1);
+    stereo->initialConfig.setLeftRightCheckThreshold(10);
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);

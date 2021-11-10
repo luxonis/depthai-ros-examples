@@ -21,7 +21,7 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("rgb_subscriber_node");
     
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub = node->create_subscription<sensor_msgs::msg::Image>("rgb_image", 5, &rgbCallback);
-    ros::spin();
-
+    rclcpp::spin(node);
+    rclcpp::shutdown();
     return 0;
 }

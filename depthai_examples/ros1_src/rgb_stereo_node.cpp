@@ -33,7 +33,7 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     // StereoDepth
-    stereo->setConfidenceThreshold(200);
+    stereo->initialConfig.setConfidenceThreshold(230);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
 
     stereo->setLeftRightCheck(lrcheck);

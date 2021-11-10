@@ -5,8 +5,7 @@
 #include <cstdio>
 // #include "utility.hpp"
 #include <sensor_msgs/msg/image.hpp>
-#include <camera_info_manager/camera_info_manager.h>
-#include <depthai_examples/rgb_stereo_pipeline.hpp>
+#include <camera_info_manager/camera_info_manager.hpp>
 #include <functional>
 
 // Inludes common necessary includes for development using depthai library
@@ -33,7 +32,7 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     // StereoDepth
-    stereo->setConfidenceThreshold(200);
+    stereo->initialConfig.setConfidenceThreshold(230);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
 
     stereo->setLeftRightCheck(lrcheck);

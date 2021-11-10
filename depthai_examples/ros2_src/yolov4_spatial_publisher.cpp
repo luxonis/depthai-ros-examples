@@ -4,11 +4,10 @@
 #include <iostream>
 #include <cstdio>
 // #include "utility.hpp"
-#include <depthai_examples/yolov4_spatial_pipeline.hpp>
 
 #include <sensor_msgs/msg/image.hpp>
-#include <camera_info_manager/camera_info_manager.h>
-#include <vision_msgs/msg/Detection2DArray.h>
+#include <camera_info_manager/camera_info_manager.hpp>
+#include <depthai_ros_msgs/msg/spatial_detection_array.hpp>
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
@@ -32,16 +31,16 @@ const std::vector<std::string> label_map = {"person",         "bicycle",    "car
 
 dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath){
     dai::Pipeline pipeline;
-    auto colorCam = _p.create<dai::node::ColorCamera>();
-    auto spatialDetectionNetwork = _p.create<dai::node::YoloSpatialDetectionNetwork>();
-    auto monoLeft =  _p.create<dai::node::MonoCamera>();
-    auto monoRight = _p.create<dai::node::MonoCamera>();
-    auto stereo =    _p.create<dai::node::StereoDepth>();
+    auto colorCam = pipeline.create<dai::node::ColorCamera>();
+    auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
+    auto monoLeft =  pipeline.create<dai::node::MonoCamera>();
+    auto monoRight = pipeline.create<dai::node::MonoCamera>();
+    auto stereo =    pipeline.create<dai::node::StereoDepth>();
 
     // create xlink connections
-    auto xoutRgb = _p.create<dai::node::XLinkOut>();
-    auto xoutDepth = _p.create<dai::node::XLinkOut>();
-    auto xoutNN =  _p.create<dai::node::XLinkOut>();
+    auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
+    auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
+    auto xoutNN =  pipeline.create<dai::node::XLinkOut>();
 
     xoutRgb->setStreamName("preview");
     xoutNN->setStreamName("detections");
@@ -58,7 +57,7 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     /// setting node configs
-    stereo->setConfidenceThreshold(255);
+    stereo->initialConfig.setConfidenceThreshold(230);
     stereo->setSubpixel(subpixel);
 
     spatialDetectionNetwork->setBlobPath(nnPath);
@@ -90,6 +89,7 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath){
 
     stereo->depth.link(spatialDetectionNetwork->inputDepth);
     spatialDetectionNetwork->passthroughDepth.link(xoutDepth->input);
+    return pipeline;
 }
 
 int main(int argc, char** argv){
@@ -119,7 +119,7 @@ int main(int argc, char** argv){
       node->get_parameter("nn_path", nnPath);
     }
 
-    dai::Pipeline pipeline = createPipeline(syncNN, nnPath);
+    dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath);
     dai::Device device(pipeline);
 
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
@@ -143,7 +143,7 @@ int main(int argc, char** argv){
                                                                                                          node, 
                                                                                                          std::string("color/yolov4_Spatial_detections"),
                                                                                                          std::bind(static_cast<void(dai::rosBridge::SpatialDetectionConverter::*)(std::shared_ptr<dai::SpatialImgDetections>, 
-                                                                                                         depthai_ros_msgs::SpatialDetectionArray&)>(&dai::rosBridge::SpatialDetectionConverter::toRosMsg), 
+                                                                                                         depthai_ros_msgs::msg::SpatialDetectionArray&)>(&dai::rosBridge::SpatialDetectionConverter::toRosMsg), 
                                                                                                          &detConverter,
                                                                                                          std::placeholders::_1, 
                                                                                                          std::placeholders::_2) , 
@@ -166,7 +166,7 @@ int main(int argc, char** argv){
     detectionPublish.addPubisherCallback(); 
     rgbPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
 
-    ros::spin();
+    rclcpp::spin(node);
 
     return 0;
 }

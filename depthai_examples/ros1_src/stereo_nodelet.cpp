@@ -164,8 +164,8 @@ namespace depthai_examples{
         // if (subpixel) maxDisp *= 32; // 5 bits fractional disparity
 
         // StereoDepth
-        // stereo->initialConfig.setConfidenceThreshold(200);
-        stereo->initialConfig.setLeftRightCheckThreshold(1);
+        stereo->initialConfig.setConfidenceThreshold(200);
+        stereo->initialConfig.setLeftRightCheckThreshold(10);
         stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
 
         stereo->setLeftRightCheck(lrcheck);

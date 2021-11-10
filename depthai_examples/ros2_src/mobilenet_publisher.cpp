@@ -6,7 +6,7 @@
 
 #include <sensor_msgs/msg/image.hpp>
 #include <camera_info_manager/camera_info_manager.hpp>
-#include <vision_msgs/msg/Detection2DArray.hpp>
+#include <vision_msgs/msg/detection2_d_array.hpp>
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
@@ -97,7 +97,7 @@ int main(int argc, char** argv){
                                                                                                          node, 
                                                                                                          std::string("color/mobilenet_detections"),
                                                                                                          std::bind(static_cast<void(dai::rosBridge::ImgDetectionConverter::*)(std::shared_ptr<dai::ImgDetections>, 
-                                                                                                         vision_msgs::Detection2DArray&)>(&dai::rosBridge::ImgDetectionConverter::toRosMsg), 
+                                                                                                         vision_msgs::msg::Detection2DArray&)>(&dai::rosBridge::ImgDetectionConverter::toRosMsg), 
                                                                                                          &detConverter,
                                                                                                          std::placeholders::_1, 
                                                                                                          std::placeholders::_2), 
