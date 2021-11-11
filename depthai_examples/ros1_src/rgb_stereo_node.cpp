@@ -6,7 +6,6 @@
 // #include "utility.hpp"
 #include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
-#include <depthai_examples/rgb_stereo_pipeline.hpp>
 #include <functional>
 
 // Inludes common necessary includes for development using depthai library

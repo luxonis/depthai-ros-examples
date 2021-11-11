@@ -135,7 +135,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   )
 
   catkin_package(
-    INCLUDE_DIRS include
+    # INCLUDE_DIRS include
     LIBRARIES ${PROJECT_NAME}
     CATKIN_DEPENDS depthai_ros_msgs roscpp sensor_msgs std_msgs camera_info_manager depthai_bridge vision_msgs cv_bridge message_filters
     DEPENDS
@@ -148,13 +148,11 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
       add_dependencies("${node_name}"
         ${catkin_EXPORTED_TARGETS} 
         ${${PROJECT_NAME}_EXPORTED_TARGETS}
-        ${PROJECT_NAME} 
       )
 
       target_link_libraries("${node_name}" 
         ${catkin_LIBRARIES}
         depthai::core
-        ${PROJECT_NAME}
         opencv_imgproc
         opencv_highgui
       )
@@ -173,13 +171,11 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
 
   add_dependencies(nodelet_stereo ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS} 
-    ${PROJECT_NAME}
   )
 
   target_link_libraries(nodelet_stereo
     ${catkin_LIBRARIES}
     depthai::core
-    ${PROJECT_NAME}
     opencv_imgproc
     opencv_highgui
   )
@@ -189,7 +185,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   dai_add_node(rgb_node ros1_src/rgb_publisher.cpp)
   dai_add_node(rgb_stereo_node ros1_src/rgb_stereo_node.cpp)
   dai_add_node(rgb_subscriber_node ros1_src/rgb_video_subscriber.cpp)
-  dai_add_node(stereo_mimic_node ros1_src/stereo_mimic_node.cpp)
+  # dai_add_node(stereo_mimic_node ros1_src/stereo_mimic_node.cpp)
 
   dai_add_node(stereo_node ros1_src/stereo_publisher.cpp)
   dai_add_node(yolov4_spatial_node ros1_src/yolov4_spatial_publisher.cpp)

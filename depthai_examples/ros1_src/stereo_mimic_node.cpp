@@ -5,7 +5,6 @@
 
 #include <camera_info_manager/camera_info_manager.h>
 #include <functional>
-#include <depthai_examples/stereo_from_host.hpp>
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"

@@ -1,12 +1,12 @@
 
-#include "rclcpp/rclcpp.hpp"
+#include "ros/ros.h"
 
 #include <iostream>
 #include <cstdio>
 
-#include <sensor_msgs/msg/image.hpp>
+#include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
-#include <vision_msgs/msg/Detection2DArray.h>
+#include <vision_msgs/Detection2DArray.h>
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
