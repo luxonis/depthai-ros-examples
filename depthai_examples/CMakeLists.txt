@@ -17,8 +17,8 @@ if(NOT OpenCV_FOUND)
   set(_opencv_version 3)
   find_package(OpenCV 3 REQUIRED COMPONENTS imgproc highgui)
 endif()
-# find_package(depthai CONFIG REQUIRED)
-find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai")
+find_package(depthai CONFIG REQUIRED)
+# find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai")
 
 set(mobilenet_blob "${PROJECT_SOURCE_DIR}/resources/mobilenet-ssd_openvino_2021.2_6shave.blob")
 file(DOWNLOAD "https://artifacts.luxonis.com/artifactory/luxonis-depthai-data-local/network/mobilenet-ssd_openvino_2021.2_6shave.blob" 
