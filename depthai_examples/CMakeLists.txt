@@ -1,13 +1,10 @@
-cmake_minimum_required(VERSION 3.0.2)
-set (CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# add_compile_options(-std=c++11)
+cmake_minimum_required(VERSION 3.5)
 project(depthai_examples)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 if(POLICY CMP0057)
     cmake_policy(SET CMP0057 NEW)
@@ -20,7 +17,7 @@ if(NOT OpenCV_FOUND)
   set(_opencv_version 3)
   find_package(OpenCV 3 REQUIRED COMPONENTS imgproc highgui)
 endif()
-# find_package(depthai REQUIRED)
+# find_package(depthai CONFIG REQUIRED)
 find_package(depthai CONFIG REQUIRED PATHS "/home/sachin/Desktop/luxonis/depthai-core/build/install/lib/cmake/depthai")
 
 set(mobilenet_blob "${PROJECT_SOURCE_DIR}/resources/mobilenet-ssd_openvino_2021.2_6shave.blob")
@@ -65,6 +62,11 @@ if ( ament_cmake_FOUND )
     vision_msgs
   )
 
+  include_directories(
+    include
+    ${ament_INCLUDE_DIRS}
+  )
+
   macro(dai_add_node_ros2 node_name node_src)
     add_executable("${node_name}" "${node_src}")
 
@@ -91,31 +93,22 @@ if ( ament_cmake_FOUND )
   dai_add_node_ros2(rgb_stereo_node ros2_src/rgb_stereo_node.cpp)
   # dai_add_node_ros2(rgb_subscriber_node ros2_src/rgb_video_subscriber.cpp)
   # dai_add_node_ros2(stereo_mimic_node ros2_src/stereo_mimic_node.cpp)
-  # dai_add_node_ros2(stereo_node ros2_src/stereo_publisher.cpp)
+  dai_add_node_ros2(stereo_node ros2_src/stereo_publisher.cpp)
   dai_add_node_ros2(yolov4_spatial_node ros2_src/yolov4_spatial_publisher.cpp)
-
-  add_executable(stereo_node ros2_src/stereo_publisher.cpp)
-
-  target_link_libraries(stereo_node 
-                        depthai::core 
-                        opencv_imgproc
-                        opencv_highgui)
-
-  ament_target_dependencies(stereo_node  
-                            ${dependencies})  
-
+    
   target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
   target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
   
   # ament_export_include_directories(include)
   # ament_export_libraries(${PROJECT_NAME})
-  ament_export_dependencies(${dependencies}
-                            depthai::core
-                            ${OpenCV_LIBRARIES})
+  # ament_export_dependencies(${dependencies}
+  #                           depthai::core
+  #                           ${OpenCV_LIBRARIES})
 
   install(DIRECTORY params DESTINATION share/${PROJECT_NAME})
   install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
-  
+
+
   install(TARGETS
           crop_control_service
           mobilenet_node

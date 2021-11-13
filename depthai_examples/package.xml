@@ -36,17 +36,10 @@
 
   <depend condition="$ROS_VERSION == 1">nodelet</depend>
 
-
   <export>
     <nodelet condition="$ROS_VERSION == 1" plugin="${prefix}/nodelet_plugins.xml" />
     <build_type condition="$ROS_VERSION == 1">catkin</build_type>
     <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
   </export>
-  
-  <!-- The export tag contains other, unspecified, tags -->
-  <!-- <export>
-    Other tools can request additional information be placed here
-
-  </export> -->
 
 </package>
