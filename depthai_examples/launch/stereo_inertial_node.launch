@@ -17,7 +17,7 @@
     <arg name="extended"              default="false" /> 
     <arg name="subpixel"              default="true" />
     <arg name="rectify"               default="false"  />
-    <arg name="depth_aligned"         default="true"  />
+    <arg name="depth_aligned"         default="false"  />
      <!-- see https://docs.luxonis.com/projects/api/en/latest/components/nodes/stereo_depth/#currently-configurable-blocks for possible combination of optionf for higher fps-->
     <arg name="stereo_fps"            default="15"    />
    
