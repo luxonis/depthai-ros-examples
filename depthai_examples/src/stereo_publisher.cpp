@@ -15,7 +15,7 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 
 
-dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel){
+dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh){
     dai::Pipeline pipeline;
 
     auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -47,9 +47,9 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
     // if (subpixel) maxDisp *= 32; // 5 bits fractional disparity
 
     // StereoDepth
-    stereo->initialConfig.setConfidenceThreshold(200);
+    stereo->initialConfig.setConfidenceThreshold(confidence);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-    stereo->initialConfig.setLeftRightCheckThreshold(1);
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
@@ -80,6 +80,8 @@ int main(int argc, char** argv){
     std::string cameraParamUri;
     int badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
+    int confidence = 200;
+    int LRchecktresh = 10;
 
     badParams += !pnh.getParam("camera_name", deviceName);
     badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
@@ -87,6 +89,8 @@ int main(int argc, char** argv){
     badParams += !pnh.getParam("lrcheck",  lrcheck);
     badParams += !pnh.getParam("extended",  extended);
     badParams += !pnh.getParam("subpixel",  subpixel);
+    badParams += !pnh.getParam("confidence",  confidence);
+    badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
     
 
     if (badParams > 0)
@@ -102,7 +106,7 @@ int main(int argc, char** argv){
         enableDepth = false;
     }
 
-    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel);
+    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh);
 
     dai::Device device(pipeline);
 
