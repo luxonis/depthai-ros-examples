@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
       auto result = client->async_send_request(request);
       if (rclcpp::spin_until_future_complete(node, result) ==
           rclcpp::FutureReturnCode::SUCCESS) {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Status: %d",
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Status: %ld",
                     result.get()->status);
       } else {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
