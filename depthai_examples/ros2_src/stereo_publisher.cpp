@@ -167,7 +167,7 @@ int main(int argc, char** argv){
     
     std::cout << "Enabling Strobe and Projector" << std::endl;
     int enable =  strobe_mode << 6 | 1 << 5 | 1 << 1; 
-    device.irWriteReg(0x01, enable)
+    device.irWriteReg(0x01, enable);
 
      if(mode == "depth"){
 
