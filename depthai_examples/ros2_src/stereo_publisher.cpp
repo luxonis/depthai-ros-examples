@@ -1,6 +1,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <cstdio>
 #include <sensor_msgs/msg/image.hpp>
@@ -71,6 +73,7 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
     return pipeline;
 }
 
+
 int main(int argc, char** argv){
 
     rclcpp::init(argc, argv);
@@ -78,22 +81,27 @@ int main(int argc, char** argv){
     
     std::string deviceName, mode;
     std::string cameraParamUri;
-    int badParams = 0;
+    int strobe_mode = 0, badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
 
-    badParams += !node->get_parameter("camera_name", deviceName);
+    /* badParams += !node->get_parameter("camera_name", deviceName);
     badParams += !node->get_parameter("camera_param_uri", cameraParamUri);
     badParams += !node->get_parameter("mode", mode);
     badParams += !node->get_parameter("lrcheck",  lrcheck);
     badParams += !node->get_parameter("extended",  extended);
     badParams += !node->get_parameter("subpixel",  subpixel);
-    
 
     if (badParams > 0)
     {
         std::cout << " Bad parameters -> " << badParams << std::endl;
         throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    } */
+
+    deviceName = "OAK-d";
+    mode = "depth";
+    lrcheck = true;
+    extended = false;
+    subpixel = true;
 
     if(mode == "depth"){
         enableDepth = true;
@@ -116,6 +124,7 @@ int main(int argc, char** argv){
     }
 
     auto calibrationHandler = device.readCalibration();
+    std::cout << "Press +/- to increase and decreasesdadasddd brightness" << std::endl;
 
     // this part would be removed once we have calibration-api
     /*     
@@ -155,9 +164,13 @@ int main(int argc, char** argv){
                                                                                      "right");
 
     rightPublish.addPubisherCallback();
+    
+    std::cout << "Enabling Strobe and Projector" << std::endl;
+    int enable =  strobe_mode << 6 | 1 << 5 | 1 << 1; 
+    device.irWriteReg(0x01, enable)
 
      if(mode == "depth"){
-         std::cout << "In depth";
+
         dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),
@@ -169,7 +182,44 @@ int main(int argc, char** argv){
                                                                                      30,
                                                                                      rightCameraInfo,
                                                                                      "stereo");
+
         depthPublish.addPubisherCallback();
+        int brightness = 54;
+        int oldBrightness = brightness;
+        dev.irWriteReg(0x04, brightness);
+        char key;
+        while (rclcpp::ok()){
+            rclcpp::spin_some(node);
+            key = getchar();
+
+            if(key == '+'){
+                brightness += 3;
+            }
+            else if(key == '-'){
+                brightness -= 3;
+            }
+            else if(key == EOF){
+                continue;
+            }
+            else{
+                std::cout << "Press +/- to increase and decrease brightness" << std::endl;
+            }
+
+            if (brightness > 127){
+                brightness = 127;
+                std::cout << "Max available brightness is 127. cannot increment beyond that" << std::endl;
+            }
+            else if (brightness < 0){
+                brightness = 0;
+                std::cout << "Min available brightness is 0. cannot decrement below 0" << std::endl;
+            }
+
+            if (oldBrightness != brightness){
+                dev.irWriteReg(0x04, brightness);
+                oldBrightness = brightness;
+                std::cout << "Updated Brightness " << brightness << std::endl;
+            }
+        }
     }
     else{
         dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
@@ -185,10 +235,43 @@ int main(int argc, char** argv){
                                                                                      "stereo");
         dispPublish.addPubisherCallback();
     }
-    rclcpp::spin(node);
-    // We can add the rectified frames also similar to these publishers. 
-    // Left them out so that users can play with it by adding and removing
+    // rclcpp::spin(node);
+    // int brightness = 54;
+    // dev.irWriteReg(0x04, brightness);
+    // std::cout << "Press +/- to increase and decrease brightness" << std::endl;
+    
 
+    /* char key;
+    while (rclcpp::ok()){
+        rclcpp::spin_some(node);
+        
+        // We can add the rectified frames also similar to these publishers. 
+        // Left them out so that users can play with it by adding and removing
+        key = getchar();
+
+        if(key == '+'){
+            brightness += 3;
+        }
+        else if(key == '-'){
+            brightness -= 3;
+        }
+        else if(key == EOF){
+            continue;
+        }
+        else{
+            std::cout << "Press +/- to increase and decrease brightness" << std::endl;
+        }
+
+        if (brightness > 127){
+            brightness = 127;
+            std::cout << "Max available brightness is 127. cannot increment beyond that" << std::endl;
+        }
+        else if (brightness < 0){
+            brightness = 0;
+            std::cout << "Min available brightness is 0. cannot decrement below 0" << std::endl;
+        }
+
+    } */
     
     return 0;
 }

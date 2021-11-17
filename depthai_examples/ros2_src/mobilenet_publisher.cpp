@@ -49,11 +49,11 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("stereo_node");
     
-    std::string deviceName;
-    std::string cameraParamUri;
+    std::string deviceName = "oak_d";
+    std::string cameraParamUri = "/home/sachin/Desktop/luxonis/ros2_ws/install/depthai_examples/share/depthai_examples/params/camera";
     std::string nnPath(BLOB_PATH);
-    bool syncNN;
-    int bad_params = 0;
+    bool syncNN = true;
+    /* int bad_params = 0;
 
     bad_params += !node->get_parameter("camera_name", deviceName);
     bad_params += !node->get_parameter("camera_param_uri", cameraParamUri);
@@ -63,12 +63,12 @@ int main(int argc, char** argv){
     {
         throw std::runtime_error("Couldn't find one of the parameters");
     }
-
+ */
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
-    if (node->has_parameter ("nn_path"))
+    /* if (node->has_parameter ("nn_path"))
     {
         node->get_parameter("nn_path", nnPath);
-    }
+    } */
 
     dai::Pipeline pipeline = createPipeline(syncNN, nnPath);
     dai::Device device(pipeline);
