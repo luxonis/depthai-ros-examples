@@ -170,6 +170,7 @@ int main(int argc, char** argv){
                                                                                      rightCameraInfo,
                                                                                      "stereo");
         depthPublish.addPubisherCallback();
+        rclcpp::spin(node);
     }
     else{
         dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
@@ -184,11 +185,7 @@ int main(int argc, char** argv){
                                                                                      rightCameraInfo,
                                                                                      "stereo");
         dispPublish.addPubisherCallback();
+        rclcpp::spin(node);
     }
-    rclcpp::spin(node);
-    // We can add the rectified frames also similar to these publishers. 
-    // Left them out so that users can play with it by adding and removing
-
-    
     return 0;
 }

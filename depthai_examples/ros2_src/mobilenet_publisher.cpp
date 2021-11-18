@@ -47,7 +47,7 @@ dai::Pipeline createPipeline(bool syncNN, std::string nnPath){
 int main(int argc, char** argv){
 
     rclcpp::init(argc, argv);
-    auto node = rclcpp::Node::make_shared("stereo_node");
+    auto node = rclcpp::Node::make_shared("mobilenet_node");
     
     std::string deviceName;
     std::string cameraParamUri;
