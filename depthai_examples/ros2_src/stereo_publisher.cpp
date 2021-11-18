@@ -113,7 +113,15 @@ int main(int argc, char** argv){
     dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel);
 
     dai::Device device(pipeline);
-
+    device.irWriteReg(0x2, 0x1)
+    device.irWriteReg(0x3, 0x0)
+    device.irWriteReg(0x4, 0x0)
+    device.irWriteReg(0x5, 0x0)
+    device.irWriteReg(0x6, 0x0)
+    device.irWriteReg(0x7, 0x9)
+    device.irWriteReg(0x8, 0x1a)
+    device.irWriteReg(0x9, 0x8)
+    device.irWriteReg(0x1, 0x24)
     auto leftQueue = device.getOutputQueue("left", 30, false);
     auto rightQueue = device.getOutputQueue("right", 30, false);
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
@@ -166,7 +174,7 @@ int main(int argc, char** argv){
     rightPublish.addPubisherCallback();
     
     std::cout << "Enabling Strobe and Projector" << std::endl;
-    int enable =  strobe_mode << 6 | 1 << 5 | 1 << 1; 
+    int enable =  strobe_mode << 6 | 1 << 5 | 1 << 1 | 1 << 2; 
     device.irWriteReg(0x01, enable);
 
      if(mode == "depth"){
@@ -186,7 +194,7 @@ int main(int argc, char** argv){
         depthPublish.addPubisherCallback();
         int brightness = 54;
         int oldBrightness = brightness;
-        dev.irWriteReg(0x04, brightness);
+        device.irWriteReg(0x04, brightness);
         char key;
         while (rclcpp::ok()){
             rclcpp::spin_some(node);
@@ -215,7 +223,7 @@ int main(int argc, char** argv){
             }
 
             if (oldBrightness != brightness){
-                dev.irWriteReg(0x04, brightness);
+                device.irWriteReg(0x04, brightness);
                 oldBrightness = brightness;
                 std::cout << "Updated Brightness " << brightness << std::endl;
             }
