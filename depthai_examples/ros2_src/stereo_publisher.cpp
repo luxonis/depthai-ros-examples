@@ -113,15 +113,15 @@ int main(int argc, char** argv){
     dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel);
 
     dai::Device device(pipeline);
-    device.irWriteReg(0x2, 0x1)
-    device.irWriteReg(0x3, 0x0)
-    device.irWriteReg(0x4, 0x0)
-    device.irWriteReg(0x5, 0x0)
-    device.irWriteReg(0x6, 0x0)
-    device.irWriteReg(0x7, 0x9)
-    device.irWriteReg(0x8, 0x1a)
-    device.irWriteReg(0x9, 0x8)
-    device.irWriteReg(0x1, 0x24)
+    device.irWriteReg(0x2, 0x1);
+    device.irWriteReg(0x3, 0x0);
+    device.irWriteReg(0x4, 0x0);
+    device.irWriteReg(0x5, 0x0);
+    device.irWriteReg(0x6, 0x0);
+    device.irWriteReg(0x7, 0x9);
+    device.irWriteReg(0x8, 0x1a);
+    device.irWriteReg(0x9, 0x8);
+    device.irWriteReg(0x1, 0x24);
     auto leftQueue = device.getOutputQueue("left", 30, false);
     auto rightQueue = device.getOutputQueue("right", 30, false);
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
