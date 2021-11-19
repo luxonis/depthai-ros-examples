@@ -106,8 +106,9 @@ if ( ament_cmake_FOUND )
   #                           ${OpenCV_LIBRARIES})
 
   install(DIRECTORY params DESTINATION share/${PROJECT_NAME})
-  install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
-
+  install(DIRECTORY rviz DESTINATION share/${PROJECT_NAME})
+  install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch
+  FILES_MATCHING PATTERN "*.py")
 
   install(TARGETS
           crop_control_service

@@ -77,12 +77,12 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("stereo_node");
     
     std::string deviceName, mode;
-    std::string cameraParamUri;
+    rclcpp::Parameter name;
     int badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
 
-    badParams += !node->get_parameter("camera_name", deviceName);
-    badParams += !node->get_parameter("camera_param_uri", cameraParamUri);
+    std::cout << node->get_parameter("camera_name", name) << name << std::endl;
+    badParams += !node->get_parameter("camera_name", name);
     badParams += !node->get_parameter("mode", mode);
     badParams += !node->get_parameter("lrcheck",  lrcheck);
     badParams += !node->get_parameter("extended",  extended);
@@ -117,14 +117,6 @@ int main(int argc, char** argv){
 
     auto calibrationHandler = device.readCalibration();
 
-    // this part would be removed once we have calibration-api
-    /*     
-     std::string leftUri = cameraParamUri +"/" + "left.yaml";
-
-     std::string rightUri = cameraParamUri + "/" + "right.yaml";
-
-     std::string stereoUri = cameraParamUri + "/" + "right.yaml";
-    */        
     dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(leftQueue,
