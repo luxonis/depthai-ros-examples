@@ -177,11 +177,12 @@ int main(int argc, char** argv){
      if(enableDepth){
         std::cout << "In depth";
         auto depthCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
+        auto depthconverter = depth_aligned ? rgbConverter : rgbConverter;
         dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      pnh, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                                                                                     &rightconverter, // since the converter has the same frame name
+                                                                                     &depthconverter, // since the converter has the same frame name
                                                                                                       // and image type is also same we can reuse it
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
@@ -234,8 +235,10 @@ int main(int argc, char** argv){
         }
     }
     else{
-        dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
+        std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
+        dai::rosBridge::DisparityConverter dispConverter(deviceName + tfSuffix , 880, 7.5, 20, 2000); // TODO(sachin): undo hardcoding of baseline
         auto disparityCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
+        auto depthconverter = depth_aligned ? rgbConverter : rgbConverter;
         dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
                                                                                      pnh, 
                                                                                      std::string("stereo/disparity"),
