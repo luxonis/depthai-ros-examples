@@ -16,7 +16,7 @@ def generate_launch_description():
     
 
     camera_name  = LaunchConfiguration('camera_name', default = 'oak')
-    camera_model = LaunchConfiguration('camera_model', default = 'OAK-D')
+    camera_model = LaunchConfiguration('camera_model', default = 'BW1098OAK')
     mode         = LaunchConfiguration('mode', default = 'depth')
     lrcheck      = LaunchConfiguration('lrcheck', default = True)
     extended     = LaunchConfiguration('extended', default = False)
@@ -121,10 +121,10 @@ def generate_launch_description():
     ld.add_action(declare_subpixel_cmd)
 
     ld.add_action(streo_node)
-    # ld.add_action(urdf_launch)
+    ld.add_action(urdf_launch)
 
-    # ld.add_action(metric_converter_node)
-    # ld.add_action(point_cloud_node)
-    # ld.add_action(rviz_node)
+    ld.add_action(metric_converter_node)
+    ld.add_action(point_cloud_node)
+    ld.add_action(rviz_node)
     return ld
 
