@@ -78,27 +78,20 @@ int main(int argc, char** argv){
     
     std::string deviceName, mode;
     // rclcpp::Parameter name;
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("mode", "depth");
+    node->declare_parameter("lrcheck", true);
+    node->declare_parameter("extended", false);
+    node->declare_parameter("subpixel", true);
+
     int badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
 
-    // std::cout << node->get_parameter("camera_name", name) << name << std::endl;
-    // badParams += !node->get_parameter("camera_name", name);
-    badParams += !node->get_parameter("mode",        mode);
-    // badParams += !node->get_parameter("lrcheck",     lrcheck);
-    // badParams += !node->get_parameter("extended",    extended);
-    // badParams += !node->get_parameter("subpixel",    subpixel);
-    
-    // name = "OAK-D";
-    mode = "depth";
-    lrcheck = true;
-    extended = false;
-    subpixel = true;
-
-    // if (badParams > 0)
-    // {
-    //     std::cout << " Bad parameters -> " << badParams << std::endl;
-    //     throw std::runtime_error("Couldn't find one of the parameters");
-    // }
+    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("mode",        mode);
+    node->get_parameter("lrcheck",     lrcheck);
+    node->get_parameter("extended",    extended);
+    node->get_parameter("subpixel",    subpixel);
 
     if(mode == "depth"){
         enableDepth = true;

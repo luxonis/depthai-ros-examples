@@ -18,9 +18,9 @@ def generate_launch_description():
     camera_name  = LaunchConfiguration('camera_name', default = 'oak')
     camera_model = LaunchConfiguration('camera_model', default = 'OAK-D')
     mode         = LaunchConfiguration('mode', default = 'depth')
-    lrcheck      = LaunchConfiguration('lrcheck', default = 'true')
-    extended     = LaunchConfiguration('extended', default = 'false')
-    subpixel     = LaunchConfiguration('subpixel', default = 'true')
+    lrcheck      = LaunchConfiguration('lrcheck', default = True)
+    extended     = LaunchConfiguration('extended', default = False)
+    subpixel     = LaunchConfiguration('subpixel', default = True)
 
 
     declare_camera_name_cmd = DeclareLaunchArgument(
@@ -64,8 +64,11 @@ def generate_launch_description():
     streo_node = launch_ros.actions.Node(
             package='depthai_examples', executable='stereo_node',
             output='screen',
-            parameters=[
-                        {"subpixel": 200}])
+            parameters=[{'camera_name': camera_name},
+                        {'mode': mode},
+                        {'lrcheck': lrcheck},
+                        {'extended': extended},
+                        {'subpixel': subpixel}])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
