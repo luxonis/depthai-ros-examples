@@ -25,32 +25,32 @@ def generate_launch_description():
 
     declare_camera_name_cmd = DeclareLaunchArgument(
         'camera_name',
-        default_value='oak',
+        default_value=camera_name,
         description='The name of the camera. It can be different from the camera model and it will be used in naming TF.')
     
     declare_camera_model_cmd = DeclareLaunchArgument(
         'camera_model',
-        default_value='OAK-D',
+        default_value=camera_model,
         description='The model of the camera. Using a wrong camera model can disable camera features. Valid models: `OAK-D, OAK-D-LITE`.')
 
     declare_mode_cmd = DeclareLaunchArgument(
         'mode',
-        default_value='depth',
+        default_value=mode,
         description='set to depth or disparity. Setting to depth will publish depth or else will publish disparity.')
 
     declare_lrcheck_cmd = DeclareLaunchArgument(
         'lrcheck',
-        default_value='true',
+        default_value=lrcheck,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
 
     declare_extended_cmd = DeclareLaunchArgument(
         'extended',
-        default_value='false',
+        default_value=extended,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
 
     declare_subpixel_cmd = DeclareLaunchArgument(
         'subpixel',
-        default_value='true',
+        default_value=subpixel,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
     
     
@@ -64,11 +64,8 @@ def generate_launch_description():
     streo_node = launch_ros.actions.Node(
             package='depthai_examples', executable='stereo_node',
             output='screen',
-            parameters=[{'camera_name': camera_name},
-                        {'mode': mode},
-                        {'lrcheck': lrcheck},
-                        {'extended': extended},
-                        {'subpixel': subpixel}])
+            parameters=[
+                        {"subpixel": 200}])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -121,10 +118,10 @@ def generate_launch_description():
     ld.add_action(declare_subpixel_cmd)
 
     ld.add_action(streo_node)
-    ld.add_action(urdf_launch)
+    # ld.add_action(urdf_launch)
 
-    ld.add_action(metric_converter_node)
-    ld.add_action(point_cloud_node)
-    ld.add_action(rviz_node)
+    # ld.add_action(metric_converter_node)
+    # ld.add_action(point_cloud_node)
+    # ld.add_action(rviz_node)
     return ld
 

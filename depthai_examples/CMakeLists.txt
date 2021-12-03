@@ -4,6 +4,7 @@ project(depthai_examples)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+add_compile_options(-g)
 
 ## is used, also find other catkin packages
 if(POLICY CMP0057)

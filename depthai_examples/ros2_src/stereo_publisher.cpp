@@ -77,23 +77,28 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("stereo_node");
     
     std::string deviceName, mode;
-    rclcpp::Parameter name;
+    // rclcpp::Parameter name;
     int badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
 
-    std::cout << node->get_parameter("camera_name", name) << name << std::endl;
-    badParams += !node->get_parameter("camera_name", name);
-    badParams += !node->get_parameter("mode", mode);
-    badParams += !node->get_parameter("lrcheck",  lrcheck);
-    badParams += !node->get_parameter("extended",  extended);
-    badParams += !node->get_parameter("subpixel",  subpixel);
+    // std::cout << node->get_parameter("camera_name", name) << name << std::endl;
+    // badParams += !node->get_parameter("camera_name", name);
+    badParams += !node->get_parameter("mode",        mode);
+    // badParams += !node->get_parameter("lrcheck",     lrcheck);
+    // badParams += !node->get_parameter("extended",    extended);
+    // badParams += !node->get_parameter("subpixel",    subpixel);
     
+    // name = "OAK-D";
+    mode = "depth";
+    lrcheck = true;
+    extended = false;
+    subpixel = true;
 
-    if (badParams > 0)
-    {
-        std::cout << " Bad parameters -> " << badParams << std::endl;
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    // if (badParams > 0)
+    // {
+    //     std::cout << " Bad parameters -> " << badParams << std::endl;
+    //     throw std::runtime_error("Couldn't find one of the parameters");
+    // }
 
     if(mode == "depth"){
         enableDepth = true;
