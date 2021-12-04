@@ -50,23 +50,25 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("mobilenet_node");
     
     std::string deviceName;
-    std::string cameraParamUri;
+    std::string cameraParamUri = "package://depthai_examples/params/camera";
     std::string nnPath(BLOB_PATH);
     bool syncNN;
     int bad_params = 0;
 
-    bad_params += !node->get_parameter("camera_name", deviceName);
-    bad_params += !node->get_parameter("camera_param_uri", cameraParamUri);
-    bad_params += !node->get_parameter("sync_nn", syncNN);
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("camera_param_uri", cameraParamUri);
+    node->declare_parameter("sync_nn", true);
+    node->declare_parameter("nn_path", "");
 
-    if (bad_params > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("camera_param_uri", cameraParamUri);
+    node->get_parameter("sync_nn", syncNN);
 
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
-    if (node->has_parameter ("nn_path"))
-    {
+    std::string nnParam;
+    node->get_parameter("nn_path", nnParam);
+    if(!nnParam.empty())
+    {   
         node->get_parameter("nn_path", nnPath);
     }
 
@@ -78,6 +80,7 @@ int main(int argc, char** argv){
 
     std::string color_uri = cameraParamUri + "/" + "color.yaml";
 
+    //TODO(sachin): Add option to use CameraInfo from EEPROM
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(previewQueue,
                                                                                    node, 

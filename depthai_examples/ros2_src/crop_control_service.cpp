@@ -23,17 +23,9 @@ void boundAdjuster(double &value) {
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
   auto node = rclcpp::Node::make_shared("crop_control_service");
-  std::string serviceName = "crop_control_srv";
-
-  /*
-  int badParams = 0;
-  badParams += !pnh.getParam("service_name", serviceName);
-
-  if (badParams > 0){
-      std::cout << " Bad parameters -> " << badParams << std::endl;
-      throw std::runtime_error("Couldn't find %d of the parameters");
-  }
-  */
+  std::string serviceName;
+  node->declare_parameter("service_name", "crop_control_srv");
+  node->get_parameter("service_name", serviceName);
 
   rclcpp::Client<depthai_ros_msgs::srv::NormalizedImageCrop>::SharedPtr client =
       node->create_client<depthai_ros_msgs::srv::NormalizedImageCrop>(

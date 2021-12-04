@@ -16,7 +16,7 @@ def generate_launch_description():
     
 
     camera_name  = LaunchConfiguration('camera_name', default = 'oak')
-    camera_model = LaunchConfiguration('camera_model', default = 'BW1098OAK')
+    camera_model = LaunchConfiguration('camera_model', default = 'OAK-D')
     mode         = LaunchConfiguration('mode', default = 'depth')
     lrcheck      = LaunchConfiguration('lrcheck', default = True)
     extended     = LaunchConfiguration('extended', default = False)

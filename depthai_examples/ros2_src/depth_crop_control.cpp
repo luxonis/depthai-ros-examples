@@ -33,14 +33,8 @@ int main() {
     auto node = rclcpp::Node::make_shared("depth_crop_control");
     std::string cameraName;
 
-    int badParams = 0;
-    bad_params += !node->get_parameter("camera_name", deviceName);
-
-    if (badParams > 0)
-    {
-        std::cout << " Bad parameters -> " << badParams << std::endl;
-        throw std::runtime_error("Couldn't find %d of the parameters", badParams);
-    }
+    node->declare_parameter("camera_name", "oak");
+    node->get_parameter("camera_name", cameraName);
 
     rclcpp::Service<depthai_ros_msgs::srv::NormalizedImageCrop>::SharedPtr service =
     node->create_service<depthai_ros_msgs::srv::NormalizedImageCrop>("crop_control_srv", &cropDepthImage);
