@@ -77,15 +77,13 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("stereo_node");
     
     std::string deviceName, mode;
-    // rclcpp::Parameter name;
+    bool lrcheck, extended, subpixel, enableDepth;
+
     node->declare_parameter("camera_name", "oak");
     node->declare_parameter("mode", "depth");
     node->declare_parameter("lrcheck", true);
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
-
-    int badParams = 0;
-    bool lrcheck, extended, subpixel, enableDepth;
 
     node->get_parameter("camera_name", deviceName);
     node->get_parameter("mode",        mode);

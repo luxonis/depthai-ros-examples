@@ -66,20 +66,21 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("rgb_stereo_node");
     
     std::string deviceName;
-    std::string camera_param_uri;
-    int bad_params = 0;
+    std::string camera_param_uri = "package://depthai_examples/params/camera";
     bool lrcheck, extended, subpixel;
 
-    bad_params += !node->get_parameter("camera_name", deviceName);
-    bad_params += !node->get_parameter("camera_param_uri", camera_param_uri);
-    bad_params += !node->get_parameter("lrcheck",  lrcheck);
-    bad_params += !node->get_parameter("extended",  extended);
-    bad_params += !node->get_parameter("subpixel",  subpixel);
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("camera_param_uri", camera_param_uri);
+    node->declare_parameter("lrcheck", true);
+    node->declare_parameter("extended", false);
+    node->declare_parameter("subpixel", true);
 
-    if (bad_params > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("camera_param_uri", camera_param_uri);
+    node->get_parameter("lrcheck",  lrcheck);
+    node->get_parameter("extended",  extended);
+    node->get_parameter("subpixel",  subpixel);
+
     dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel);
     dai::Device device(pipeline);
 

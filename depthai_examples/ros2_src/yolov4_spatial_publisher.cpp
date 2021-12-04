@@ -102,21 +102,22 @@ int main(int argc, char** argv){
     std::string nnPath(BLOB_PATH); // Set your path for the model here
     bool syncNN, subpixel;
 
-    int bad_params = 0;
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("camera_param_uri", camera_param_uri);
+    node->declare_parameter("sync_nn", true);
+    node->declare_parameter("subpixel", true);
+    node->declare_parameter("nn_path", "");
 
-    bad_params += !node->get_parameter("camera_name", deviceName);
-    bad_params += !node->get_parameter("camera_param_uri", camera_param_uri);
-    bad_params += !node->get_parameter("sync_nn", syncNN);
-    bad_params += !node->get_parameter("subpixel", subpixel);
+    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("camera_param_uri", camera_param_uri);
+    node->get_parameter("sync_nn", syncNN);
+    node->get_parameter("subpixel", subpixel);
 
-    if (bad_params > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
-
-    if (node->has_parameter("nn_path"))
-    {
-      node->get_parameter("nn_path", nnPath);
+    std::string nnParam;
+    node->get_parameter("nn_path", nnParam);
+    if(!nnParam.empty())
+    {   
+        node->get_parameter("nn_path", nnPath);
     }
 
     dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath);
@@ -125,6 +126,7 @@ int main(int argc, char** argv){
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
     std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
 
+    //TODO(sachin): Add option to use CameraInfo from EEPROM
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(device.getOutputQueue("preview", 30, false),
                                                                                      node, 

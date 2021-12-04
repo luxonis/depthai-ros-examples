@@ -32,17 +32,14 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("rgb_node");
 
     std::string deviceName;
-    std::string cameraParamUri;
-    int bad_params = 0;
-
-    bad_params += !node->get_parameter("camera_name", deviceName);
-    bad_params += !node->get_parameter("camera_param_uri", cameraParamUri);
-
-    if (bad_params > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    std::string cameraParamUri = "package://depthai_examples/params/camera";
     
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("camera_param_uri", camera_param_uri);
+    
+    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("camera_param_uri", cameraParamUri);
+
     dai::Pipeline pipeline = createPipeline();
     dai::Device device(pipeline);
     std::shared_ptr<dai::DataOutputQueue> imgQueue = device.getOutputQueue("video", 30, false);
