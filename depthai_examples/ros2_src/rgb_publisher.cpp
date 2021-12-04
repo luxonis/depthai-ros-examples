@@ -35,7 +35,7 @@ int main(int argc, char** argv){
     std::string cameraParamUri = "package://depthai_examples/params/camera";
     
     node->declare_parameter("camera_name", "oak");
-    node->declare_parameter("camera_param_uri", camera_param_uri);
+    node->declare_parameter("camera_param_uri", cameraParamUri);
     
     node->get_parameter("camera_name", deviceName);
     node->get_parameter("camera_param_uri", cameraParamUri);
