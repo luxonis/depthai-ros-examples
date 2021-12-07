@@ -25,10 +25,10 @@ class StereoMimicNode{
     {
         std::string deviceName;
         std::string camera_param_uri;
-        int bad_params = 0;
+        int badParams = 0;
 
-        bad_params += !_pnh.getParam("camera_name", deviceName);
-        bad_params += !_pnh.getParam("camera_param_uri", camera_param_uri);
+        badParams += !_pnh.getParam("camera_name", deviceName);
+        badParams += !_pnh.getParam("camera_param_uri", camera_param_uri);
 
         _stereoPipeline = std::make_unique<StereoHost>();
         _stereoPipeline->initDepthaiDev();

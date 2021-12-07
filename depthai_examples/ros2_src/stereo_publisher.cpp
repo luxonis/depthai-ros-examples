@@ -85,7 +85,7 @@ int main(int argc, char** argv){
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
     node->declare_parameter("confidence",  200);
-    node->declare_parameter("LRchecktresh",  10);
+    node->declare_parameter("LRchecktresh",  5);
 
     node->get_parameter("camera_name",  deviceName);
     node->get_parameter("mode",         mode);

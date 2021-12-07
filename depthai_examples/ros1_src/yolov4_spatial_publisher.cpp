@@ -29,7 +29,7 @@ const std::vector<std::string> label_map = {"person",         "bicycle",    "car
              "toaster",        "sink",       "refrigerator",  "book",          "clock",       "vase",          "scissors",
              "teddy bear",     "hair drier", "toothbrush"};
 
-dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath){
+dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int confidence, int LRchecktresh){
     dai::Pipeline pipeline;
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
     auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
@@ -57,7 +57,9 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     /// setting node configs
-    stereo->initialConfig.setConfidenceThreshold(230);
+    stereo->initialConfig.setConfidenceThreshold(confidence);
+    stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
     stereo->setSubpixel(subpixel);
 
     spatialDetectionNetwork->setBlobPath(nnPath);
@@ -102,14 +104,18 @@ int main(int argc, char** argv){
     std::string nnPath(BLOB_PATH); // Set your path for the model here
     bool syncNN, subpixel;
 
-    int bad_params = 0;
+    int badParams = 0;
+    int confidence = 200;
+    int LRchecktresh = 5;
 
-    bad_params += !pnh.getParam("camera_name", deviceName);
-    bad_params += !pnh.getParam("camera_param_uri", camera_param_uri);
-    bad_params += !pnh.getParam("sync_nn", syncNN);
-    bad_params += !pnh.getParam("subpixel", subpixel);
+    badParams += !pnh.getParam("camera_name", deviceName);
+    badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
+    badParams += !pnh.getParam("sync_nn", syncNN);
+    badParams += !pnh.getParam("subpixel", subpixel);
+    badParams += !pnh.getParam("confidence", confidence);
+    badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
 
-    if (bad_params > 0)
+    if (badParams > 0)
     {
         throw std::runtime_error("Couldn't find one of the parameters");
     }
@@ -119,7 +125,7 @@ int main(int argc, char** argv){
       pnh.getParam("nn_path", nnPath);
     }
 
-    dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath);
+    dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh);
     dai::Device device(pipeline);
 
     std::string color_uri = camera_param_uri + "/" + "color.yaml";

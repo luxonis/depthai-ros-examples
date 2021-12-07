@@ -26,7 +26,7 @@ def generate_launch_description():
     depth_aligned  = LaunchConfiguration('depth_aligned', default = False)
     stereo_fps     = LaunchConfiguration('stereo_fps', default = 30)
     confidence     = LaunchConfiguration('confidence', default = 200)
-    LRchecktresh   = LaunchConfiguration('LRchecktresh', default = 10)
+    LRchecktresh   = LaunchConfiguration('LRchecktresh', default = 5)
 
     declare_camera_name_cmd = DeclareLaunchArgument(
         'camera_name',

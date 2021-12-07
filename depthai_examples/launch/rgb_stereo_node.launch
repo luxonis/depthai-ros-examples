@@ -17,6 +17,8 @@
     <arg name="lrcheck"               default="true" /> 
     <arg name="extended"              default="false" /> 
     <arg name="subpixel"              default="false" />
+    <arg name="confidence"            default="200" />
+    <arg name="LRchecktresh"          default="5" />
   
     <!-- args for stereo node -->
     <!-- <arg name="outputDepth"           default="true" />

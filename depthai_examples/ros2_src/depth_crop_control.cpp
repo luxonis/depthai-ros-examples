@@ -32,9 +32,22 @@ int main() {
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("depth_crop_control");
     std::string cameraName;
+    int confidence, LRchecktresh;
+    bool lrcheck, extended, subpixel;
 
     node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("lrcheck", true);
+    node->declare_parameter("extended", false);
+    node->declare_parameter("subpixel", true);
+    node->declare_parameter("confidence",  200);
+    node->declare_parameter("LRchecktresh",  5);
+
     node->get_parameter("camera_name", cameraName);
+    node->get_parameter("lrcheck",      lrcheck);
+    node->get_parameter("extended",     extended);
+    node->get_parameter("subpixel",     subpixel);
+    node->get_parameter("confidence",   confidence);
+    node->get_parameter("LRchecktresh", LRchecktresh);
 
     rclcpp::Service<depthai_ros_msgs::srv::NormalizedImageCrop>::SharedPtr service =
     node->create_service<depthai_ros_msgs::srv::NormalizedImageCrop>("crop_control_srv", &cropDepthImage);
@@ -68,7 +81,11 @@ int main() {
 
     manip->initialConfig.setCropRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
     manip->setMaxOutputFrameSize(monoRight->getResolutionHeight() * monoRight->getResolutionWidth() * 3);
-    stereo->initialConfig.setConfidenceThreshold(230);
+    stereo->initialConfig.setConfidenceThreshold(confidence);
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
+    stereo->setLeftRightCheck(lrcheck);
+    stereo->setExtendedDisparity(extended);
+    stereo->setSubpixel(subpixel);
 
     // Linking
     configIn->out.link(manip->inputConfig);
@@ -87,6 +104,7 @@ int main() {
     auto calibrationHandler = device.readCalibration();
 
     dai::rosBridge::ImageConverter depthConverter(cameraName + "_right_camera_optical_frame", true);
+    // TODO(sachin): Modify the calibration based on crop from service
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(depthQueue,

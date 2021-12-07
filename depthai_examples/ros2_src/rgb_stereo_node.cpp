@@ -14,7 +14,7 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
+dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh){
 
     dai::Pipeline pipeline;
     auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -32,9 +32,9 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     // StereoDepth
-    stereo->initialConfig.setConfidenceThreshold(230);
+    stereo->initialConfig.setConfidenceThreshold(confidence);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
@@ -68,18 +68,23 @@ int main(int argc, char** argv){
     std::string deviceName;
     std::string camera_param_uri = "package://depthai_examples/params/camera";
     bool lrcheck, extended, subpixel;
+    int confidence, LRchecktresh;
 
     node->declare_parameter("camera_name", "oak");
     node->declare_parameter("camera_param_uri", camera_param_uri);
     node->declare_parameter("lrcheck", true);
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
+    node->declare_parameter("confidence",  200);
+    node->declare_parameter("LRchecktresh",  5);
 
     node->get_parameter("camera_name", deviceName);
     node->get_parameter("camera_param_uri", camera_param_uri);
     node->get_parameter("lrcheck",  lrcheck);
     node->get_parameter("extended",  extended);
     node->get_parameter("subpixel",  subpixel);
+    node->get_parameter("confidence",   confidence);
+    node->get_parameter("LRchecktresh", LRchecktresh);
 
     dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel);
     dai::Device device(pipeline);
@@ -87,10 +92,8 @@ int main(int argc, char** argv){
     auto stereoQueue = device.getOutputQueue("depth", 30, false);
     auto previewQueue = device.getOutputQueue("preview", 30, true);
 
-    bool latched_cam_info = true;
     std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
-
 
     dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
@@ -124,7 +127,6 @@ int main(int argc, char** argv){
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
-
     rclcpp::spin(node);
 
     return 0;

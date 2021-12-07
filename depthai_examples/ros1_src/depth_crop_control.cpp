@@ -31,14 +31,21 @@ int main() {
     ros::init(argc, argv, "depth_crop_control");
     ros::NodeHandle pnh("~");
     std::string cameraName;
+    int confidence = 200;
+    int LRchecktresh = 5;
 
     int badParams = 0;
     badParams += !pnh.getParam("camera_name", cameraName);
+    badParams += !pnh.getParam("lrcheck",      lrcheck);
+    badParams += !pnh.getParam("extended",     extended);
+    badParams += !pnh.getParam("subpixel",     subpixel);
+    badParams += !pnh.getParam("confidence",   confidence);
+    badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
 
     if (badParams > 0)
     {   
         std::cout << " Bad parameters -> " << badParams << std::endl;
-        throw std::runtime_error("Couldn't find %d of the parameters");
+        throw std::runtime_error("Couldn't find the parameters",);
     }
 
     ros::ServiceServer service = n.advertiseService("crop_control_srv", cropDepthImage);
@@ -70,8 +77,12 @@ int main() {
 
     manip->initialConfig.setCropRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
     manip->setMaxOutputFrameSize(monoRight->getResolutionHeight() * monoRight->getResolutionWidth() * 3);
-    stereo->initialConfig.setConfidenceThreshold(230);
-
+    stereo->initialConfig.setConfidenceThreshold(confidence);
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
+    stereo->setLeftRightCheck(lrcheck);
+    stereo->setExtendedDisparity(extended);
+    stereo->setSubpixel(subpixel);
+    
     // Linking
     configIn->out.link(manip->inputConfig);
     stereo->depth.link(manip->inputImage);

@@ -20,12 +20,12 @@
 dai::Pipeline createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps, int confidence, int LRchecktresh){
     dai::Pipeline pipeline;
 
-    auto monoLeft             = pipeline.create<dai::node::MonoCamera>();
-    auto monoRight            = pipeline.create<dai::node::MonoCamera>();
-    auto stereo               = pipeline.create<dai::node::StereoDepth>();
-    auto xoutDepth            = pipeline.create<dai::node::XLinkOut>();
-    auto imu                  = pipeline.create<dai::node::IMU>();
-    auto xoutImu              = pipeline.create<dai::node::XLinkOut>();
+    auto monoLeft  = pipeline.create<dai::node::MonoCamera>();
+    auto monoRight = pipeline.create<dai::node::MonoCamera>();
+    auto stereo    = pipeline.create<dai::node::StereoDepth>();
+    auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
+    auto imu       = pipeline.create<dai::node::IMU>();
+    auto xoutImu   = pipeline.create<dai::node::XLinkOut>();
 
     if (enableDepth) {
         xoutDepth->setStreamName("depth");
@@ -122,7 +122,7 @@ int main(int argc, char** argv){
     node->declare_parameter("depth_aligned",  false);
     node->declare_parameter("stereo_fps",  30);
     node->declare_parameter("confidence",  200);
-    node->declare_parameter("LRchecktresh",  10);
+    node->declare_parameter("LRchecktresh",  5);
 
     node->get_parameter("camera_name",   deviceName);
     node->get_parameter("mode",          mode);
@@ -245,7 +245,7 @@ int main(int argc, char** argv){
         std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
         dai::rosBridge::DisparityConverter dispConverter(deviceName + tfSuffix , 880, 7.5, 20, 2000); // TODO(sachin): undo hardcoding of baseline
         auto disparityCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
-        auto depthconverter = depth_aligned ? rgbConverter : rgbConverter;
+        auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
         dai::rosBridge::BridgePublisher<stereo_msgs::msg::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/disparity"),

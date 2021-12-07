@@ -15,12 +15,14 @@ def generate_launch_description():
     urdf_launch_dir = os.path.join(get_package_share_directory('depthai_bridge'), 'launch')
     
 
-    camera_name  = LaunchConfiguration('camera_name', default = 'oak')
-    camera_model = LaunchConfiguration('camera_model', default = 'OAK-D')
-    camera_param_uri         = LaunchConfiguration('camera_param_uri', default = 'depth')
-    lrcheck      = LaunchConfiguration('lrcheck', default = True)
-    extended     = LaunchConfiguration('extended', default = False)
-    subpixel     = LaunchConfiguration('subpixel', default = True)
+    camera_name      = LaunchConfiguration('camera_name', default = 'oak')
+    camera_model     = LaunchConfiguration('camera_model', default = 'OAK-D')
+    camera_param_uri = LaunchConfiguration('camera_param_uri', default = 'depth')
+    lrcheck          = LaunchConfiguration('lrcheck',      default = True)
+    extended         = LaunchConfiguration('extended',     default = False)
+    subpixel         = LaunchConfiguration('subpixel',     default = True)
+    confidence       = LaunchConfiguration('confidence',   default = 200)
+    LRchecktresh     = LaunchConfiguration('LRchecktresh', default = 5)
 
 
     declare_camera_name_cmd = DeclareLaunchArgument(
@@ -53,6 +55,15 @@ def generate_launch_description():
         default_value=subpixel,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
     
+    declare_confidence_cmd = DeclareLaunchArgument(
+        'confidence',
+        default_value=confidence,
+        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+    
+    declare_LRchecktresh_cmd = DeclareLaunchArgument(
+        'LRchecktresh',
+        default_value=LRchecktresh,
+        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
     
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
@@ -119,6 +130,8 @@ def generate_launch_description():
     ld.add_action(declare_lrcheck_cmd)
     ld.add_action(declare_extended_cmd)
     ld.add_action(declare_subpixel_cmd)
+    ld.add_action(declare_confidence_cmd)
+    ld.add_action(declare_LRchecktresh_cmd)
 
     ld.add_action(rgb_stereo_node)
     ld.add_action(urdf_launch)

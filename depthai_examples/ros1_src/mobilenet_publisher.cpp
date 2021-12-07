@@ -53,13 +53,13 @@ int main(int argc, char** argv){
     std::string cameraParamUri;
     std::string nnPath(BLOB_PATH);
     bool syncNN;
-    int bad_params = 0;
+    int badParams = 0;
 
-    bad_params += !pnh.getParam("camera_name", deviceName);
-    bad_params += !pnh.getParam("camera_param_uri", cameraParamUri);
-    bad_params += !pnh.getParam("sync_nn", syncNN);
+    badParams += !pnh.getParam("camera_name", deviceName);
+    badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
+    badParams += !pnh.getParam("sync_nn", syncNN);
 
-    if (bad_params > 0)
+    if (badParams > 0)
     {
         throw std::runtime_error("Couldn't find one of the parameters");
     }

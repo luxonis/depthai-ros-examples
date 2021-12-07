@@ -14,7 +14,7 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
+dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh){
 
     dai::Pipeline pipeline;
     auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -32,8 +32,9 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     // StereoDepth
-    stereo->initialConfig.setConfidenceThreshold(230);
+    stereo->initialConfig.setConfidenceThreshold(confidence);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
 
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
@@ -67,20 +68,24 @@ int main(int argc, char** argv){
     
     std::string deviceName;
     std::string camera_param_uri;
-    int bad_params = 0;
+    int badParams = 0;
     bool lrcheck, extended, subpixel;
+    int confidence = 200;
+    int LRchecktresh = 5;
 
-    bad_params += !pnh.getParam("camera_name", deviceName);
-    bad_params += !pnh.getParam("camera_param_uri", camera_param_uri);
-    bad_params += !pnh.getParam("lrcheck",  lrcheck);
-    bad_params += !pnh.getParam("extended",  extended);
-    bad_params += !pnh.getParam("subpixel",  subpixel);
+    badParams += !pnh.getParam("camera_name", deviceName);
+    badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
+    badParams += !pnh.getParam("lrcheck",  lrcheck);
+    badParams += !pnh.getParam("extended",  extended);
+    badParams += !pnh.getParam("subpixel",  subpixel);
+    badParams += !pnh.getParam("confidence",   confidence);
+    badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
 
     if (bad_params > 0)
     {
         throw std::runtime_error("Couldn't find one of the parameters");
     }
-    dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel);
+    dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel, confidence, LRchecktresh);
     dai::Device device(pipeline);
     auto calibrationHandler = device.readCalibration();
 

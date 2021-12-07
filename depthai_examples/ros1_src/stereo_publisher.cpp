@@ -81,10 +81,9 @@ int main(int argc, char** argv){
     int badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
     int confidence = 200;
-    int LRchecktresh = 10;
+    int LRchecktresh = 5;
 
     badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
-
     badParams += !pnh.getParam("camera_name",  deviceName);
     badParams += !pnh.getParam("mode",         mode);
     badParams += !pnh.getParam("lrcheck",      lrcheck);

@@ -29,7 +29,7 @@ const std::vector<std::string> label_map = {"person",         "bicycle",    "car
              "toaster",        "sink",       "refrigerator",  "book",          "clock",       "vase",          "scissors",
              "teddy bear",     "hair drier", "toothbrush"};
 
-dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath){
+dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int confidence, int LRchecktresh){
     dai::Pipeline pipeline;
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
     auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
@@ -57,7 +57,9 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     /// setting node configs
-    stereo->initialConfig.setConfidenceThreshold(230);
+    stereo->initialConfig.setConfidenceThreshold(confidence);
+    stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
     stereo->setSubpixel(subpixel);
 
     spatialDetectionNetwork->setBlobPath(nnPath);
@@ -101,17 +103,22 @@ int main(int argc, char** argv){
     std::string camera_param_uri;
     std::string nnPath(BLOB_PATH); // Set your path for the model here
     bool syncNN, subpixel;
+    int confidence = 200, LRchecktresh = 5;
 
     node->declare_parameter("camera_name", "oak");
     node->declare_parameter("camera_param_uri", camera_param_uri);
     node->declare_parameter("sync_nn", true);
     node->declare_parameter("subpixel", true);
     node->declare_parameter("nn_path", "");
+    node->declare_parameter("confidence", confidence);
+    node->declare_parameter("LRchecktresh", LRchecktresh);
 
     node->get_parameter("camera_name", deviceName);
     node->get_parameter("camera_param_uri", camera_param_uri);
     node->get_parameter("sync_nn", syncNN);
     node->get_parameter("subpixel", subpixel);
+    node->get_parameter("confidence", confidence);
+    node->get_parameter("LRchecktresh", LRchecktresh);
 
     std::string nnParam;
     node->get_parameter("nn_path", nnParam);
@@ -120,7 +127,7 @@ int main(int argc, char** argv){
         node->get_parameter("nn_path", nnPath);
     }
 
-    dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath);
+    dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh);
     dai::Device device(pipeline);
 
     std::string color_uri = camera_param_uri + "/" + "color.yaml";

@@ -178,7 +178,7 @@ int main(int argc, char** argv){
      if(enableDepth){
         std::cout << "In depth";
         auto depthCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
-        auto depthconverter = depth_aligned ? rgbConverter : rgbConverter;
+        auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
         dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      pnh, 
                                                                                      std::string("stereo/depth"),
