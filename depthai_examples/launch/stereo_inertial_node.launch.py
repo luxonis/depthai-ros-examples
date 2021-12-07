@@ -11,7 +11,7 @@ import launch_ros.descriptions
 
 def generate_launch_description():
     default_rviz = os.path.join(get_package_share_directory('depthai_examples'),
-                                'rviz', 'stereoPointCloud.rviz')
+                                'rviz', 'stereoInertial.rviz')
     urdf_launch_dir = os.path.join(get_package_share_directory('depthai_bridge'), 'launch')
     
 
@@ -22,7 +22,7 @@ def generate_launch_description():
     extended     = LaunchConfiguration('extended', default = False)
     subpixel     = LaunchConfiguration('subpixel', default = True)
 
-    rectify        = LaunchConfiguration('rectify', default = False)
+    rectify        = LaunchConfiguration('rectify', default = True)
     depth_aligned  = LaunchConfiguration('depth_aligned', default = False)
     stereo_fps     = LaunchConfiguration('stereo_fps', default = 30)
     confidence     = LaunchConfiguration('confidence', default = 200)
@@ -94,8 +94,8 @@ def generate_launch_description():
     streo_node = launch_ros.actions.Node(
             package='depthai_examples', executable='stereo_inertial_node',
             output='screen',
-            parameters=[{'camera_name': camera_name},
-                        {'mode': mode},
+            parameters=[{'camera_name':   camera_name},
+                        {'mode':          mode},
                         {'lrcheck':       lrcheck},
                         {'extended':      extended},
                         {'subpixel':      subpixel},
@@ -136,7 +136,7 @@ def generate_launch_description():
                     name='point_cloud_xyzi',
 
                     remappings=[('depth/image_rect', '/stereo/converted_depth'),
-                                ('intensity/image_rect', '/right/image'),
+                                ('intensity/image_rect', '/right/image_rect'),
                                 ('intensity/camera_info', '/right/camera_info'),
                                 ('points', '/stereo/points')]
                 ),
@@ -163,8 +163,8 @@ def generate_launch_description():
     ld.add_action(streo_node)
     ld.add_action(urdf_launch)
 
-    # ld.add_action(metric_converter_node)
-    # ld.add_action(point_cloud_node)
-    # ld.add_action(rviz_node)
+    ld.add_action(metric_converter_node)
+    ld.add_action(point_cloud_node)
+    ld.add_action(rviz_node)
     return ld
 

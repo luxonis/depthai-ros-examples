@@ -182,9 +182,9 @@ int main(int argc, char** argv){
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720);
     
      if(enableDepth){
-        std::cout << "In depth";
+        std::cout << "In depth----------------------------------";
         auto depthCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
-        auto depthconverter = depth_aligned ? rgbConverter : rgbConverter;
+        auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
         dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),

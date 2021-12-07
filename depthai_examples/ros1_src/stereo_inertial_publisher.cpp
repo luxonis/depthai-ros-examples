@@ -17,7 +17,7 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 
 
-dai::Pipeline createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps){
+dai::Pipeline createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps, int confidence, int LRchecktresh){
     dai::Pipeline pipeline;
 
     auto monoLeft             = pipeline.create<dai::node::MonoCamera>();
@@ -45,9 +45,9 @@ dai::Pipeline createPipeline(bool enableDepth, bool lrcheck, bool extended, bool
     monoRight->setFps(stereo_fps);
 
     // StereoDepth
-    stereo->initialConfig.setConfidenceThreshold(220); //Known to be best
+    stereo->initialConfig.setConfidenceThreshold(confidence); //Known to be best
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-    stereo->initialConfig.setLeftRightCheckThreshold(10); //Known to be best
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh); //Known to be best
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
@@ -110,7 +110,7 @@ int main(int argc, char** argv){
     ros::NodeHandle pnh("~");
 
     std::string deviceName, mode;
-    int badParams = 0, stereo_fps;
+    int badParams = 0, stereo_fps, confidence, LRchecktresh;
     bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
 
     badParams += !pnh.getParam("camera_name", deviceName);
@@ -121,6 +121,8 @@ int main(int argc, char** argv){
     badParams += !pnh.getParam("rectify",  rectify);
     badParams += !pnh.getParam("depth_aligned",  depth_aligned);
     badParams += !pnh.getParam("stereo_fps",  stereo_fps);
+    badParams += !pnh.getParam("confidence",  confidence);
+    badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
 
     if (badParams > 0)
     {   
@@ -135,8 +137,7 @@ int main(int argc, char** argv){
         enableDepth = false;
     }
 
-    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps);
-
+    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh);
     dai::Device device(pipeline);
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
@@ -238,7 +239,7 @@ int main(int argc, char** argv){
         std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
         dai::rosBridge::DisparityConverter dispConverter(deviceName + tfSuffix , 880, 7.5, 20, 2000); // TODO(sachin): undo hardcoding of baseline
         auto disparityCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
-        auto depthconverter = depth_aligned ? rgbConverter : rgbConverter;
+        auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
         dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
                                                                                      pnh, 
                                                                                      std::string("stereo/disparity"),
