@@ -15,7 +15,7 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 
 
-dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel){
+dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh){
     dai::Pipeline pipeline;
 
     auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -47,9 +47,9 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
     // if (subpixel) maxDisp *= 32; // 5 bits fractional disparity
 
     // StereoDepth
-    stereo->initialConfig.setConfidenceThreshold(230);
+    stereo->initialConfig.setConfidenceThreshold(confidence);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-    stereo->initialConfig.setLeftRightCheckThreshold(10);
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
@@ -78,18 +78,22 @@ int main(int argc, char** argv){
     
     std::string deviceName, mode;
     bool lrcheck, extended, subpixel, enableDepth;
-
+    int confidence, LRchecktresh;
     node->declare_parameter("camera_name", "oak");
     node->declare_parameter("mode", "depth");
     node->declare_parameter("lrcheck", true);
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
+    node->declare_parameter("confidence",  200);
+    node->declare_parameter("LRchecktresh",  10);
 
-    node->get_parameter("camera_name", deviceName);
-    node->get_parameter("mode",        mode);
-    node->get_parameter("lrcheck",     lrcheck);
-    node->get_parameter("extended",    extended);
-    node->get_parameter("subpixel",    subpixel);
+    node->get_parameter("camera_name",  deviceName);
+    node->get_parameter("mode",         mode);
+    node->get_parameter("lrcheck",      lrcheck);
+    node->get_parameter("extended",     extended);
+    node->get_parameter("subpixel",     subpixel);
+    node->get_parameter("confidence",   confidence);
+    node->get_parameter("LRchecktresh", LRchecktresh);
 
     if(mode == "depth"){
         enableDepth = true;
@@ -98,8 +102,7 @@ int main(int argc, char** argv){
         enableDepth = false;
     }
 
-    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel);
-
+    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh);
     dai::Device device(pipeline);
 
     auto leftQueue = device.getOutputQueue("left", 30, false);
@@ -145,7 +148,6 @@ int main(int argc, char** argv){
     rightPublish.addPubisherCallback();
 
      if(mode == "depth"){
-         std::cout << "In depth";
         dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),

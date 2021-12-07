@@ -31,6 +31,8 @@ namespace depthai_examples{
             std::string cameraParamUri;
             int badParams = 0;
             bool lrcheck, extended, subpixel, enableDepth;
+            int confidence = 200;
+            int LRchecktresh = 10;
 
             badParams += !pnh.getParam("camera_name", deviceName);
             badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
@@ -38,6 +40,8 @@ namespace depthai_examples{
             badParams += !pnh.getParam("lrcheck",  lrcheck);
             badParams += !pnh.getParam("extended",  extended);
             badParams += !pnh.getParam("subpixel",  subpixel);
+            badParams += !pnh.getParam("confidence",  confidence);
+            badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
             
             if (badParams > 0)
             {   
@@ -52,7 +56,7 @@ namespace depthai_examples{
                 enableDepth = false;
             }
 
-            dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel);
+            dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh);
             _dev = std::make_unique<dai::Device>(pipeline);
 
             auto leftQueue = _dev->getOutputQueue("left", 30, false);
@@ -131,7 +135,7 @@ namespace depthai_examples{
         }
 
 
-    dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel){
+    dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh){
         dai::Pipeline pipeline;
 
         auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -163,8 +167,8 @@ namespace depthai_examples{
         // if (subpixel) maxDisp *= 32; // 5 bits fractional disparity
 
         // StereoDepth
-        stereo->initialConfig.setConfidenceThreshold(200);
-        stereo->initialConfig.setLeftRightCheckThreshold(10);
+        stereo->initialConfig.setConfidenceThreshold(confidence);
+        stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
         stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
 
         stereo->setLeftRightCheck(lrcheck);

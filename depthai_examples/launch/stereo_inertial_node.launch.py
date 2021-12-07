@@ -22,6 +22,11 @@ def generate_launch_description():
     extended     = LaunchConfiguration('extended', default = False)
     subpixel     = LaunchConfiguration('subpixel', default = True)
 
+    rectify        = LaunchConfiguration('rectify', default = False)
+    depth_aligned  = LaunchConfiguration('depth_aligned', default = False)
+    stereo_fps     = LaunchConfiguration('stereo_fps', default = 30)
+    confidence     = LaunchConfiguration('confidence', default = 200)
+    LRchecktresh   = LaunchConfiguration('LRchecktresh', default = 10)
 
     declare_camera_name_cmd = DeclareLaunchArgument(
         'camera_name',
@@ -53,6 +58,31 @@ def generate_launch_description():
         default_value=subpixel,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
     
+    declare_rectify_cmd = DeclareLaunchArgument(
+        'rectify',
+        default_value=rectify,
+        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+    
+    declare_depth_aligned_cmd = DeclareLaunchArgument(
+        'depth_aligned',
+        default_value=depth_aligned,
+        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+    
+    declare_stereo_fps_cmd = DeclareLaunchArgument(
+        'stereo_fps',
+        default_value=stereo_fps,
+        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+    
+    declare_LRchecktresh_cmd = DeclareLaunchArgument(
+        'LRchecktresh',
+        default_value=LRchecktresh,
+        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+    
+    declare_confidence_cmd = DeclareLaunchArgument(
+        'confidence',
+        default_value=confidence,
+        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+    
     
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
@@ -62,13 +92,18 @@ def generate_launch_description():
 
 
     streo_node = launch_ros.actions.Node(
-            package='depthai_examples', executable='stereo_node',
+            package='depthai_examples', executable='stereo_inertial_node',
             output='screen',
             parameters=[{'camera_name': camera_name},
                         {'mode': mode},
-                        {'lrcheck': lrcheck},
-                        {'extended': extended},
-                        {'subpixel': subpixel}])
+                        {'lrcheck':       lrcheck},
+                        {'extended':      extended},
+                        {'subpixel':      subpixel},
+                        {'rectify':       rectify},
+                        {'depth_aligned': depth_aligned},
+                        {'stereo_fps':    stereo_fps},
+                        {'confidence':    confidence},
+                        {'LRchecktresh':  LRchecktresh}])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -119,12 +154,17 @@ def generate_launch_description():
     ld.add_action(declare_lrcheck_cmd)
     ld.add_action(declare_extended_cmd)
     ld.add_action(declare_subpixel_cmd)
+    ld.add_action(declare_rectify_cmd)
+    ld.add_action(declare_depth_aligned_cmd)
+    ld.add_action(declare_stereo_fps_cmd)
+    ld.add_action(declare_LRchecktresh_cmd)
+    ld.add_action(declare_confidence_cmd)
 
     ld.add_action(streo_node)
     ld.add_action(urdf_launch)
 
-    ld.add_action(metric_converter_node)
-    ld.add_action(point_cloud_node)
-    ld.add_action(rviz_node)
+    # ld.add_action(metric_converter_node)
+    # ld.add_action(point_cloud_node)
+    # ld.add_action(rviz_node)
     return ld
 

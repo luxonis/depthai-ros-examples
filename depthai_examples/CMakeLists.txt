@@ -93,7 +93,7 @@ if ( ament_cmake_FOUND )
   dai_add_node_ros2(rgb_node ros2_src/rgb_publisher.cpp)
   dai_add_node_ros2(rgb_stereo_node ros2_src/rgb_stereo_node.cpp)
   # dai_add_node_ros2(rgb_subscriber_node ros2_src/rgb_video_subscriber.cpp)
-  # dai_add_node_ros2(stereo_mimic_node ros2_src/stereo_mimic_node.cpp)
+  dai_add_node_ros2(stereo_inertial_node ros2_src/stereo_inertial_publisher.cpp)
   dai_add_node_ros2(stereo_node ros2_src/stereo_publisher.cpp)
   dai_add_node_ros2(yolov4_spatial_node ros2_src/yolov4_spatial_publisher.cpp)
     
@@ -118,6 +118,7 @@ if ( ament_cmake_FOUND )
           rgb_stereo_node
           # rgb_subscriber_node
           # stereo_mimic_node
+          stereo_inertial_node
           stereo_node
           yolov4_spatial_node
           DESTINATION lib/${PROJECT_NAME})
@@ -192,6 +193,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   dai_add_node(rgb_stereo_node ros1_src/rgb_stereo_node.cpp)
   dai_add_node(rgb_subscriber_node ros1_src/rgb_video_subscriber.cpp)
   # dai_add_node(stereo_mimic_node ros1_src/stereo_mimic_node.cpp)
+  dai_add_node(stereo_inertial_node ros1_src/stereo_inertial_publisher.cpp)
 
   dai_add_node(stereo_node ros1_src/stereo_publisher.cpp)
   dai_add_node(yolov4_spatial_node ros1_src/yolov4_spatial_publisher.cpp)
