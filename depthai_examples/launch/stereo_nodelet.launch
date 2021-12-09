@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
        
-     <arg name="camera_model"         default="BW1098OAK" /> <!-- 'zed' or 'zedm' -->
+     <arg name="camera_model"         default="OAK-D" /> <!-- 'zed' or 'zedm' -->
     <arg name="camera_name"          default="oak" />
     <arg name="mode"                 default="depth" />
     <arg name="base_frame"           default="oak-d_frame" />

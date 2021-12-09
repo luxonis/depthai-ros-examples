@@ -87,7 +87,7 @@ int main(int argc, char** argv){
     dai::Device device(pipeline);
 
     auto stereoQueue = device.getOutputQueue("depth", 30, false);
-    auto previewQueue = device.getOutputQueue("video", 30, true);
+    auto previewQueue = device.getOutputQueue("video", 30, false);
 
     auto calibrationHandler = device.readCalibration();
 

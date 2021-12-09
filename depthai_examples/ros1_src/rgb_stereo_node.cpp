@@ -81,7 +81,7 @@ int main(int argc, char** argv){
     badParams += !pnh.getParam("confidence",   confidence);
     badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
 
-    if (bad_params > 0)
+    if (badParams > 0)
     {
         throw std::runtime_error("Couldn't find one of the parameters");
     }
@@ -90,7 +90,7 @@ int main(int argc, char** argv){
     auto calibrationHandler = device.readCalibration();
 
     auto stereoQueue = device.getOutputQueue("depth", 30, false);
-    auto previewQueue = device.getOutputQueue("video", 30, true);
+    auto previewQueue = device.getOutputQueue("video", 30, false);
 
     bool latched_cam_info = true;
     std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
