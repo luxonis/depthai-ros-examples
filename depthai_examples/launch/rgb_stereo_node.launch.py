@@ -17,7 +17,6 @@ def generate_launch_description():
 
     camera_name      = LaunchConfiguration('camera_name', default = 'oak')
     camera_model     = LaunchConfiguration('camera_model', default = 'OAK-D')
-    camera_param_uri = LaunchConfiguration('camera_param_uri', default = 'depth')
     lrcheck          = LaunchConfiguration('lrcheck',      default = True)
     extended         = LaunchConfiguration('extended',     default = False)
     subpixel         = LaunchConfiguration('subpixel',     default = True)
@@ -34,11 +33,6 @@ def generate_launch_description():
         'camera_model',
         default_value=camera_model,
         description='The model of the camera. Using a wrong camera model can disable camera features. Valid models: `OAK-D, OAK-D-LITE`.')
-
-    declare_camera_param_uri_cmd = DeclareLaunchArgument(
-        'camera_param_uri',
-        default_value=camera_param_uri,
-        description='set to depth or disparity. Setting to depth will publish depth or else will publish disparity.')
 
     declare_lrcheck_cmd = DeclareLaunchArgument(
         'lrcheck',
@@ -76,10 +70,11 @@ def generate_launch_description():
             package='depthai_examples', executable='rgb_stereo_node',
             output='screen',
             parameters=[{'camera_name': camera_name},
-                        {'camera_param_uri': camera_param_uri},
                         {'lrcheck': lrcheck},
                         {'extended': extended},
-                        {'subpixel': subpixel}])
+                        {'subpixel': subpixel},
+                        {'confidence': confidence},
+                        {'LRchecktresh': LRchecktresh}])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -126,7 +121,6 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(declare_camera_name_cmd)
     ld.add_action(declare_camera_model_cmd)
-    ld.add_action(declare_camera_param_uri_cmd)
     ld.add_action(declare_lrcheck_cmd)
     ld.add_action(declare_extended_cmd)
     ld.add_action(declare_subpixel_cmd)
@@ -138,6 +132,6 @@ def generate_launch_description():
 
     # ld.add_action(metric_converter_node)
     # ld.add_action(point_cloud_node)
-    ld.add_action(rviz_node)
+    # ld.add_action(rviz_node)
     return ld
 

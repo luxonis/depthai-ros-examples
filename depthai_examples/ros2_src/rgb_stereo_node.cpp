@@ -47,14 +47,14 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int con
     // Color camers steream setup -------->
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
     auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
-    xlinkOut->setStreamName("preview");
+    xlinkOut->setStreamName("video");
     
-    colorCam->setPreviewSize(1920, 1080);
     colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
-    colorCam->setInterleaved(true);
-
+    colorCam->setVideoSize(1920, 1080);
+    xlinkOut->input.setQueueSize(1);
+    colorCam->setInterleaved(false);
     // Link plugins CAM -> XLINK
-    colorCam->preview.link(xlinkOut->input);
+    colorCam->video.link(xlinkOut->input);
 
     return pipeline;
 }
@@ -66,12 +66,10 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("rgb_stereo_node");
     
     std::string deviceName;
-    std::string camera_param_uri = "package://depthai_examples/params/camera";
     bool lrcheck, extended, subpixel;
     int confidence, LRchecktresh;
 
     node->declare_parameter("camera_name", "oak");
-    node->declare_parameter("camera_param_uri", camera_param_uri);
     node->declare_parameter("lrcheck", true);
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
@@ -79,23 +77,22 @@ int main(int argc, char** argv){
     node->declare_parameter("LRchecktresh",  5);
 
     node->get_parameter("camera_name", deviceName);
-    node->get_parameter("camera_param_uri", camera_param_uri);
     node->get_parameter("lrcheck",  lrcheck);
     node->get_parameter("extended",  extended);
     node->get_parameter("subpixel",  subpixel);
     node->get_parameter("confidence",   confidence);
     node->get_parameter("LRchecktresh", LRchecktresh);
 
-    dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel);
+    dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel, confidence , LRchecktresh);
     dai::Device device(pipeline);
 
     auto stereoQueue = device.getOutputQueue("depth", 30, false);
-    auto previewQueue = device.getOutputQueue("preview", 30, true);
+    auto previewQueue = device.getOutputQueue("video", 30, true);
 
-    std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
-    std::string color_uri = camera_param_uri + "/" + "color.yaml";
+    auto calibrationHandler = device.readCalibration();
 
     dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
+    auto stereoCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),
@@ -105,11 +102,11 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
-                                                                                     stereo_uri,
+                                                                                     stereoCameraInfo,
                                                                                      "stereo");
 
-
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", true);
+    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1920, 1080); 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(previewQueue,
                                                                                     node, 
                                                                                     std::string("color/image"),
@@ -119,7 +116,7 @@ int main(int argc, char** argv){
                                                                                     std::placeholders::_1, 
                                                                                     std::placeholders::_2) , 
                                                                                     30,
-                                                                                    color_uri,
+                                                                                    rgbCameraInfo,
                                                                                     "color");
 
     depthPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
