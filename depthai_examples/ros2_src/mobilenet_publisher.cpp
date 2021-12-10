@@ -1,12 +1,12 @@
 
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include <iostream>
 #include <cstdio>
 
-#include "sensor_msgs/Image.h"
-#include <camera_info_manager/camera_info_manager.h>
-#include <vision_msgs/Detection2DArray.h>
+#include <sensor_msgs/msg/image.hpp>
+#include <camera_info_manager/camera_info_manager.hpp>
+#include <vision_msgs/msg/detection2_d_array.hpp>
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
@@ -46,28 +46,30 @@ dai::Pipeline createPipeline(bool syncNN, std::string nnPath){
 
 int main(int argc, char** argv){
 
-    ros::init(argc, argv, "mobilenet_node");
-    ros::NodeHandle pnh("~");
+    rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("mobilenet_node");
     
     std::string deviceName;
-    std::string cameraParamUri;
+    std::string cameraParamUri = "package://depthai_examples/params/camera";
     std::string nnPath(BLOB_PATH);
     bool syncNN;
     int bad_params = 0;
 
-    bad_params += !pnh.getParam("camera_name", deviceName);
-    bad_params += !pnh.getParam("camera_param_uri", cameraParamUri);
-    bad_params += !pnh.getParam("sync_nn", syncNN);
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("camera_param_uri", cameraParamUri);
+    node->declare_parameter("sync_nn", true);
+    node->declare_parameter("nn_path", "");
 
-    if (bad_params > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("camera_param_uri", cameraParamUri);
+    node->get_parameter("sync_nn", syncNN);
 
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
-    if (pnh.hasParam("nn_path"))
-    {
-      pnh.getParam("nn_path", nnPath);
+    std::string nnParam;
+    node->get_parameter("nn_path", nnParam);
+    if(!nnParam.empty())
+    {   
+        node->get_parameter("nn_path", nnPath);
     }
 
     dai::Pipeline pipeline = createPipeline(syncNN, nnPath);
@@ -78,35 +80,36 @@ int main(int argc, char** argv){
 
     std::string color_uri = cameraParamUri + "/" + "color.yaml";
 
+    //TODO(sachin): Add option to use CameraInfo from EEPROM
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(previewQueue,
-                                                                                     pnh, 
-                                                                                     std::string("color/image"),
-                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                                                                                     &rgbConverter, // since the converter has the same frame name
-                                                                                                      // and image type is also same we can reuse it
-                                                                                     std::placeholders::_1, 
-                                                                                     std::placeholders::_2) , 
-                                                                                     30,
-                                                                                     color_uri,
-                                                                                     "color");
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(previewQueue,
+                                                                                   node, 
+                                                                                   std::string("color/image"),
+                                                                                   std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+                                                                                   &rgbConverter, // since the converter has the same frame name
+                                                                                                   // and image type is also same we can reuse it
+                                                                                   std::placeholders::_1, 
+                                                                                   std::placeholders::_2) , 
+                                                                                   30,
+                                                                                   color_uri,
+                                                                                   "color");
 
 
     dai::rosBridge::ImgDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 300, 300, false);
-    dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueue,
-                                                                                                         pnh, 
+    dai::rosBridge::BridgePublisher<vision_msgs::msg::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueue,
+                                                                                                         node, 
                                                                                                          std::string("color/mobilenet_detections"),
                                                                                                          std::bind(static_cast<void(dai::rosBridge::ImgDetectionConverter::*)(std::shared_ptr<dai::ImgDetections>, 
-                                                                                                         vision_msgs::Detection2DArray&)>(&dai::rosBridge::ImgDetectionConverter::toRosMsg), 
+                                                                                                         vision_msgs::msg::Detection2DArray&)>(&dai::rosBridge::ImgDetectionConverter::toRosMsg), 
                                                                                                          &detConverter,
                                                                                                          std::placeholders::_1, 
                                                                                                          std::placeholders::_2), 
                                                                                                          30);
 
-    detectionPublish.startPublisherThread();
+    detectionPublish.addPubisherCallback();
     rgbPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
 
-    ros::spin();
+    rclcpp::spin(node);
 
     return 0;
 }

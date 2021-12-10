@@ -4,7 +4,6 @@
 
 #include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
-#include <depthai_examples/stereo_pipeline.hpp>
 #include <functional>
 
 // Inludes common necessary includes for development using depthai library
@@ -33,7 +32,7 @@ namespace depthai_examples{
             int badParams = 0;
             bool lrcheck, extended, subpixel, enableDepth;
             int confidence = 200;
-            int LRchecktresh = 10;
+            int LRchecktresh = 5;
 
             badParams += !pnh.getParam("camera_name", deviceName);
             badParams += !pnh.getParam("camera_param_uri", cameraParamUri);

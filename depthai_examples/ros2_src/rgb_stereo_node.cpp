@@ -1,12 +1,11 @@
 
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include <iostream>
 #include <cstdio>
 // #include "utility.hpp"
-#include "sensor_msgs/Image.h"
-#include <camera_info_manager/camera_info_manager.h>
-#include <depthai_examples/rgb_stereo_pipeline.hpp>
+#include <sensor_msgs/msg/image.hpp>
+#include <camera_info_manager/camera_info_manager.hpp>
 #include <functional>
 
 // Inludes common necessary includes for development using depthai library
@@ -15,7 +14,7 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
+dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh){
 
     dai::Pipeline pipeline;
     auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -33,13 +32,13 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     // StereoDepth
-    stereo->setConfidenceThreshold(200);
+    stereo->initialConfig.setConfidenceThreshold(confidence);
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
-    // stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
+
     // // Link plugins CAM -> STEREO -> XLINK
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
@@ -49,11 +48,11 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
     auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
     xlinkOut->setStreamName("video");
-    colorCam->setBoardSocket(dai::CameraBoardSocket::RGB);
-
+    
     colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
-    colorCam->setInterleaved(true);
-
+    colorCam->setVideoSize(1920, 1080);
+    xlinkOut->input.setQueueSize(1);
+    colorCam->setInterleaved(false);
     // Link plugins CAM -> XLINK
     colorCam->video.link(xlinkOut->input);
 
@@ -63,41 +62,39 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel){
 
 int main(int argc, char** argv){
 
-    ros::init(argc, argv, "rgb_stereo_node");
-    ros::NodeHandle pnh("~");
+    rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("rgb_stereo_node");
     
     std::string deviceName;
-    std::string camera_param_uri;
-    int bad_params = 0;
     bool lrcheck, extended, subpixel;
+    int confidence, LRchecktresh;
 
-    bad_params += !pnh.getParam("camera_name", deviceName);
-    bad_params += !pnh.getParam("camera_param_uri", camera_param_uri);
-    bad_params += !pnh.getParam("lrcheck",  lrcheck);
-    bad_params += !pnh.getParam("extended",  extended);
-    bad_params += !pnh.getParam("subpixel",  subpixel);
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("lrcheck", true);
+    node->declare_parameter("extended", false);
+    node->declare_parameter("subpixel", true);
+    node->declare_parameter("confidence",  200);
+    node->declare_parameter("LRchecktresh",  5);
 
-    if (bad_params > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
-    dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel);
+    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("lrcheck",  lrcheck);
+    node->get_parameter("extended",  extended);
+    node->get_parameter("subpixel",  subpixel);
+    node->get_parameter("confidence",   confidence);
+    node->get_parameter("LRchecktresh", LRchecktresh);
+
+    dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel, confidence , LRchecktresh);
     dai::Device device(pipeline);
-    auto calibrationHandler = device.readCalibration();
 
     auto stereoQueue = device.getOutputQueue("depth", 30, false);
-    auto previewQueue = device.getOutputQueue("video", 30, true);
+    auto previewQueue = device.getOutputQueue("video", 30, false);
 
-    bool latched_cam_info = true;
-    std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
-    std::string color_uri = camera_param_uri + "/" + "color.yaml";
-
+    auto calibrationHandler = device.readCalibration();
 
     dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
-    auto rgbCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720); 
-
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
-                                                                                     pnh, 
+    auto stereoCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
+                                                                                     node, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                      &depthConverter, // since the converter has the same frame name
@@ -105,13 +102,13 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
-                                                                                     rgbCameraInfo,
+                                                                                     stereoCameraInfo,
                                                                                      "stereo");
 
-
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", true);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(previewQueue,
-                                                                                    pnh, 
+    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1920, 1080); 
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(previewQueue,
+                                                                                    node, 
                                                                                     std::string("color/image"),
                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                     &rgbConverter, // since the converter has the same frame name
@@ -123,12 +120,11 @@ int main(int argc, char** argv){
                                                                                     "color");
 
     depthPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
-    rgbPublish.startPublisherThread();
+    rgbPublish.addPubisherCallback();
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
-
-    ros::spin();
+    rclcpp::spin(node);
 
     return 0;
 }

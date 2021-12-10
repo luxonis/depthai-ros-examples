@@ -1,11 +1,11 @@
 
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include <iostream>
 #include <cstdio>
-#include "sensor_msgs/Image.h"
-#include "stereo_msgs/DisparityImage.h"
-#include <camera_info_manager/camera_info_manager.h>
+#include <sensor_msgs/msg/image.hpp>
+#include <stereo_msgs/msg/disparity_image.hpp>
+#include <camera_info_manager/camera_info_manager.hpp>
 #include <functional>
 
 // Inludes common necessary includes for development using depthai library
@@ -73,31 +73,27 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
 
 int main(int argc, char** argv){
 
-    ros::init(argc, argv, "stereo_node");
-    ros::NodeHandle pnh("~");
+    rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("stereo_node");
     
     std::string deviceName, mode;
-    std::string cameraParamUri;
-    int badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
-    int confidence = 200;
-    int LRchecktresh = 10;
+    int confidence, LRchecktresh;
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("mode", "depth");
+    node->declare_parameter("lrcheck", true);
+    node->declare_parameter("extended", false);
+    node->declare_parameter("subpixel", true);
+    node->declare_parameter("confidence",  200);
+    node->declare_parameter("LRchecktresh",  5);
 
-    badParams += !pnh.getParam("camera_name", deviceName);
-    badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
-    badParams += !pnh.getParam("mode", mode);
-    badParams += !pnh.getParam("lrcheck",  lrcheck);
-    badParams += !pnh.getParam("extended",  extended);
-    badParams += !pnh.getParam("subpixel",  subpixel);
-    badParams += !pnh.getParam("confidence",  confidence);
-    badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
-    
-
-    if (badParams > 0)
-    {   
-        std::cout << " Bad parameters -> " << badParams << std::endl;
-        throw std::runtime_error("Couldn't find %d of the parameters");
-    }
+    node->get_parameter("camera_name",  deviceName);
+    node->get_parameter("mode",         mode);
+    node->get_parameter("lrcheck",      lrcheck);
+    node->get_parameter("extended",     extended);
+    node->get_parameter("subpixel",     subpixel);
+    node->get_parameter("confidence",   confidence);
+    node->get_parameter("LRchecktresh", LRchecktresh);
 
     if(mode == "depth"){
         enableDepth = true;
@@ -107,7 +103,6 @@ int main(int argc, char** argv){
     }
 
     dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh);
-
     dai::Device device(pipeline);
 
     auto leftQueue = device.getOutputQueue("left", 30, false);
@@ -121,18 +116,10 @@ int main(int argc, char** argv){
 
     auto calibrationHandler = device.readCalibration();
 
-    // this part would be removed once we have calibration-api
-    /*     
-     std::string leftUri = cameraParamUri +"/" + "left.yaml";
-
-     std::string rightUri = cameraParamUri + "/" + "right.yaml";
-
-     std::string stereoUri = cameraParamUri + "/" + "right.yaml";
-    */        
     dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
-                                                                                    pnh, 
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(leftQueue,
+                                                                                    node, 
                                                                                     std::string("left/image"),
                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                     &converter, 
@@ -147,8 +134,8 @@ int main(int argc, char** argv){
     dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rightPublish(rightQueue,
-                                                                                     pnh, 
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
+                                                                                     node, 
                                                                                      std::string("right/image"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                      &rightconverter, 
@@ -161,9 +148,8 @@ int main(int argc, char** argv){
     rightPublish.addPubisherCallback();
 
      if(mode == "depth"){
-         std::cout << "In depth";
-        dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
-                                                                                     pnh, 
+        dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
+                                                                                     node, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                      &rightconverter, // since the converter has the same frame name
@@ -174,12 +160,12 @@ int main(int argc, char** argv){
                                                                                      rightCameraInfo,
                                                                                      "stereo");
         depthPublish.addPubisherCallback();
-        ros::spin();
+        rclcpp::spin(node);
     }
     else{
         dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
-        dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
-                                                                                     pnh, 
+        dai::rosBridge::BridgePublisher<stereo_msgs::msg::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
+                                                                                     node, 
                                                                                      std::string("stereo/disparity"),
                                                                                      std::bind(&dai::rosBridge::DisparityConverter::toRosMsg, 
                                                                                      &dispConverter, 
@@ -189,12 +175,7 @@ int main(int argc, char** argv){
                                                                                      rightCameraInfo,
                                                                                      "stereo");
         dispPublish.addPubisherCallback();
-        ros::spin();
+        rclcpp::spin(node);
     }
-
-    // We can add the rectified frames also similar to these publishers. 
-    // Left them out so that users can play with it by adding and removing
-
-    
     return 0;
 }

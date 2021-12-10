@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- <args for urdf/> -->
-    <arg name="camera_model"         default="BW1098OAK" /> <!-- 'zed' or 'zedm' -->
+    <arg name="camera_model"         default="OAK-D" /> <!-- 'zed' or 'zedm' -->
     <arg name="camera_name"          default="oak" />
     <arg name="mode"                 default="depth" />
     <arg name="base_frame"           default="oak-d_frame" />
@@ -13,8 +13,8 @@
     <arg name="cam_pitch"             default="0.0" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
     <arg name="cam_yaw"               default="1.5708" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
     
-    <arg name="confidence"            default="245" /> 
-    <arg name="LRchecktresh"          default="10" /> 
+    <arg name="confidence"            default="200" /> 
+    <arg name="LRchecktresh"          default="5" /> 
     <arg name="lrcheck"               default="true" /> 
     <arg name="extended"              default="false" /> 
     <arg name="subpixel"              default="true" />

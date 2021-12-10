@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
        
-     <arg name="camera_model"         default="BW1098OAK" /> <!-- 'zed' or 'zedm' -->
+     <arg name="camera_model"         default="OAK-D" /> <!-- 'zed' or 'zedm' -->
     <arg name="camera_name"          default="oak" />
     <arg name="mode"                 default="depth" />
     <arg name="base_frame"           default="oak-d_frame" />
@@ -18,7 +18,7 @@
     <arg name="subpixel"              default="true" />
     <arg name="camera_param_uri"      default="package://depthai_examples/params/camera" />
     <arg name="confidence"            default="200" /> 
-    <arg name="LRchecktresh"          default="10" /> 
+    <arg name="LRchecktresh"          default="5" /> 
    
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />

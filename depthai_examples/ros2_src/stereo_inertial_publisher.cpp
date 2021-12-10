@@ -1,12 +1,12 @@
 
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include <iostream>
 #include <cstdio>
-#include "sensor_msgs/Imu.h"
-#include "sensor_msgs/Image.h"
-#include "stereo_msgs/DisparityImage.h"
-#include <camera_info_manager/camera_info_manager.h>
+#include "sensor_msgs/msg/imu.h"
+#include <sensor_msgs/msg/image.hpp>
+#include <stereo_msgs/msg/disparity_image.hpp>
+#include <camera_info_manager/camera_info_manager.hpp>
 #include <functional>
 
 // Inludes common necessary includes for development using depthai library
@@ -17,15 +17,15 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 
 
-dai::Pipeline createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps){
+dai::Pipeline createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps, int confidence, int LRchecktresh){
     dai::Pipeline pipeline;
 
-    auto monoLeft             = pipeline.create<dai::node::MonoCamera>();
-    auto monoRight            = pipeline.create<dai::node::MonoCamera>();
-    auto stereo               = pipeline.create<dai::node::StereoDepth>();
-    auto xoutDepth            = pipeline.create<dai::node::XLinkOut>();
-    auto imu                  = pipeline.create<dai::node::IMU>();
-    auto xoutImu              = pipeline.create<dai::node::XLinkOut>();
+    auto monoLeft  = pipeline.create<dai::node::MonoCamera>();
+    auto monoRight = pipeline.create<dai::node::MonoCamera>();
+    auto stereo    = pipeline.create<dai::node::StereoDepth>();
+    auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
+    auto imu       = pipeline.create<dai::node::IMU>();
+    auto xoutImu   = pipeline.create<dai::node::XLinkOut>();
 
     if (enableDepth) {
         xoutDepth->setStreamName("depth");
@@ -45,9 +45,9 @@ dai::Pipeline createPipeline(bool enableDepth, bool lrcheck, bool extended, bool
     monoRight->setFps(stereo_fps);
 
     // StereoDepth
-    stereo->initialConfig.setConfidenceThreshold(220); //Known to be best
+    stereo->initialConfig.setConfidenceThreshold(confidence); //Known to be best
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
-    stereo->initialConfig.setLeftRightCheckThreshold(10); //Known to be best
+    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh); //Known to be best
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
@@ -106,27 +106,34 @@ dai::Pipeline createPipeline(bool enableDepth, bool lrcheck, bool extended, bool
 
 int main(int argc, char** argv){
     
-    ros::init(argc, argv, "stereo_inertial_node");
-    ros::NodeHandle pnh("~");
+    rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("stereo_inertial_node");
 
     std::string deviceName, mode;
-    int badParams = 0, stereo_fps;
+    int badParams = 0, stereo_fps, confidence, LRchecktresh;
     bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
 
-    badParams += !pnh.getParam("camera_name", deviceName);
-    badParams += !pnh.getParam("mode", mode);
-    badParams += !pnh.getParam("lrcheck",  lrcheck);
-    badParams += !pnh.getParam("extended",  extended);
-    badParams += !pnh.getParam("subpixel",  subpixel);
-    badParams += !pnh.getParam("rectify",  rectify);
-    badParams += !pnh.getParam("depth_aligned",  depth_aligned);
-    badParams += !pnh.getParam("stereo_fps",  stereo_fps);
+    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("mode", "depth");
+    node->declare_parameter("lrcheck",  true);
+    node->declare_parameter("extended",  false);
+    node->declare_parameter("subpixel",  true);
+    node->declare_parameter("rectify",  false);
+    node->declare_parameter("depth_aligned",  false);
+    node->declare_parameter("stereo_fps",  30);
+    node->declare_parameter("confidence",  200);
+    node->declare_parameter("LRchecktresh",  5);
 
-    if (badParams > 0)
-    {   
-        std::cout << " Bad parameters -> " << badParams << std::endl;
-        throw std::runtime_error("Couldn't find %d of the parameters");
-    }
+    node->get_parameter("camera_name",   deviceName);
+    node->get_parameter("mode",          mode);
+    node->get_parameter("lrcheck",       lrcheck);
+    node->get_parameter("extended",      extended);
+    node->get_parameter("subpixel",      subpixel);
+    node->get_parameter("rectify",       rectify);
+    node->get_parameter("depth_aligned", depth_aligned);
+    node->get_parameter("stereo_fps",    stereo_fps);
+    node->get_parameter("confidence",    confidence);
+    node->get_parameter("LRchecktresh",  LRchecktresh);
 
     if(mode == "depth"){
         enableDepth = true;
@@ -135,7 +142,7 @@ int main(int argc, char** argv){
         enableDepth = false;
     }
 
-    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps);
+    dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh);
 
     dai::Device device(pipeline);
 
@@ -158,8 +165,8 @@ int main(int argc, char** argv){
 
     dai::rosBridge::ImuConverter imuConverter(deviceName +"_imu_frame");
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::Imu, dai::IMUData> ImuPublish(imuQueue,
-                                                                                     pnh, 
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Imu, dai::IMUData> ImuPublish(imuQueue,
+                                                                                     node, 
                                                                                      std::string("imu"),
                                                                                      std::bind(&dai::rosBridge::ImuConverter::toRosMsg, 
                                                                                      &imuConverter, 
@@ -175,11 +182,11 @@ int main(int argc, char** argv){
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720);
     
      if(enableDepth){
-        std::cout << "In depth";
+        std::cout << "In depth----------------------------------";
         auto depthCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
-        auto depthconverter = depth_aligned ? rgbConverter : rgbConverter;
-        dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
-                                                                                     pnh, 
+        auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
+        dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
+                                                                                     node, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                      &depthconverter, // since the converter has the same frame name
@@ -193,8 +200,8 @@ int main(int argc, char** argv){
         
         if(depth_aligned){
             auto imgQueue = device.getOutputQueue("rgb", 30, false);
-            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(imgQueue,
-                                                                                        pnh, 
+            dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(imgQueue,
+                                                                                        node, 
                                                                                         std::string("color/image"),
                                                                                         std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                         &rgbConverter,
@@ -204,13 +211,13 @@ int main(int argc, char** argv){
                                                                                         rgbCameraInfo,
                                                                                         "color");
             rgbPublish.addPubisherCallback();
-            ros::spin();
+            rclcpp::spin(node);
         }
         else {
             auto leftQueue = device.getOutputQueue("left", 30, false);
             auto rightQueue = device.getOutputQueue("right", 30, false);
-            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
-                                                                                            pnh, 
+            dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(leftQueue,
+                                                                                            node, 
                                                                                             leftPubName,
                                                                                             std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                             &converter, 
@@ -219,8 +226,8 @@ int main(int argc, char** argv){
                                                                                             30,
                                                                                             leftCameraInfo,
                                                                                             "left");
-            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rightPublish(rightQueue,
-                                                                                            pnh, 
+            dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
+                                                                                            node, 
                                                                                             rightPubName,
                                                                                             std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                             &rightconverter, 
@@ -231,16 +238,16 @@ int main(int argc, char** argv){
                                                                                             "right");  
             rightPublish.addPubisherCallback();
             leftPublish.addPubisherCallback();
-            ros::spin();
+            rclcpp::spin(node);
         }
     }
     else{
         std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
         dai::rosBridge::DisparityConverter dispConverter(deviceName + tfSuffix , 880, 7.5, 20, 2000); // TODO(sachin): undo hardcoding of baseline
         auto disparityCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
-        auto depthconverter = depth_aligned ? rgbConverter : rgbConverter;
-        dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
-                                                                                     pnh, 
+        auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
+        dai::rosBridge::BridgePublisher<stereo_msgs::msg::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
+                                                                                     node, 
                                                                                      std::string("stereo/disparity"),
                                                                                      std::bind(&dai::rosBridge::DisparityConverter::toRosMsg, 
                                                                                      &dispConverter, 
@@ -253,8 +260,8 @@ int main(int argc, char** argv){
         if(depth_aligned){
             auto imgQueue = device.getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
-            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(imgQueue,
-                                                                                        pnh, 
+            dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(imgQueue,
+                                                                                        node, 
                                                                                         std::string("color/image"),
                                                                                         std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                         &rgbConverter,
@@ -264,13 +271,13 @@ int main(int argc, char** argv){
                                                                                         rgbCameraInfo,
                                                                                         "color");
             rgbPublish.addPubisherCallback();
-            ros::spin();
+            rclcpp::spin(node);
         }
         else {
             auto leftQueue = device.getOutputQueue("left", 30, false);
             auto rightQueue = device.getOutputQueue("right", 30, false);
-            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
-                                                                                            pnh, 
+            dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(leftQueue,
+                                                                                            node, 
                                                                                             leftPubName,
                                                                                             std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                             &converter, 
@@ -279,8 +286,8 @@ int main(int argc, char** argv){
                                                                                             30,
                                                                                             leftCameraInfo,
                                                                                             "left");
-            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rightPublish(rightQueue,
-                                                                                            pnh, 
+            dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
+                                                                                            node, 
                                                                                             rightPubName,
                                                                                             std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                             &rightconverter, 
@@ -291,7 +298,7 @@ int main(int argc, char** argv){
                                                                                             "right");  
             rightPublish.addPubisherCallback();
             leftPublish.addPubisherCallback();
-            ros::spin();
+            rclcpp::spin(node);
         }
     }
     

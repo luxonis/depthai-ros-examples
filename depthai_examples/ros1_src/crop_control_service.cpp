@@ -97,14 +97,13 @@ int main(int argc, char **argv)
                 break;
             default:
                 std::cout << " Entered Invalid Key..!!!" << std::endl;
-                std::cout << "Use the following keys to control the cropping region" << std::endl; 
+                std::cout << " Use the following keys to control the cropping region" << std::endl; 
                 std::cout << "  Q/W -> Increment/Decrement the topleft X position" << std::endl;
                 std::cout << "  A/S -> Increment/Decrement the topleft Y position" << std::endl;
                 std::cout << "  E/R -> Increment/Decrement the bottomright X position" << std::endl;
                 std::cout << "  D/F -> Increment/Decrement the bottomright Y position" << std::endl;
                 std::cout << "  Preess ctrl+D to exit." << std::endl;
         }
-
 
         if (sendSignal){
             std::cout << "Top left Position -> (" << srvMsg.request.top_left.x << ", " << srvMsg.request.top_left.y << ")" << std::endl; 
