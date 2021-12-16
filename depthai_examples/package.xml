@@ -32,6 +32,7 @@
   <depend>vision_msgs</depend>
 
   <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>depth_image_proc</exec_depend>
   <exec_depend>xacro</exec_depend>
 
   <depend condition="$ROS_VERSION == 1">nodelet</depend>
