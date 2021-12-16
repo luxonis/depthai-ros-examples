@@ -15,16 +15,17 @@ def generate_launch_description():
     urdf_launch_dir = os.path.join(get_package_share_directory('depthai_bridge'), 'launch')
     
 
-    camera_model     = LaunchConfiguration('camera_model', default = 'OAK-D')
-    camera_name      = LaunchConfiguration('camera_name', default = 'oak')
+    camera_model     = LaunchConfiguration('camera_model',  default = 'OAK-D')
+    camera_name      = LaunchConfiguration('camera_name',   default = 'oak')
     base_frame       = LaunchConfiguration('base_frame',    default = 'oak-d_frame')
     parent_frame     = LaunchConfiguration('parent_frame',  default = 'oak-d-base-frame')
+    
     cam_pos_x        = LaunchConfiguration('cam_pos_x',     default = '0.0')
     cam_pos_y        = LaunchConfiguration('cam_pos_y',     default = '0.0')
     cam_pos_z        = LaunchConfiguration('cam_pos_z',     default = '0.0')
-    cam_roll         = LaunchConfiguration('cam_roll',      default = '1.5708')
+    cam_roll         = LaunchConfiguration('cam_roll',      default = '0.0')
     cam_pitch        = LaunchConfiguration('cam_pitch',     default = '0.0')
-    cam_yaw          = LaunchConfiguration('cam_yaw',       default = '1.5708')
+    cam_yaw          = LaunchConfiguration('cam_yaw',       default = '0.0')
 
     camera_param_uri = LaunchConfiguration('camera_param_uri', default = 'package://depthai_examples/params/camera')
     sync_nn          = LaunchConfiguration('sync_nn', default = True)
