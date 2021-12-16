@@ -1,17 +1,18 @@
 <?xml version="1.0"?>
 <launch>
        
-     <arg name="camera_model"         default="OAK-D" /> <!-- 'zed' or 'zedm' -->
+    <arg name="camera_model"         default="OAK-D" /> <!-- 'zed' or 'zedm' -->
     <arg name="camera_name"          default="oak" />
     <arg name="mode"                 default="depth" />
     <arg name="base_frame"           default="oak-d_frame" />
+    <arg name="parent_frame"         default="oak-d-base-frame" />
 
     <arg name="cam_pos_x"             default="0.0" /> <!-- Position respect to base frame (i.e. "base_link) -->
     <arg name="cam_pos_y"             default="0.0" /> <!-- Position respect to base frame (i.e. "base_link) -->
     <arg name="cam_pos_z"             default="0.0" /> <!-- Position respect to base frame (i.e. "base_link) -->
-    <arg name="cam_roll"              default="1.5708" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
+    <arg name="cam_roll"              default="0.0" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
     <arg name="cam_pitch"             default="0.0" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
-    <arg name="cam_yaw"               default="1.5708" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
+    <arg name="cam_yaw"               default="0.0" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
 
     <arg name="lrcheck"               default="true" />
     <arg name="extended"              default="false" />
@@ -22,6 +23,7 @@
    
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
+        <arg name="parent_frame"    value="$(arg  parent_frame)"/>
         <arg name="camera_model"    value="$(arg  camera_model)"/>
         <arg name="camera_name"     value="$(arg  camera_name)" />
         <arg name="cam_pos_x"       value="$(arg  cam_pos_x)"   />
