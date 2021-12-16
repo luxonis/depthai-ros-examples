@@ -27,12 +27,12 @@ def generate_launch_description():
     cam_pitch = LaunchConfiguration('cam_pitch',     default = '0.0')
     cam_yaw   = LaunchConfiguration('cam_yaw',       default = '0.0')
 
-    camera_param_uri = LaunchConfiguration('camera_param_uri', default = 'package://depthai_examples/params/camera')
-    sync_nn          = LaunchConfiguration('sync_nn', default = True)
-    subpixel         = LaunchConfiguration('subpixel', default = True)
-    nn_path          = LaunchConfiguration('nn_path', default = "")
-    confidence       = LaunchConfiguration('confidence', default = 200)
-    LRchecktresh     = LaunchConfiguration('LRchecktresh', default = 5)
+    camera_param_uri = LaunchConfiguration('camera_param_uri',  default = 'package://depthai_examples/params/camera')
+    sync_nn          = LaunchConfiguration('sync_nn',           default = True)
+    subpixel         = LaunchConfiguration('subpixel',          default = True)
+    nn_path          = LaunchConfiguration('nn_path',           default = "")
+    confidence       = LaunchConfiguration('confidence',        default = 200)
+    LRchecktresh     = LaunchConfiguration('LRchecktresh',      default = 5)
 
     declare_camera_model_cmd = DeclareLaunchArgument(
         'camera_model',
