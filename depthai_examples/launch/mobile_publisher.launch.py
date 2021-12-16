@@ -14,8 +14,8 @@ def generate_launch_description():
                                 'rviz', 'pointCloud.rviz')
     urdf_launch_dir = os.path.join(get_package_share_directory('depthai_bridge'), 'launch')
     
-    camera_model     = LaunchConfiguration('camera_model', default = 'OAK-D')
-    camera_name      = LaunchConfiguration('camera_name', default = 'oak')
+    camera_model     = LaunchConfiguration('camera_model',  default = 'OAK-D')
+    camera_name      = LaunchConfiguration('camera_name',   default = 'oak')
     base_frame       = LaunchConfiguration('base_frame',    default = 'oak-d_frame')
     parent_frame     = LaunchConfiguration('parent_frame',  default = 'oak-d-base-frame')
     cam_pos_x        = LaunchConfiguration('cam_pos_x',     default = '0.0')

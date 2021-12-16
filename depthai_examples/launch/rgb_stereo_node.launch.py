@@ -15,22 +15,23 @@ def generate_launch_description():
     urdf_launch_dir = os.path.join(get_package_share_directory('depthai_bridge'), 'launch')
     
 
-    camera_name      = LaunchConfiguration('camera_name',  default = 'oak')
-    camera_model     = LaunchConfiguration('camera_model', default = 'OAK-D')
-    base_frame       = LaunchConfiguration('base_frame',   default = 'oak-d_frame')
-    parent_frame     = LaunchConfiguration('parent_frame', default = 'oak-d-base-frame')
-    cam_pos_x        = LaunchConfiguration('cam_pos_x',    default = '0.0')
-    cam_pos_y        = LaunchConfiguration('cam_pos_y',    default = '0.0')
-    cam_pos_z        = LaunchConfiguration('cam_pos_z',    default = '0.0')
-    cam_roll         = LaunchConfiguration('cam_roll',     default = '0.0')
-    cam_pitch        = LaunchConfiguration('cam_pitch',    default = '0.0')
-    cam_yaw          = LaunchConfiguration('cam_yaw',      default = '0.0')
+    camera_name  = LaunchConfiguration('camera_name',  default = 'oak')
+    camera_model = LaunchConfiguration('camera_model', default = 'OAK-D')
+    base_frame   = LaunchConfiguration('base_frame',   default = 'oak-d_frame')
+    parent_frame = LaunchConfiguration('parent_frame', default = 'oak-d-base-frame')
 
-    lrcheck          = LaunchConfiguration('lrcheck',      default = True)
-    extended         = LaunchConfiguration('extended',     default = False)
-    subpixel         = LaunchConfiguration('subpixel',     default = True)
-    confidence       = LaunchConfiguration('confidence',   default = 200)
-    LRchecktresh     = LaunchConfiguration('LRchecktresh', default = 5)
+    cam_pos_x = LaunchConfiguration('cam_pos_x',       default = '0.0')
+    cam_pos_y = LaunchConfiguration('cam_pos_y',       default = '0.0')
+    cam_pos_z = LaunchConfiguration('cam_pos_z',       default = '0.0')
+    cam_roll  = LaunchConfiguration('cam_roll',        default = '0.0')
+    cam_pitch = LaunchConfiguration('cam_pitch',       default = '0.0')
+    cam_yaw   = LaunchConfiguration('cam_yaw',         default = '0.0')
+
+    lrcheck      = LaunchConfiguration('lrcheck',      default = True)
+    extended     = LaunchConfiguration('extended',     default = False)
+    subpixel     = LaunchConfiguration('subpixel',     default = True)
+    confidence   = LaunchConfiguration('confidence',   default = 200)
+    LRchecktresh = LaunchConfiguration('LRchecktresh', default = 5)
 
 
     declare_camera_model_cmd = DeclareLaunchArgument(
