@@ -1,6 +1,7 @@
 
 #include "ros/ros.h"
 
+#include <depthai-shared/properties/MonoCameraProperties.hpp>
 #include <iostream>
 #include <cstdio>
 // #include "utility.hpp"
@@ -29,8 +30,9 @@ const std::vector<std::string> label_map = {"person",         "bicycle",    "car
              "toaster",        "sink",       "refrigerator",  "book",          "clock",       "vase",          "scissors",
              "teddy bear",     "hair drier", "toothbrush"};
 
-dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int confidence, int LRchecktresh){
+dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int confidence, int LRchecktresh, std::string resolution){
     dai::Pipeline pipeline;
+    dai::MonoCameraProperties::SensorResolution monoResolution; 
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
     auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
     auto monoLeft =  pipeline.create<dai::node::MonoCamera>();
@@ -51,9 +53,17 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int
     colorCam->setInterleaved(false);
     colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
 
-    monoLeft->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
+    if(resolution == "720p"){
+        monoResolution = dai::MonoCameraProperties::SensorResolution::THE_720_P; 
+    }else if(resolution == "400p" ){
+        monoResolution = dai::MonoCameraProperties::SensorResolution::THE_400_P; 
+    }else{
+        monoResolution = dai::MonoCameraProperties::SensorResolution::THE_800_P; 
+    }
+
+    monoLeft->setResolution(monoResolution);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
-    monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
+    monoRight->setResolution(monoResolution);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     /// setting node configs
@@ -107,6 +117,7 @@ int main(int argc, char** argv){
     int badParams = 0;
     int confidence = 200;
     int LRchecktresh = 5;
+    std::string monoResolution = "720p";
 
     badParams += !pnh.getParam("camera_name", deviceName);
     badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
@@ -114,6 +125,7 @@ int main(int argc, char** argv){
     badParams += !pnh.getParam("subpixel", subpixel);
     badParams += !pnh.getParam("confidence", confidence);
     badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
+    badParams += !pnh.getParam("monoResolution", monoResolution);
 
     if (badParams > 0)
     {
@@ -125,7 +137,7 @@ int main(int argc, char** argv){
       pnh.getParam("nn_path", nnPath);
     }
 
-    dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh);
+    dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh, monoResolution);
     dai::Device device(pipeline);
 
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
