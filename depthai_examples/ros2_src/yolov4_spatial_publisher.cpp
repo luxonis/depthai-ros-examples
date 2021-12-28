@@ -141,12 +141,17 @@ int main(int argc, char** argv){
     dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh, monoResolution);
     dai::Device device(pipeline);
 
+    auto colorQueue = device.getOutputQueue("preview", 30, false);
+    auto detectionQueue = device.getOutputQueue("detections", 30, false);
+    auto depthQueue = device.getOutputQueue("depth", 30, false);
+
+    auto calibrationHandler = device.readCalibration();
+
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
-    std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
 
     //TODO(sachin): Add option to use CameraInfo from EEPROM
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
-    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(device.getOutputQueue("preview", 30, false),
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(colorQueue,
                                                                                      node, 
                                                                                      std::string("color/image"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -159,7 +164,7 @@ int main(int argc, char** argv){
                                                                                      "color");
 
     dai::rosBridge::SpatialDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 416, 416, false);
-    dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(device.getOutputQueue("detections", 30, false),
+    dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(detectionQueue,
                                                                                                          node, 
                                                                                                          std::string("color/yolov4_Spatial_detections"),
                                                                                                          std::bind(static_cast<void(dai::rosBridge::SpatialDetectionConverter::*)(std::shared_ptr<dai::SpatialImgDetections>, 
@@ -170,7 +175,8 @@ int main(int argc, char** argv){
                                                                                                          30);
 
     dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
-    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(device.getOutputQueue("depth", 30, false),
+    auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
+    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(depthQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -178,7 +184,7 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
-                                                                                     stereo_uri,
+                                                                                     rightCameraInfo,
                                                                                      "stereo");
 
     depthPublish.addPubisherCallback();
