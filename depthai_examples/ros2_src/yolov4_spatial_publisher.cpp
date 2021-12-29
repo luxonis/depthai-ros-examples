@@ -31,7 +31,7 @@ const std::vector<std::string> label_map = {"person",         "bicycle",    "car
 
 dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int confidence, int LRchecktresh, std::string resolution){
     dai::Pipeline pipeline;
-    dai::MonoCameraProperties::SensorResolution monoResolution; 
+    dai::node::MonoCamera::Properties::SensorResolution monoResolution; 
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
     auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
     auto monoLeft =  pipeline.create<dai::node::MonoCamera>();
@@ -53,11 +53,16 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int
     colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
 
     if(resolution == "720p"){
-        monoResolution = dai::MonoCameraProperties::SensorResolution::THE_720_P; 
+        monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P; 
     }else if(resolution == "400p" ){
-        monoResolution = dai::MonoCameraProperties::SensorResolution::THE_400_P; 
+        monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P; 
+    }else if(resolution == "800p" ){
+        monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P; 
+    }else if(resolution == "480p" ){
+        monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
     }else{
-        monoResolution = dai::MonoCameraProperties::SensorResolution::THE_800_P; 
+        throw std::runtime_error("Invalid mono camera resolution.");
+    }
     }
     monoLeft->setResolution(monoResolution);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
@@ -147,10 +152,8 @@ int main(int argc, char** argv){
 
     auto calibrationHandler = device.readCalibration();
 
-    std::string color_uri = camera_param_uri + "/" + "color.yaml";
-
-    //TODO(sachin): Add option to use CameraInfo from EEPROM
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
+    auto rgbCameraInfo = rgbConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 416, 416);
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(colorQueue,
                                                                                      node, 
                                                                                      std::string("color/image"),
@@ -160,7 +163,7 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
-                                                                                     color_uri,
+                                                                                     rgbCameraInfo,
                                                                                      "color");
 
     dai::rosBridge::SpatialDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 416, 416, false);
