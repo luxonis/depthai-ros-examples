@@ -30,7 +30,6 @@ const std::vector<std::string> label_map = {"person",         "bicycle",    "car
              "toaster",        "sink",       "refrigerator",  "book",          "clock",       "vase",          "scissors",
              "teddy bear",     "hair drier", "toothbrush"};
 std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>> rgbPublish, depthPublish;
-std::unique_ptr<dai::rosBridge::ImageConverter> rgbConverter, rightConverter;
 std::unique_ptr<dai::Device> _dev;
 
 dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int confidence, int LRchecktresh, std::string resolution){
@@ -152,12 +151,13 @@ int main(int argc, char** argv){
     auto depthQueue = _dev->getOutputQueue("depth", 30, false);
     auto calibrationHandler = _dev->readCalibration();
 
-    auto rgbCameraInfo = rgbConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 416, 416);
+    dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
+    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, -1, -1);
     rgbPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>(colorQueue, 
                                                                                      pnh, 
                                                                                      std::string("color/image"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                                                                                     rgbConverter.get(), // since the converter has the same frame name
+                                                                                     &rgbConverter, // since the converter has the same frame name
                                                                                                       // and image type is also same we can reuse it
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
@@ -176,12 +176,13 @@ int main(int argc, char** argv){
                                                                                                          std::placeholders::_2) , 
                                                                                                          30);
 
-    auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
+    dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
+    auto rightCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, -1, -1); 
     depthPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>(depthQueue, 
                                                                                      pnh,
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                                                                                     rightConverter.get(), 
+                                                                                     &depthConverter, 
                                                                                      std::placeholders::_1, 
                                                                                      std::placeholders::_2) , 
                                                                                      30,
