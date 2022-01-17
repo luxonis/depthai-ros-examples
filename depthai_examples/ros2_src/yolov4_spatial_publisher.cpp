@@ -61,9 +61,11 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int
     }else if(resolution == "480p" ){
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
     }else{
+         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
+                   "Invalid parameter. -> monoResolution: %s", resolution.c_str());
         throw std::runtime_error("Invalid mono camera resolution.");
     }
-    }
+    
     monoLeft->setResolution(monoResolution);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
     monoRight->setResolution(monoResolution);
@@ -117,7 +119,7 @@ int main(int argc, char** argv){
     std::string nnPath(BLOB_PATH); // Set your path for the model here
     bool syncNN, subpixel;
     int confidence = 200, LRchecktresh = 5;
-    std::string monoResolution = "720p";
+    std::string monoResolution = "400p";
 
     node->declare_parameter("camera_name", "oak");
     node->declare_parameter("camera_param_uri", camera_param_uri);
@@ -149,8 +151,26 @@ int main(int argc, char** argv){
     auto colorQueue = device.getOutputQueue("preview", 30, false);
     auto detectionQueue = device.getOutputQueue("detections", 30, false);
     auto depthQueue = device.getOutputQueue("depth", 30, false);
-
     auto calibrationHandler = device.readCalibration();
+
+    int width, height;
+    if(monoResolution == "720p"){
+        width  = 1280;
+        height = 720;
+    }else if(monoResolution == "400p" ){
+        width  = 640;
+        height = 400;
+    }else if(monoResolution == "800p" ){
+        width  = 1280;
+        height = 800; 
+    }else if(monoResolution == "480p" ){
+        width  = 640;
+        height = 480; 
+    }else{
+         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
+                   "Invalid parameter. -> monoResolution: %s", resolution.c_str());
+        throw std::runtime_error("Invalid mono camera resolution.");
+    }
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
     auto rgbCameraInfo = rgbConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, -1, -1);
@@ -178,7 +198,7 @@ int main(int argc, char** argv){
                                                                                                          30);
 
     dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
-    auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, -1, -1); 
+    auto rightCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, width, height); 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(depthQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),

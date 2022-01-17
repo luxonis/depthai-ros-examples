@@ -150,9 +150,26 @@ int main(int argc, char** argv){
     auto detectionQueue = _dev->getOutputQueue("detections", 30, false);
     auto depthQueue = _dev->getOutputQueue("depth", 30, false);
     auto calibrationHandler = _dev->readCalibration();
+    int width, height;
+    if(monoResolution == "720p"){
+        width  = 1280;
+        height = 720;
+    }else if(monoResolution == "400p" ){
+        width  = 640;
+        height = 400;
+    }else if(monoResolution == "800p" ){
+        width  = 1280;
+        height = 800; 
+    }else if(monoResolution == "480p" ){
+        width  = 640;
+        height = 480; 
+    }else{
+        ROS_ERROR("Invalid parameter. -> monoResolution: %s", monoResolution.c_str());
+        throw std::runtime_error("Invalid mono camera resolution.");
+    }
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
-    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, -1, -1);
+    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 416, 416);
     rgbPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>(colorQueue, 
                                                                                      pnh, 
                                                                                      std::string("color/image"),
@@ -177,7 +194,7 @@ int main(int argc, char** argv){
                                                                                                          30);
 
     dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
-    auto rightCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, -1, -1); 
+    auto rightCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, width, height); 
     depthPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>(depthQueue, 
                                                                                      pnh,
                                                                                      std::string("stereo/depth"),

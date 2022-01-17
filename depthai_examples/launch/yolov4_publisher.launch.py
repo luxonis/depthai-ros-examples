@@ -32,7 +32,8 @@ def generate_launch_description():
     subpixel         = LaunchConfiguration('subpixel',          default = True)
     nn_path          = LaunchConfiguration('nn_path',           default = "")
     confidence       = LaunchConfiguration('confidence',        default = 200)
-    LRchecktresh     = LaunchConfiguration('LRchecktresh',      default = 5)
+    lrCheckTresh     = LaunchConfiguration('lrCheckTresh',      default = 5)
+    monoResolution   = LaunchConfiguration('monoResolution',  default = '400p')
 
     declare_camera_model_cmd = DeclareLaunchArgument(
         'camera_model',
@@ -107,13 +108,18 @@ def generate_launch_description():
     declare_confidence_cmd = DeclareLaunchArgument(
         'confidence',
         default_value=confidence,
-        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+        description='Confidence that the disparity from the feature matching was good. 0-255. 255 being the lowest confidence.')
     
-    declare_LRchecktresh_cmd = DeclareLaunchArgument(
-        'LRchecktresh',
-        default_value=LRchecktresh,
-        description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
-    
+    declare_lrCheckTresh_cmd = DeclareLaunchArgument(
+        'lrCheckTresh',
+        default_value=lrCheckTresh,
+        description='LR Threshold is the threshod of how much off the disparity on the l->r and r->l  ')
+
+    declare_monoResolution_cmd = DeclareLaunchArgument(
+        'monoResolution',
+        default_value=monoResolution,
+        description='Contains the resolution of the Mono Cameras. Available resolutions are 800p, 720p & 400p for OAK-D & 480p for OAK-D-Lite.')
+  
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
                                     os.path.join(urdf_launch_dir, 'urdf_launch.py')),
@@ -159,7 +165,8 @@ def generate_launch_description():
     ld.add_action(declare_subpixel_cmd)
     ld.add_action(declare_nn_path_cmd)
     ld.add_action(declare_confidence_cmd)
-    ld.add_action(declare_LRchecktresh_cmd)
+    ld.add_action(declare_lrCheckTresh_cmd)
+    ld.add_action(declare_monoResolution_cmd)
 
     ld.add_action(yolov4_spatial_node)
     ld.add_action(urdf_launch)
