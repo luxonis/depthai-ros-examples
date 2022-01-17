@@ -18,6 +18,7 @@
     <arg name="subpixel"              default="true"/>
     <arg name="confidence"            default="200" /> 
     <arg name="LRchecktresh"          default="5"   /> 
+    <arg name="monoResolution"        default="480p"/> <!-- '400p','480p', '720p' or '800p' -->
 
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -39,6 +40,7 @@
         <param name="subpixel"         value="$(arg subpixel)"/>
         <param name="confidence"       value="$(arg confidence)"/>
         <param name="LRchecktresh"     value="$(arg LRchecktresh)"/>
+        <param name="monoResolution"   value="$(arg monoResolution)"/>
     </node>
 
 </launch>
