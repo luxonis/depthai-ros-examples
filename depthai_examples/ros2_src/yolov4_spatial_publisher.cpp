@@ -168,12 +168,12 @@ int main(int argc, char** argv){
         height = 480; 
     }else{
          RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
-                   "Invalid parameter. -> monoResolution: %s", resolution.c_str());
+                   "Invalid parameter. -> monoResolution: %s", monoResolution.c_str());
         throw std::runtime_error("Invalid mono camera resolution.");
     }
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
-    auto rgbCameraInfo = rgbConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, -1, -1);
+    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, -1, -1);
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(colorQueue,
                                                                                      node, 
                                                                                      std::string("color/image"),
