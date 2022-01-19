@@ -16,7 +16,7 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 
 
-dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution){
+std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution){
     dai::Pipeline pipeline;
     dai::node::MonoCamera::Properties::SensorResolution monoResolution; 
     auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -55,7 +55,8 @@ dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool s
         width  = 640;
         height = 480;
     }else{
-        ROS_ERROR("Invalid parameter. -> monoResolution: %s", resolution.c_str());
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
+                    "Invalid parameter. -> monoResolution: %s", resolution.c_str());
         throw std::runtime_error("Invalid mono camera resolution.");
     }
 
