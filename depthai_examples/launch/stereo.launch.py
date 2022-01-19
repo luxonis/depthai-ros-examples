@@ -27,12 +27,13 @@ def generate_launch_description():
     cam_pitch  = LaunchConfiguration('cam_pitch',     default = '0.0')
     cam_yaw    = LaunchConfiguration('cam_yaw',       default = '0.0')
 
-    mode         = LaunchConfiguration('mode', default = 'depth')
-    lrcheck      = LaunchConfiguration('lrcheck', default = True)
-    extended     = LaunchConfiguration('extended', default = False)
-    subpixel     = LaunchConfiguration('subpixel', default = True)
-    confidence   = LaunchConfiguration('confidence', default = 200)
-    LRchecktresh = LaunchConfiguration('LRchecktresh', default = 5)
+    mode           = LaunchConfiguration('mode', default = 'depth')
+    lrcheck        = LaunchConfiguration('lrcheck', default = True)
+    extended       = LaunchConfiguration('extended', default = False)
+    subpixel       = LaunchConfiguration('subpixel', default = True)
+    confidence     = LaunchConfiguration('confidence', default = 200)
+    LRchecktresh   = LaunchConfiguration('LRchecktresh', default = 5)
+    monoResolution = LaunchConfiguration('monoResolution',  default = '720p')
 
     declare_camera_model_cmd = DeclareLaunchArgument(
         'camera_model',
@@ -114,6 +115,11 @@ def generate_launch_description():
         default_value=LRchecktresh,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
     
+    declare_monoResolution_cmd = DeclareLaunchArgument(
+        'monoResolution',
+        default_value=monoResolution,
+        description='Contains the resolution of the Mono Cameras. Available resolutions are 800p, 720p & 400p for OAK-D & 480p for OAK-D-Lite.')
+
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
                                     os.path.join(urdf_launch_dir, 'urdf_launch.py')),
@@ -135,7 +141,11 @@ def generate_launch_description():
                         {'mode': mode},
                         {'lrcheck': lrcheck},
                         {'extended': extended},
-                        {'subpixel': subpixel}])
+                        {'subpixel': subpixel},
+                        {'confidence': confidence},
+                        {'LRchecktresh': LRchecktresh},
+                        {'monoResolution': monoResolution}])
+
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -199,6 +209,7 @@ def generate_launch_description():
     ld.add_action(declare_subpixel_cmd)
     ld.add_action(declare_confidence_cmd)
     ld.add_action(declare_LRchecktresh_cmd)
+    ld.add_action(declare_monoResolution_cmd)
 
     ld.add_action(stereo_node)
     ld.add_action(urdf_launch)

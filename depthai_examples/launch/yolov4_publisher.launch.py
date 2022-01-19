@@ -140,7 +140,8 @@ def generate_launch_description():
             parameters=[{'camera_name': camera_name},
                         {'camera_param_uri': camera_param_uri},
                         {'sync_nn': sync_nn},
-                        {'nn_path': nn_path}])
+                        {'nn_path': nn_path},
+                        {'monoResolution': monoResolution}])
 
     rviz_node = launch_ros.actions.Node(
             package='rviz2', executable='rviz2', output='screen',
