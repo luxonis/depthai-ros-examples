@@ -153,7 +153,7 @@ int main(int argc, char** argv){
                                                                                     leftCameraInfo,
                                                                                     "left");
 
-    leftPublish.addPubisherCallback();
+    leftPublish.addPublisherCallback();
 
     dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight);  
@@ -169,7 +169,7 @@ int main(int argc, char** argv){
                                                                                      rightCameraInfo,
                                                                                      "right");
 
-    rightPublish.addPubisherCallback();
+    rightPublish.addPublisherCallback();
 
      if(mode == "depth"){
         dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
@@ -183,7 +183,7 @@ int main(int argc, char** argv){
                                                                                      30,
                                                                                      rightCameraInfo,
                                                                                      "stereo");
-        depthPublish.addPubisherCallback();
+        depthPublish.addPublisherCallback();
         rclcpp::spin(node);
     }
     else{
@@ -198,7 +198,7 @@ int main(int argc, char** argv){
                                                                                      30,
                                                                                      rightCameraInfo,
                                                                                      "stereo");
-        dispPublish.addPubisherCallback();
+        dispPublish.addPublisherCallback();
         rclcpp::spin(node);
     }
     return 0;

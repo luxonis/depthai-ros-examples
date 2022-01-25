@@ -114,7 +114,7 @@ int main() {
                                                                                     30,
                                                                                     rightCameraInfo,
                                                                                     "stereo");
-    depthPublish.addPubisherCallback();
+    depthPublish.addPublisherCallback();
     ros::spin();
 
     return 0;

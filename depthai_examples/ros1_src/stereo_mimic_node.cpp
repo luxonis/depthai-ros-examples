@@ -48,7 +48,7 @@ class StereoMimicNode{
                                                            stereo_uri,
                                                            "stereo");
 
-        _imagePublisher->addPubisherCallback();
+        _imagePublisher->addPublisherCallback();
         _inputConverter = std::make_unique<dai::rosBridge::ImageConverter>(true);
         _sync.registerCallback(boost::bind(&StereoMimicNode::stereoCallback, this, _1, _2));
         

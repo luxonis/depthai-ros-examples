@@ -118,7 +118,7 @@ int main() {
                                                                                     30,
                                                                                     rightCameraInfo,
                                                                                     "stereo");
-    depthPublish.addPubisherCallback();
+    depthPublish.addPublisherCallback();
     rclcpp::spin(node);
 
     return 0;

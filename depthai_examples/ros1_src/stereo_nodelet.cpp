@@ -95,7 +95,7 @@ namespace depthai_examples{
                                                                                              "left");
 
             // bridgePublish.startPublisherThread();
-            leftPublish->addPubisherCallback();
+            leftPublish->addPublisherCallback();
 
             rightConverter = std::make_unique<dai::rosBridge::ImageConverter >(deviceName + "_right_camera_optical_frame", true);
             auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
@@ -112,7 +112,7 @@ namespace depthai_examples{
                                                                                              rightCameraInfo,
                                                                                              "right");
 
-            rightPublish->addPubisherCallback();
+            rightPublish->addPublisherCallback();
 
             // dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame");
             depthPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
@@ -128,7 +128,7 @@ namespace depthai_examples{
                                                                              rightCameraInfo,
                                                                              "stereo");
 
-            depthPublish->addPubisherCallback();
+            depthPublish->addPublisherCallback();
 
             // We can add the rectified frames also similar to these publishers. 
             // Left them out so that users can play with it by adding and removing

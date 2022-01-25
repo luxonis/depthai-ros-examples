@@ -119,8 +119,8 @@ int main(int argc, char** argv){
                                                                                     rgbCameraInfo,
                                                                                     "color");
 
-    depthPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
-    rgbPublish.addPubisherCallback();
+    depthPublish.addPublisherCallback(); // addPublisherCallback works only when the dataqueue is non blocking.
+    rgbPublish.addPublisherCallback();
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing

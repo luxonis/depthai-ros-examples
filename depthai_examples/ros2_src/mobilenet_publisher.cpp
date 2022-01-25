@@ -106,8 +106,8 @@ int main(int argc, char** argv){
                                                                                                          std::placeholders::_2), 
                                                                                                          30);
 
-    detectionPublish.addPubisherCallback();
-    rgbPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
+    detectionPublish.addPublisherCallback();
+    rgbPublish.addPublisherCallback(); // addPublisherCallback works only when the dataqueue is non blocking.
 
     rclcpp::spin(node);
 

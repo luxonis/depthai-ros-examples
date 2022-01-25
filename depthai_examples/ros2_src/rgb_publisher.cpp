@@ -59,7 +59,7 @@ int main(int argc, char** argv){
                                                                                   color_uri,
                                                                                   "color");
 
-    rgbPublish.addPubisherCallback();
+    rgbPublish.addPublisherCallback();
     rclcpp::spin(node);
     return 0;
 }

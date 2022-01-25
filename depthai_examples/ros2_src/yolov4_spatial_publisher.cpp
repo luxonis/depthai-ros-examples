@@ -210,10 +210,10 @@ int main(int argc, char** argv){
                                                                                      rightCameraInfo,
                                                                                      "stereo");
 
-    depthPublish.addPubisherCallback();
+    depthPublish.addPublisherCallback();
 
-    detectionPublish.addPubisherCallback(); 
-    rgbPublish.addPubisherCallback(); // addPubisherCallback works only when the dataqueue is non blocking.
+    detectionPublish.addPublisherCallback(); 
+    rgbPublish.addPublisherCallback(); // addPublisherCallback works only when the dataqueue is non blocking.
 
     rclcpp::spin(node);
 

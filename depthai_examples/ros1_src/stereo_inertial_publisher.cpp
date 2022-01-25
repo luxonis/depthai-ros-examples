@@ -170,7 +170,7 @@ int main(int argc, char** argv){
                                                                                      "",
                                                                                      "imu");
 
-    ImuPublish.addPubisherCallback();
+    ImuPublish.addPublisherCallback();
 
     dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720);
@@ -190,7 +190,7 @@ int main(int argc, char** argv){
                                                                                      30,
                                                                                      depthCameraInfo,
                                                                                      "stereo");
-        depthPublish.addPubisherCallback();
+        depthPublish.addPublisherCallback();
         
         if(depth_aligned){
             auto imgQueue = device.getOutputQueue("rgb", 30, false);
@@ -204,7 +204,7 @@ int main(int argc, char** argv){
                                                                                         30,
                                                                                         rgbCameraInfo,
                                                                                         "color");
-            rgbPublish.addPubisherCallback();
+            rgbPublish.addPublisherCallback();
             ros::spin();
         }
         else {
@@ -230,8 +230,8 @@ int main(int argc, char** argv){
                                                                                             30,
                                                                                             rightCameraInfo,
                                                                                             "right");  
-            rightPublish.addPubisherCallback();
-            leftPublish.addPubisherCallback();
+            rightPublish.addPublisherCallback();
+            leftPublish.addPublisherCallback();
             ros::spin();
         }
     }
@@ -250,7 +250,7 @@ int main(int argc, char** argv){
                                                                                      30,
                                                                                      disparityCameraInfo,
                                                                                      "stereo");
-        dispPublish.addPubisherCallback();
+        dispPublish.addPublisherCallback();
         if(depth_aligned){
             auto imgQueue = device.getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
@@ -264,7 +264,7 @@ int main(int argc, char** argv){
                                                                                         30,
                                                                                         rgbCameraInfo,
                                                                                         "color");
-            rgbPublish.addPubisherCallback();
+            rgbPublish.addPublisherCallback();
             ros::spin();
         }
         else {
@@ -290,8 +290,8 @@ int main(int argc, char** argv){
                                                                                             30,
                                                                                             rightCameraInfo,
                                                                                             "right");  
-            rightPublish.addPubisherCallback();
-            leftPublish.addPubisherCallback();
+            rightPublish.addPublisherCallback();
+            leftPublish.addPublisherCallback();
             ros::spin();
         }
     }
