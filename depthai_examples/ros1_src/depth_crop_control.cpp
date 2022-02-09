@@ -35,7 +35,7 @@ int main() {
     int LRchecktresh = 5;
 
     int badParams = 0;
-    badParams += !pnh.getParam("camera_name", cameraName);
+    badParams += !pnh.getParam("tf_prefix", cameraName);
     badParams += !pnh.getParam("lrcheck",      lrcheck);
     badParams += !pnh.getParam("extended",     extended);
     badParams += !pnh.getParam("subpixel",     subpixel);

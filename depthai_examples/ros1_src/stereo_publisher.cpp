@@ -95,7 +95,7 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "stereo_node");
     ros::NodeHandle pnh("~");
     
-    std::string deviceName, mode;
+    std::string tfPrefix, mode;
     std::string cameraParamUri;
     int badParams = 0;
     bool lrcheck, extended, subpixel, enableDepth;
@@ -106,7 +106,7 @@ int main(int argc, char** argv){
     dai::Pipeline pipeline;
 
     badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
-    badParams += !pnh.getParam("camera_name",      deviceName);
+    badParams += !pnh.getParam("tf_prefix",        tfPrefix);
     badParams += !pnh.getParam("mode",             mode);
     badParams += !pnh.getParam("lrcheck",          lrcheck);
     badParams += !pnh.getParam("extended",         extended);
@@ -141,8 +141,14 @@ int main(int argc, char** argv){
     }
 
     auto calibrationHandler = device.readCalibration();
+
+    auto boardName = calibrationHandler.getEepromData().boardName;
+    if (monoHeight > 480 && boardName == "OAK-D-LITE") {
+        monoWidth = 640;
+        monoHeight = 480;
+    }
    
-    dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter converter(tfPrefix + "_left_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, monoWidth, monoHeight); 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(leftQueue,
                                                                                     pnh, 
@@ -157,7 +163,7 @@ int main(int argc, char** argv){
 
     leftPublish.addPublisherCallback();
 
-    dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter rightconverter(tfPrefix + "_right_camera_optical_frame", true);
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight);
 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rightPublish(rightQueue,
@@ -189,7 +195,7 @@ int main(int argc, char** argv){
         ros::spin();
     }
     else{
-        dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
+        dai::rosBridge::DisparityConverter dispConverter(tfPrefix + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
         dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
                                                                                      pnh, 
                                                                                      std::string("stereo/disparity"),

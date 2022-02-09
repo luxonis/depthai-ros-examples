@@ -27,14 +27,14 @@ namespace depthai_examples{
 
             auto& pnh = getPrivateNodeHandle();
             
-            std::string deviceName, mode;
+            std::string tfPrefix, mode;
             std::string cameraParamUri;
             int badParams = 0;
             bool lrcheck, extended, subpixel, enableDepth;
             int confidence = 200;
             int LRchecktresh = 5;
 
-            badParams += !pnh.getParam("camera_name", deviceName);
+            badParams += !pnh.getParam("tf_prefix", tfPrefix);
             badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
             badParams += !pnh.getParam("mode", mode);
             badParams += !pnh.getParam("lrcheck",  lrcheck);
@@ -79,7 +79,7 @@ namespace depthai_examples{
             std::string stereo_uri = camera_param_uri + "/" + "right.yaml"; 
             */
 
-            leftConverter = std::make_unique<dai::rosBridge::ImageConverter>(deviceName + "_left_camera_optical_frame", true);
+            leftConverter = std::make_unique<dai::rosBridge::ImageConverter>(tfPrefix + "_left_camera_optical_frame", true);
             auto leftCameraInfo = leftConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
 
             leftPublish  = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
@@ -97,7 +97,7 @@ namespace depthai_examples{
             // bridgePublish.startPublisherThread();
             leftPublish->addPublisherCallback();
 
-            rightConverter = std::make_unique<dai::rosBridge::ImageConverter >(deviceName + "_right_camera_optical_frame", true);
+            rightConverter = std::make_unique<dai::rosBridge::ImageConverter >(tfPrefix + "_right_camera_optical_frame", true);
             auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
 
             rightPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
@@ -114,7 +114,7 @@ namespace depthai_examples{
 
             rightPublish->addPublisherCallback();
 
-            // dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame");
+            // dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame");
             depthPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
                                                                             (stereoQueue,
                                                                              pnh, 

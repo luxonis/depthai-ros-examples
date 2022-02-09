@@ -114,14 +114,14 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("yolov4_spatial_node");
     
-    std::string deviceName;
+    std::string tfPrefix;
     std::string camera_param_uri;
     std::string nnPath(BLOB_PATH); // Set your path for the model here
     bool syncNN, subpixel;
     int confidence = 200, LRchecktresh = 5;
     std::string monoResolution = "400p";
 
-    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("camera_param_uri", camera_param_uri);
     node->declare_parameter("sync_nn", true);
     node->declare_parameter("subpixel", true);
@@ -130,7 +130,7 @@ int main(int argc, char** argv){
     node->declare_parameter("LRchecktresh", LRchecktresh);
     node->declare_parameter("monoResolution", monoResolution);
 
-    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("camera_param_uri", camera_param_uri);
     node->get_parameter("sync_nn", syncNN);
     node->get_parameter("subpixel", subpixel);
@@ -172,7 +172,7 @@ int main(int argc, char** argv){
         throw std::runtime_error("Invalid mono camera resolution.");
     }
 
-    dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
+    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, -1, -1);
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(colorQueue,
                                                                                      node, 
@@ -186,7 +186,7 @@ int main(int argc, char** argv){
                                                                                      rgbCameraInfo,
                                                                                      "color");
 
-    dai::rosBridge::SpatialDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 416, 416, false);
+    dai::rosBridge::SpatialDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 416, 416, false);
     dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(detectionQueue,
                                                                                                          node, 
                                                                                                          std::string("color/yolov4_Spatial_detections"),
@@ -197,7 +197,7 @@ int main(int argc, char** argv){
                                                                                                          std::placeholders::_2) , 
                                                                                                          30);
 
-    dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
     auto rightCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, width, height); 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(depthQueue,
                                                                                      node, 

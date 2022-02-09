@@ -66,14 +66,14 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "rgb_stereo_node");
     ros::NodeHandle pnh("~");
     
-    std::string deviceName;
+    std::string tfPrefix;
     std::string camera_param_uri;
     int badParams = 0;
     bool lrcheck, extended, subpixel;
     int confidence = 200;
     int LRchecktresh = 5;
 
-    badParams += !pnh.getParam("camera_name", deviceName);
+    badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
     badParams += !pnh.getParam("lrcheck",  lrcheck);
     badParams += !pnh.getParam("extended",  extended);
@@ -97,7 +97,7 @@ int main(int argc, char** argv){
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
 
 
-    dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
     auto rgbCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720); 
 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
@@ -113,7 +113,7 @@ int main(int argc, char** argv){
                                                                                      "stereo");
 
 
-    dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", true);
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(previewQueue,
                                                                                     pnh, 
                                                                                     std::string("color/image"),

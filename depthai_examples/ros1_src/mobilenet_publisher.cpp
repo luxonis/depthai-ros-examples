@@ -49,13 +49,13 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "mobilenet_node");
     ros::NodeHandle pnh("~");
     
-    std::string deviceName;
+    std::string tfPrefix;
     std::string cameraParamUri;
     std::string nnPath(BLOB_PATH);
     bool syncNN;
     int badParams = 0;
 
-    badParams += !pnh.getParam("camera_name", deviceName);
+    badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
     badParams += !pnh.getParam("sync_nn", syncNN);
 
@@ -78,7 +78,7 @@ int main(int argc, char** argv){
 
     std::string color_uri = cameraParamUri + "/" + "color.yaml";
 
-    dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
+    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(previewQueue,
                                                                                      pnh, 
                                                                                      std::string("color/image"),
@@ -92,7 +92,7 @@ int main(int argc, char** argv){
                                                                                      "color");
 
 
-    dai::rosBridge::ImgDetectionConverter detConverter(deviceName + "_rgb_camera_optical_frame", 300, 300, false);
+    dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 300, 300, false);
     dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueue,
                                                                                                          pnh, 
                                                                                                          std::string("color/mobilenet_detections"),

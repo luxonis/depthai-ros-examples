@@ -65,18 +65,18 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("rgb_stereo_node");
     
-    std::string deviceName;
+    std::string tfPrefix;
     bool lrcheck, extended, subpixel;
     int confidence, LRchecktresh;
 
-    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("lrcheck", true);
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
     node->declare_parameter("confidence",  200);
     node->declare_parameter("LRchecktresh",  5);
 
-    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("lrcheck",  lrcheck);
     node->get_parameter("extended",  extended);
     node->get_parameter("subpixel",  subpixel);
@@ -91,7 +91,7 @@ int main(int argc, char** argv){
 
     auto calibrationHandler = device.readCalibration();
 
-    dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
     auto stereoCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      node, 
@@ -105,7 +105,7 @@ int main(int argc, char** argv){
                                                                                      stereoCameraInfo,
                                                                                      "stereo");
 
-    dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", true);
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1920, 1080); 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(previewQueue,
                                                                                     node, 

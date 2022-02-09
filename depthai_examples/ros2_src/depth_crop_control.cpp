@@ -35,14 +35,14 @@ int main() {
     int confidence, LRchecktresh;
     bool lrcheck, extended, subpixel;
 
-    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("lrcheck", true);
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
     node->declare_parameter("confidence",  200);
     node->declare_parameter("LRchecktresh",  5);
 
-    node->get_parameter("camera_name", cameraName);
+    node->get_parameter("tf_prefix", cameraName);
     node->get_parameter("lrcheck",      lrcheck);
     node->get_parameter("extended",     extended);
     node->get_parameter("subpixel",     subpixel);
