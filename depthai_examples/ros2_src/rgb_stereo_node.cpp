@@ -14,7 +14,7 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh){
+std::tuple<dai::Pipeline, int, int> createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution){
 
     dai::Pipeline pipeline;
     auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -25,10 +25,34 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int con
 
     xoutDepth->setStreamName("depth");
   
+    int width, height;
+    dai::node::MonoCamera::Properties::SensorResolution monoResolution; 
+    if(resolution == "720p"){
+        monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P; 
+        width  = 1280;
+        height = 720;
+    }else if(resolution == "400p" ){
+        monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P; 
+        width  = 640;
+        height = 400;
+    }else if(resolution == "800p" ){
+        monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P; 
+        width  = 1280;
+        height = 800;
+    }else if(resolution == "480p" ){
+        monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
+        width  = 640;
+        height = 480;
+    }else{
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
+                    "Invalid parameter. -> monoResolution: %s", resolution.c_str());
+        throw std::runtime_error("Invalid mono camera resolution.");
+    }
+
     // MonoCamera
-    monoLeft->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
+    monoLeft->setResolution(monoResolution);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
-    monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_720_P);
+    monoRight->setResolution(monoResolution);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
 
     // StereoDepth
@@ -56,7 +80,7 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int con
     // Link plugins CAM -> XLINK
     colorCam->video.link(xlinkOut->input);
 
-    return pipeline;
+    return std::make_tuple(pipeline, width, height);
 }
 
 
@@ -65,7 +89,7 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("rgb_stereo_node");
     
-    std::string tfPrefix;
+    std::string tfPrefix, monoResolution;
     bool lrcheck, extended, subpixel;
     int confidence, LRchecktresh;
 
@@ -75,6 +99,7 @@ int main(int argc, char** argv){
     node->declare_parameter("subpixel", true);
     node->declare_parameter("confidence",  200);
     node->declare_parameter("LRchecktresh",  5);
+    node->declare_parameter("monoResolution",  "720p");
 
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("lrcheck",  lrcheck);
@@ -82,8 +107,11 @@ int main(int argc, char** argv){
     node->get_parameter("subpixel",  subpixel);
     node->get_parameter("confidence",   confidence);
     node->get_parameter("LRchecktresh", LRchecktresh);
+    node->get_parameter("monoResolution", monoResolution);
 
-    dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel, confidence , LRchecktresh);
+    dai::Pipeline pipeline;
+    int monoWidth, monoHeight;
+    std::tie(pipeline, monoWidth, monoHeight) = createPipeline(lrcheck, extended, subpixel, confidence , LRchecktresh, monoResolution);
     dai::Device device(pipeline);
 
     auto stereoQueue = device.getOutputQueue("depth", 30, false);
@@ -91,8 +119,6 @@ int main(int argc, char** argv){
 
     auto calibrationHandler = device.readCalibration();
 
-    int monoWidth = 1280;
-    int monoHeight = 720;
     auto boardName = calibrationHandler.getEepromData().boardName;
     if (monoHeight > 480 && boardName == "OAK-D-LITE") {
         monoWidth = 640;

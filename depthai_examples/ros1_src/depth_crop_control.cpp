@@ -31,6 +31,7 @@ int main() {
     ros::init(argc, argv, "depth_crop_control");
     ros::NodeHandle pnh("~");
     std::string cameraName;
+    std::string monoResolution = "720p";
     int confidence = 200;
     int LRchecktresh = 5;
 
@@ -41,6 +42,8 @@ int main() {
     badParams += !pnh.getParam("subpixel",     subpixel);
     badParams += !pnh.getParam("confidence",   confidence);
     badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
+
+    badParams += !pnh.getParam("monoResolution",   monoResolution);
 
     if (badParams > 0)
     {   
@@ -69,11 +72,34 @@ int main() {
     dai::Point2f topLeft(0.2, 0.2);
     dai::Point2f bottomRight(0.8, 0.8);
 
+    dai::node::MonoCamera::Properties::SensorResolution _monoResolution; 
+    int monoWidth, monoHeight;
+    if(resolution == "720p"){
+        _monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P; 
+        monoWidth  = 1280;
+        monoHeight = 720;
+    }else if(resolution == "400p" ){
+        _monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P; 
+        monoWidth  = 640;
+        monoHeight = 400;
+    }else if(resolution == "800p" ){
+        _monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P; 
+        monoWidth  = 1280;
+        monoHeight = 800;
+    }else if(resolution == "480p" ){
+        _monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
+        monoWidth  = 640;
+        monoHeight = 480;
+    }else{
+        ROS_ERROR("Invalid parameter. -> monoResolution: %s", resolution.c_str());
+        throw std::runtime_error("Invalid mono camera resolution.");
+    }
+
     // Properties
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
-    monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_400_P);
-    monoLeft->setResolution(dai::MonoCameraProperties::SensorResolution::THE_400_P);
+    monoRight->setResolution(_monoResolution);
+    monoLeft->setResolution(_monoResolution);
 
     manip->initialConfig.setCropRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
     manip->setMaxOutputFrameSize(monoRight->getResolutionHeight() * monoRight->getResolutionWidth() * 3);
@@ -99,8 +125,6 @@ int main() {
 
     auto calibrationHandler = device.readCalibration();
 
-    int monoWidth = 1280;
-    int monoHeight = 720;
     auto boardName = calibrationHandler.getEepromData().boardName;
     if (monoHeight > 480 && boardName == "OAK-D-LITE") {
         monoWidth = 640;
