@@ -76,21 +76,21 @@ int main() {
     dai::Point2f bottomRight(0.8, 0.8);
 
     int monoWidth, monoHeight;
-    dai::node::MonoCamera::Properties::SensorResolution _monoResolution; 
+    dai::node::MonoCamera::Properties::SensorResolution monoRes; 
     if(monoResolution == "720p"){
-        _monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P; 
+        monoRes = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P; 
         monoWidth  = 1280;
         monoHeight = 720;
     }else if(monoResolution == "400p" ){
-        _monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P; 
+        monoRes = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P; 
         monoWidth  = 640;
         monoHeight = 400;
     }else if(monoResolution == "800p" ){
-        _monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P; 
+        monoRes = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P; 
         monoWidth  = 1280;
         monoHeight = 800;
     }else if(monoResolution == "480p" ){
-        _monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
+        monoRes = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
         monoWidth  = 640;
         monoHeight = 480;
     }else{
@@ -102,8 +102,8 @@ int main() {
     // Properties
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
-    monoRight->setResolution(_monoResolution);
-    monoLeft->setResolution(_monoResolution);
+    monoRight->setResolution(monoRes);
+    monoLeft->setResolution(monoRes);
 
     manip->initialConfig.setCropRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
     manip->setMaxOutputFrameSize(monoRight->getResolutionHeight() * monoRight->getResolutionWidth() * 3);

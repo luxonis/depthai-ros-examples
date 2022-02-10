@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <tuple>
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/Image.h"
 #include "stereo_msgs/DisparityImage.h"

@@ -5,6 +5,7 @@
 #include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
 #include <functional>
+#include <tuple>
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
