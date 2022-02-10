@@ -168,6 +168,12 @@ int main(int argc, char** argv){
         throw std::runtime_error("Invalid mono camera resolution.");
     }
 
+    auto boardName = calibrationHandler.getEepromData().boardName;
+    if (height > 480 && boardName == "OAK-D-LITE") {
+        width = 640;
+        height = 480;
+    }
+
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 416, 416);
     rgbPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>(colorQueue, 

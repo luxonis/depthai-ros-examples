@@ -79,8 +79,16 @@ namespace depthai_examples{
             std::string stereo_uri = camera_param_uri + "/" + "right.yaml"; 
             */
 
+            auto boardName = calibrationHandler.getEepromData().boardName;
+            int monoWidth = 1280;
+            int monoHeight = 720;
+            if (monoHeight > 480 && boardName == "OAK-D-LITE") {
+                monoWidth = 640;
+                monoHeight = 480;
+            }
+
             leftConverter = std::make_unique<dai::rosBridge::ImageConverter>(tfPrefix + "_left_camera_optical_frame", true);
-            auto leftCameraInfo = leftConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
+            auto leftCameraInfo = leftConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, monoWidth, monoHeight); 
 
             leftPublish  = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
                                                                                             (leftQueue,
@@ -98,7 +106,7 @@ namespace depthai_examples{
             leftPublish->addPublisherCallback();
 
             rightConverter = std::make_unique<dai::rosBridge::ImageConverter >(tfPrefix + "_right_camera_optical_frame", true);
-            auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
+            auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight); 
 
             rightPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
                                                                                             (rightQueue,
