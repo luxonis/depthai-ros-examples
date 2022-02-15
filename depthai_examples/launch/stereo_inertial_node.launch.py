@@ -181,8 +181,9 @@ def generate_launch_description():
             ],
             output='screen',)
 
+    #TODO(sachin): Move this into the same container
     point_cloud_node = launch_ros.actions.ComposableNodeContainer(
-            name='container',
+            name='container2',
             namespace='',
             package='rclcpp_components',
             executable='component_container',

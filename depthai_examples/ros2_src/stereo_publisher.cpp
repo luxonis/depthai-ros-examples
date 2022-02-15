@@ -78,8 +78,8 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck,
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
 
-    stereo->syncedLeft.link(xoutLeft->input);
-    stereo->syncedRight.link(xoutRight->input);
+    stereo->rectifiedLeft.link(xoutLeft->input);
+    stereo->rectifiedRight.link(xoutRight->input);
 
     if(withDepth){
         stereo->depth.link(xoutDepth->input);
@@ -144,7 +144,7 @@ int main(int argc, char** argv){
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, monoWidth, monoHeight);  
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(leftQueue,
                                                                                     node, 
-                                                                                    std::string("left/image"),
+                                                                                    std::string("left/image_rect"),
                                                                                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                     &converter, 
                                                                                     std::placeholders::_1, 
@@ -160,7 +160,7 @@ int main(int argc, char** argv){
 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
                                                                                      node, 
-                                                                                     std::string("right/image"),
+                                                                                     std::string("right/image_rect"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                      &rightconverter, 
                                                                                      std::placeholders::_1, 

@@ -166,7 +166,7 @@ def generate_launch_description():
             output='screen',)
 
     point_cloud_node = launch_ros.actions.ComposableNodeContainer(
-            name='container',
+            name='container2',
             namespace='',
             package='rclcpp_components',
             executable='component_container',
@@ -178,7 +178,7 @@ def generate_launch_description():
                     name='point_cloud_xyzi',
 
                     remappings=[('depth/image_rect', '/stereo/converted_depth'),
-                                ('intensity/image_rect', '/right/image'),
+                                ('intensity/image_rect', '/right/image_rect'),
                                 ('intensity/camera_info', '/right/camera_info'),
                                 ('points', '/stereo/points')]
                 ),
