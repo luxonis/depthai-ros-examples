@@ -5,6 +5,7 @@
 #include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
 #include <functional>
+#include <tuple>
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
@@ -27,14 +28,15 @@ namespace depthai_examples{
 
             auto& pnh = getPrivateNodeHandle();
             
-            std::string deviceName, mode;
+            std::string tfPrefix, mode;
             std::string cameraParamUri;
+            std::string monoResolution = "720p";
             int badParams = 0;
             bool lrcheck, extended, subpixel, enableDepth;
             int confidence = 200;
             int LRchecktresh = 5;
 
-            badParams += !pnh.getParam("camera_name", deviceName);
+            badParams += !pnh.getParam("tf_prefix", tfPrefix);
             badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
             badParams += !pnh.getParam("mode", mode);
             badParams += !pnh.getParam("lrcheck",  lrcheck);
@@ -42,6 +44,7 @@ namespace depthai_examples{
             badParams += !pnh.getParam("subpixel",  subpixel);
             badParams += !pnh.getParam("confidence",  confidence);
             badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
+            badParams += !pnh.getParam("LRchecktresh",  monoResolution);
             
             if (badParams > 0)
             {   
@@ -56,7 +59,9 @@ namespace depthai_examples{
                 enableDepth = false;
             }
 
-            dai::Pipeline pipeline = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh);
+            dai::Pipeline pipeline;
+            int monoWidth, monoHeight;
+            std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution);
             _dev = std::make_unique<dai::Device>(pipeline);
 
             auto leftQueue = _dev->getOutputQueue("left", 30, false);
@@ -79,8 +84,14 @@ namespace depthai_examples{
             std::string stereo_uri = camera_param_uri + "/" + "right.yaml"; 
             */
 
-            leftConverter = std::make_unique<dai::rosBridge::ImageConverter>(deviceName + "_left_camera_optical_frame", true);
-            auto leftCameraInfo = leftConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, 1280, 720); 
+            auto boardName = calibrationHandler.getEepromData().boardName;
+            if (monoHeight > 480 && boardName == "OAK-D-LITE") {
+                monoWidth = 640;
+                monoHeight = 480;
+            }
+
+            leftConverter = std::make_unique<dai::rosBridge::ImageConverter>(tfPrefix + "_left_camera_optical_frame", true);
+            auto leftCameraInfo = leftConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, monoWidth, monoHeight); 
 
             leftPublish  = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
                                                                                             (leftQueue,
@@ -97,8 +108,8 @@ namespace depthai_examples{
             // bridgePublish.startPublisherThread();
             leftPublish->addPublisherCallback();
 
-            rightConverter = std::make_unique<dai::rosBridge::ImageConverter >(deviceName + "_right_camera_optical_frame", true);
-            auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
+            rightConverter = std::make_unique<dai::rosBridge::ImageConverter >(tfPrefix + "_right_camera_optical_frame", true);
+            auto rightCameraInfo = rightConverter->calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight); 
 
             rightPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
                                                                                             (rightQueue,
@@ -114,7 +125,7 @@ namespace depthai_examples{
 
             rightPublish->addPublisherCallback();
 
-            // dai::rosBridge::ImageConverter depthConverter(deviceName + "_right_camera_optical_frame");
+            // dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame");
             depthPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>>
                                                                             (stereoQueue,
                                                                              pnh, 
@@ -135,7 +146,7 @@ namespace depthai_examples{
         }
 
 
-    dai::Pipeline createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh){
+    std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution){
         dai::Pipeline pipeline;
 
         auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -154,6 +165,29 @@ namespace depthai_examples{
         }
         else {
             xoutDepth->setStreamName("disparity");
+        }
+
+        int width, height;
+        dai::node::MonoCamera::Properties::SensorResolution monoResolution;
+        if(resolution == "720p"){
+            monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P; 
+            width  = 1280;
+            height = 720;
+        }else if(resolution == "400p" ){
+            monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P; 
+            width  = 640;
+            height = 400;
+        }else if(resolution == "800p" ){
+            monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P; 
+            width  = 1280;
+            height = 800;
+        }else if(resolution == "480p" ){
+            monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
+            width  = 640;
+            height = 480;
+        }else{
+            ROS_ERROR("Invalid parameter. -> monoResolution: %s", resolution.c_str());
+            throw std::runtime_error("Invalid mono camera resolution.");
         }
 
         // MonoCamera
@@ -189,7 +223,7 @@ namespace depthai_examples{
             stereo->disparity.link(xoutDepth->input);
         }
 
-        return pipeline;
+        return std::make_tuple(pipeline, width, height);
     }
 };
 

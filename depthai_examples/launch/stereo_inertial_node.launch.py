@@ -16,7 +16,7 @@ def generate_launch_description():
     
 
     camera_model = LaunchConfiguration('camera_model',  default = 'OAK-D')
-    camera_name  = LaunchConfiguration('camera_name',   default = 'oak')
+    tf_prefix    = LaunchConfiguration('tf_prefix',   default = 'oak')
     base_frame   = LaunchConfiguration('base_frame',    default = 'oak-d_frame')
     parent_frame = LaunchConfiguration('parent_frame',  default = 'oak-d-base-frame')
     
@@ -43,9 +43,9 @@ def generate_launch_description():
         default_value=camera_model,
         description='The model of the camera. Using a wrong camera model can disable camera features. Valid models: `OAK-D, OAK-D-LITE`.')
 
-    declare_camera_name_cmd = DeclareLaunchArgument(
-        'camera_name',
-        default_value=camera_name,
+    declare_tf_prefix_cmd = DeclareLaunchArgument(
+        'tf_prefix',
+        default_value=tf_prefix,
         description='The name of the camera. It can be different from the camera model and it will be used in naming TF.')
 
     declare_base_frame_cmd = DeclareLaunchArgument(
@@ -137,7 +137,7 @@ def generate_launch_description():
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
                                     os.path.join(urdf_launch_dir, 'urdf_launch.py')),
-                            launch_arguments={'camera_name' : camera_name,
+                            launch_arguments={'tf_prefix'   : tf_prefix,
                                               'camera_model': camera_model,
                                               'base_frame'  : base_frame,
                                               'parent_frame': parent_frame,
@@ -152,7 +152,7 @@ def generate_launch_description():
     streo_node = launch_ros.actions.Node(
             package='depthai_examples', executable='stereo_inertial_node',
             output='screen',
-            parameters=[{'camera_name':   camera_name},
+            parameters=[{'tf_prefix':     tf_prefix},
                         {'mode':          mode},
                         {'lrcheck':       lrcheck},
                         {'extended':      extended},
@@ -207,7 +207,7 @@ def generate_launch_description():
             arguments=['--display-config', default_rviz])
 
     ld = LaunchDescription()
-    ld.add_action(declare_camera_name_cmd)
+    ld.add_action(declare_tf_prefix_cmd)
     ld.add_action(declare_camera_model_cmd)
     
     ld.add_action(declare_base_frame_cmd)

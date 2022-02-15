@@ -31,13 +31,13 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("rgb_node");
 
-    std::string deviceName;
+    std::string tfPrefix;
     std::string cameraParamUri = "package://depthai_examples/params/camera";
     
-    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("camera_param_uri", cameraParamUri);
     
-    node->get_parameter("camera_name", deviceName);
+    node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("camera_param_uri", cameraParamUri);
 
     dai::Pipeline pipeline = createPipeline();
@@ -46,7 +46,7 @@ int main(int argc, char** argv){
     
     std::string color_uri = cameraParamUri + "/" + "color.yaml";
 
-    dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
+    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(imgQueue,
                                                                                   node, 
                                                                                   std::string("color/image"),

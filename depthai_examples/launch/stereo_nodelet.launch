@@ -2,7 +2,7 @@
 <launch>
        
     <arg name="camera_model"         default="OAK-D" /> <!-- 'zed' or 'zedm' -->
-    <arg name="camera_name"          default="oak" />
+    <arg name="tf_prefix"            default="oak" />
     <arg name="mode"                 default="depth" />
     <arg name="base_frame"           default="oak-d_frame" />
     <arg name="parent_frame"         default="oak-d-base-frame" />
@@ -25,7 +25,7 @@
         <arg name="base_frame"      value="$(arg  base_frame)"  />
         <arg name="parent_frame"    value="$(arg  parent_frame)"/>
         <arg name="camera_model"    value="$(arg  camera_model)"/>
-        <arg name="camera_name"     value="$(arg  camera_name)" />
+        <arg name="tf_prefix"       value="$(arg  tf_prefix)" />
         <arg name="cam_pos_x"       value="$(arg  cam_pos_x)"   />
         <arg name="cam_pos_y"       value="$(arg  cam_pos_y)"   />
         <arg name="cam_pos_z"       value="$(arg  cam_pos_z)"   />
@@ -40,7 +40,7 @@
 
     <node name="stereo_publisher" pkg="nodelet" type="nodelet" output="screen" required="true"
         args="load depthai_examples/StereoNodelet nodelet_manager">
-        <param name="camera_name" value="$(arg camera_name)"/>
+        <param name="tf_prefix" value="$(arg tf_prefix)"/>
         <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
         <param name="mode" value="$(arg mode)"/>
         <param name="lrcheck" value="$(arg lrcheck)"/>

@@ -32,11 +32,11 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "rgb_node");
     ros::NodeHandle pnh("~");
     
-    std::string deviceName;
+    std::string tfPrefix;
     std::string camera_param_uri;
     int badParams = 0;
 
-    badParams += !pnh.getParam("camera_name", deviceName);
+    badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
 
     if (badParams > 0)
@@ -50,7 +50,7 @@ int main(int argc, char** argv){
     
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
 
-    dai::rosBridge::ImageConverter rgbConverter(deviceName + "_rgb_camera_optical_frame", false);
+    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(imgQueue,
                                                                                   pnh, 
                                                                                   std::string("color/image"),

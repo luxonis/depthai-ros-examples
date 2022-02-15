@@ -23,11 +23,11 @@ class StereoMimicNode{
                                 _rightImageSub(_nh, "right", 10),
                                 _sync(_leftImageSub, _rightImageSub, 15)
     {
-        std::string deviceName;
+        std::string tfPrefix;
         std::string camera_param_uri;
         int badParams = 0;
 
-        badParams += !_pnh.getParam("camera_name", deviceName);
+        badParams += !_pnh.getParam("tf_prefix", tfPrefix);
         badParams += !_pnh.getParam("camera_param_uri", camera_param_uri);
 
         _stereoPipeline = std::make_unique<StereoHost>();
@@ -36,7 +36,7 @@ class StereoMimicNode{
         _inputQueues  = _stereoPipeline->getExposedInputImageStreams();
 
         std::string stereo_uri = camera_param_uri + "/" + "right.yaml";
-        _outputConverter = std::make_unique<dai::rosBridge::ImageConverter>(deviceName + "_right_camera_optical_frame", true);
+        _outputConverter = std::make_unique<dai::rosBridge::ImageConverter>(tfPrefix + "_right_camera_optical_frame", true);
         _imagePublisher  = std::make_unique<ImagePublisher>(_outputQueues[0],
                                                            _pnh, 
                                                            std::string("stereo/depth"),

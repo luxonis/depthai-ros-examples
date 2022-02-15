@@ -31,16 +31,19 @@ int main() {
     ros::init(argc, argv, "depth_crop_control");
     ros::NodeHandle pnh("~");
     std::string cameraName;
+    std::string monoResolution = "720p";
     int confidence = 200;
     int LRchecktresh = 5;
 
     int badParams = 0;
-    badParams += !pnh.getParam("camera_name", cameraName);
+    badParams += !pnh.getParam("tf_prefix", cameraName);
     badParams += !pnh.getParam("lrcheck",      lrcheck);
     badParams += !pnh.getParam("extended",     extended);
     badParams += !pnh.getParam("subpixel",     subpixel);
     badParams += !pnh.getParam("confidence",   confidence);
     badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
+
+    badParams += !pnh.getParam("monoResolution",   monoResolution);
 
     if (badParams > 0)
     {   
@@ -69,11 +72,34 @@ int main() {
     dai::Point2f topLeft(0.2, 0.2);
     dai::Point2f bottomRight(0.8, 0.8);
 
+    dai::node::MonoCamera::Properties::SensorResolution monoRes; 
+    int monoWidth, monoHeight;
+    if(monoResolution == "720p"){
+        monoRes = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P; 
+        monoWidth  = 1280;
+        monoHeight = 720;
+    }else if(monoResolution == "400p" ){
+        monoRes = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P; 
+        monoWidth  = 640;
+        monoHeight = 400;
+    }else if(monoResolution == "800p" ){
+        monoRes = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P; 
+        monoWidth  = 1280;
+        monoHeight = 800;
+    }else if(monoResolution == "480p" ){
+        monoRes = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
+        monoWidth  = 640;
+        monoHeight = 480;
+    }else{
+        ROS_ERROR("Invalid parameter. -> monoResolution: %s", monoResolution.c_str());
+        throw std::runtime_error("Invalid mono camera resolution.");
+    }
+
     // Properties
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
-    monoRight->setResolution(dai::MonoCameraProperties::SensorResolution::THE_400_P);
-    monoLeft->setResolution(dai::MonoCameraProperties::SensorResolution::THE_400_P);
+    monoRight->setResolution(monoRes);
+    monoLeft->setResolution(monoRes);
 
     manip->initialConfig.setCropRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
     manip->setMaxOutputFrameSize(monoRight->getResolutionHeight() * monoRight->getResolutionWidth() * 3);
@@ -99,9 +125,15 @@ int main() {
 
     auto calibrationHandler = device.readCalibration();
 
+    auto boardName = calibrationHandler.getEepromData().boardName;
+    if (monoHeight > 480 && boardName == "OAK-D-LITE") {
+        monoWidth = 640;
+        monoHeight = 480;
+    }
+
     dai::rosBridge::ImageConverter depthConverter(cameraName + "_right_camera_optical_frame", true);
     // TODO(sachin): Modify the calibration based on crop from service
-    auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, 1280, 720); 
+    auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight); 
 
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(depthQueue,
                                                                                     pnh, 

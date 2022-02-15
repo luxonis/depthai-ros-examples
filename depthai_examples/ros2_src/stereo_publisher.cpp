@@ -96,13 +96,13 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("stereo_node");
     
-    std::string deviceName, mode, monoResolution;
+    std::string tfPrefix, mode, monoResolution;
     bool lrcheck, extended, subpixel, enableDepth;
     int confidence, LRchecktresh;
     int monoWidth, monoHeight;
     dai::Pipeline pipeline;
 
-    node->declare_parameter("camera_name", "oak");
+    node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("mode", "depth");
     node->declare_parameter("lrcheck", true);
     node->declare_parameter("extended", false);
@@ -111,7 +111,7 @@ int main(int argc, char** argv){
     node->declare_parameter("LRchecktresh",  5);
     node->declare_parameter("monoResolution",  "720p");
 
-    node->get_parameter("camera_name",    deviceName);
+    node->get_parameter("tf_prefix",      tfPrefix);
     node->get_parameter("mode",           mode);
     node->get_parameter("lrcheck",        lrcheck);
     node->get_parameter("extended",       extended);
@@ -140,7 +140,13 @@ int main(int argc, char** argv){
 
     auto calibrationHandler = device.readCalibration();
 
-    dai::rosBridge::ImageConverter converter(deviceName + "_left_camera_optical_frame", true);
+    auto boardName = calibrationHandler.getEepromData().boardName;
+    if (monoHeight > 480 && boardName == "OAK-D-LITE") {
+        monoWidth = 640;
+        monoHeight = 480;
+    }
+
+    dai::rosBridge::ImageConverter converter(tfPrefix + "_left_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, monoWidth, monoHeight);  
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(leftQueue,
                                                                                     node, 
@@ -155,7 +161,7 @@ int main(int argc, char** argv){
 
     leftPublish.addPublisherCallback();
 
-    dai::rosBridge::ImageConverter rightconverter(deviceName + "_right_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter rightconverter(tfPrefix + "_right_camera_optical_frame", true);
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight);  
 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rightPublish(rightQueue,
@@ -187,7 +193,7 @@ int main(int argc, char** argv){
         rclcpp::spin(node);
     }
     else{
-        dai::rosBridge::DisparityConverter dispConverter(deviceName + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
+        dai::rosBridge::DisparityConverter dispConverter(tfPrefix + "_right_camera_optical_frame", 880, 7.5, 20, 2000);
         dai::rosBridge::BridgePublisher<stereo_msgs::msg::DisparityImage, dai::ImgFrame> dispPublish(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/disparity"),
