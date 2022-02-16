@@ -44,7 +44,7 @@ namespace depthai_examples{
             badParams += !pnh.getParam("subpixel",  subpixel);
             badParams += !pnh.getParam("confidence",  confidence);
             badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
-            badParams += !pnh.getParam("LRchecktresh",  monoResolution);
+            badParams += !pnh.getParam("monoResolution",  monoResolution);
             
             if (badParams > 0)
             {   
