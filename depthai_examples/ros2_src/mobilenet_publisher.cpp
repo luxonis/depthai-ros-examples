@@ -54,17 +54,17 @@ int main(int argc, char** argv){
     std::string nnPath(BLOB_PATH);
     bool syncNN;
     int bad_params = 0;
-
+    
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("camera_param_uri", cameraParamUri);
     node->declare_parameter("sync_nn", true);
-    node->declare_parameter("nn_path", "");
-
+    node->declare_parameter<std::string>("nn_path", "");
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("camera_param_uri", cameraParamUri);
     node->get_parameter("sync_nn", syncNN);
 
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
+    std::cout << "HEy 1" << std::endl;
     std::string nnParam;
     node->get_parameter("nn_path", nnParam);
     if(!nnParam.empty())

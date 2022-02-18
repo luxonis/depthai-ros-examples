@@ -7,7 +7,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 import launch_ros.actions
 import launch_ros.descriptions
-
+from launch_ros.parameter_descriptions import ParameterValue 
 
 def generate_launch_description():
     default_rviz = os.path.join(get_package_share_directory('depthai_examples'),
