@@ -30,7 +30,7 @@ def generate_launch_description():
     camera_param_uri = LaunchConfiguration('camera_param_uri',  default = 'package://depthai_examples/params/camera')
     sync_nn          = LaunchConfiguration('sync_nn',           default = True)
     subpixel         = LaunchConfiguration('subpixel',          default = True)
-    nn_path          = LaunchConfiguration('nn_path',           default = "")
+    nn_path          = LaunchConfiguration('nn_path',           default = launch_ros.parameter_descriptions.ParameterValue('', value_type=str))
     confidence       = LaunchConfiguration('confidence',        default = 200)
     lrCheckTresh     = LaunchConfiguration('lrCheckTresh',      default = 5)
     monoResolution   = LaunchConfiguration('monoResolution',  default = '400p')

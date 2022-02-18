@@ -27,7 +27,7 @@ def generate_launch_description():
 
     camera_param_uri = LaunchConfiguration('camera_param_uri', default = 'package://depthai_examples/params/camera')
     sync_nn          = LaunchConfiguration('sync_nn', default = True)
-    nn_path          = LaunchConfiguration('nn_path', default = "")
+    nn_path          = LaunchConfiguration('nn_path', default = launch_ros.parameter_descriptions.ParameterValue('', value_type=str)) 
 
 
     declare_camera_model_cmd = DeclareLaunchArgument(
