@@ -64,7 +64,6 @@ int main(int argc, char** argv){
     node->get_parameter("sync_nn", syncNN);
 
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
-    std::cout << "HEy 1" << std::endl;
     std::string nnParam;
     node->get_parameter("nn_path", nnParam);
     if(!nnParam.empty())
