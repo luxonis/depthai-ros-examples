@@ -12,6 +12,7 @@
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
+#include "common.hpp"
 
 namespace depthai_examples{
 
@@ -28,30 +29,22 @@ namespace depthai_examples{
 
             auto& pnh = getPrivateNodeHandle();
             
-            std::string tfPrefix, mode;
-            std::string cameraParamUri;
+            std::string tfPrefix = "oak", mode = "depth";
+            std::string cameraParamUri = "package://depthai_examples/params/camera";
             std::string monoResolution = "720p";
-            int badParams = 0;
-            bool lrcheck, extended, subpixel, enableDepth;
+            bool lrcheck = true, extended = false, subpixel = true;
             int confidence = 200;
             int LRchecktresh = 5;
 
-            badParams += !pnh.getParam("tf_prefix", tfPrefix);
-            badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
-            badParams += !pnh.getParam("mode", mode);
-            badParams += !pnh.getParam("lrcheck",  lrcheck);
-            badParams += !pnh.getParam("extended",  extended);
-            badParams += !pnh.getParam("subpixel",  subpixel);
-            badParams += !pnh.getParam("confidence",  confidence);
-            badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
-            badParams += !pnh.getParam("monoResolution",  monoResolution);
-            
-            if (badParams > 0)
-            {   
-                std::cout << " Bad parameters -> " << badParams << std::endl;
-                throw std::runtime_error("Couldn't find %d of the parameters");
-            }
+            getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+            getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
+            getParamWithWarning(pnh, "monoResolution", monoResolution);
+            getParamWithWarning(pnh, "lrcheck", lrcheck);
+            getParamWithWarning(pnh, "subpixel",  subpixel);
+            getParamWithWarning(pnh, "confidence",   confidence);
+            getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
 
+            bool enableDepth;
             if(mode == "depth"){
                 enableDepth = true;
             }

@@ -16,6 +16,7 @@
 #include <depthai_bridge/ImuConverter.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/DisparityConverter.hpp>
+#include "common.hpp"
 
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps, int confidence, int LRchecktresh, std::string resolution){
@@ -133,29 +134,24 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "stereo_inertial_node");
     ros::NodeHandle pnh("~");
 
-    std::string tfPrefix, mode;
+    std::string tfPrefix = "oak", mode = "depth";
     std::string monoResolution = "720p";
-    int badParams = 0, stereo_fps, confidence, LRchecktresh;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    int stereo_fps = 15, confidence = 200, LRchecktresh = 5;
+    bool lrcheck = true, extended = false, subpixel = true, rectify = true, depth_aligned = true;
 
-    badParams += !pnh.getParam("tf_prefix", tfPrefix);
-    badParams += !pnh.getParam("mode", mode);
-    badParams += !pnh.getParam("lrcheck",  lrcheck);
-    badParams += !pnh.getParam("extended",  extended);
-    badParams += !pnh.getParam("subpixel",  subpixel);
-    badParams += !pnh.getParam("rectify",  rectify);
-    badParams += !pnh.getParam("depth_aligned",  depth_aligned);
-    badParams += !pnh.getParam("stereo_fps",  stereo_fps);
-    badParams += !pnh.getParam("confidence",  confidence);
-    badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
-    badParams += !pnh.getParam("monoResolution",   monoResolution);
+    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    getParamWithWarning(pnh, "mode",   mode);
+    getParamWithWarning(pnh, "monoResolution", monoResolution);
+    getParamWithWarning(pnh, "stereo_fps", stereo_fps);
+    getParamWithWarning(pnh, "confidence",   confidence);
+    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
+    getParamWithWarning(pnh, "lrcheck",  lrcheck);
+    getParamWithWarning(pnh, "extended",  extended);
+    getParamWithWarning(pnh, "subpixel",  subpixel);
+    getParamWithWarning(pnh, "rectify", rectify);
+    getParamWithWarning(pnh, "depth_aligned", depth_aligned);
 
-    if (badParams > 0)
-    {   
-        std::cout << " Bad parameters -> " << badParams << std::endl;
-        throw std::runtime_error("Couldn't find %d of the parameters");
-    }
-
+    bool enableDepth;
     if(mode == "depth"){
         enableDepth = true;
     }

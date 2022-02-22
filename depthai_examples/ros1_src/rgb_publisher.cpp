@@ -11,6 +11,7 @@
 #include "depthai/depthai.hpp"
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
+#include "common.hpp"
 
 dai::Pipeline createPipeline(){
     dai::Pipeline pipeline;
@@ -32,17 +33,11 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "rgb_node");
     ros::NodeHandle pnh("~");
     
-    std::string tfPrefix;
-    std::string camera_param_uri;
-    int badParams = 0;
+    std::string tfPrefix = "oak";
+    std::string camera_param_uri = "package://depthai_examples/params/camera";
 
-    badParams += !pnh.getParam("tf_prefix", tfPrefix);
-    badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
-
-    if (badParams > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
     
     dai::Pipeline pipeline = createPipeline();
     dai::Device device(pipeline);

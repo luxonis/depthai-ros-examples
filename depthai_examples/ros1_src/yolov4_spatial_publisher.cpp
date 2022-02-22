@@ -12,10 +12,11 @@
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
-#include <depthai_bridge/SpatialDetectionConverter.hpp>
+#include <depthai_bridge/SpatialDetectionConverter.hpp>\
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
+#include "common.hpp"
 
 const std::vector<std::string> label_map = {"person",         "bicycle",    "car",           "motorbike",     "aeroplane",   "bus",           "train",
              "truck",          "boat",       "traffic light", "fire hydrant",  "stop sign",   "parking meter", "bench",
@@ -116,28 +117,22 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "yolov4_spatial_node");
     ros::NodeHandle pnh("~");
     
-    std::string tfPrefix;
-    std::string camera_param_uri;
+    std::string tfPrefix = "oak";
+    std::string camera_param_uri = "package://depthai_examples/params/camera";
     std::string nnPath(BLOB_PATH); // Set your path for the model here
-    bool syncNN, subpixel;
+    bool syncNN = true, subpixel = true;
 
-    int badParams = 0;
     int confidence = 200;
     int LRchecktresh = 5;
     std::string monoResolution = "720p";
 
-    badParams += !pnh.getParam("tf_prefix", tfPrefix);
-    badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
-    badParams += !pnh.getParam("sync_nn", syncNN);
-    badParams += !pnh.getParam("subpixel", subpixel);
-    badParams += !pnh.getParam("confidence", confidence);
-    badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
-    badParams += !pnh.getParam("monoResolution", monoResolution);
-
-    if (badParams > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
+    getParamWithWarning(pnh, "sync_nn",  syncNN);
+    getParamWithWarning(pnh, "subpixel",  subpixel);
+    getParamWithWarning(pnh, "confidence",   confidence);
+    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
+    getParamWithWarning(pnh, "monoResolution", monoResolution);
 
     if (pnh.hasParam("nn_path"))
     {

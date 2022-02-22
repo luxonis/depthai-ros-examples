@@ -14,6 +14,7 @@
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
+#include "common.hpp"
 
 dai::Pipeline createPipeline(bool syncNN, std::string nnPath){
     dai::Pipeline pipeline;
@@ -48,21 +49,15 @@ int main(int argc, char** argv){
 
     ros::init(argc, argv, "mobilenet_node");
     ros::NodeHandle pnh("~");
-    
-    std::string tfPrefix;
-    std::string cameraParamUri;
+
+    std::string tfPrefix = "oak";
+    std::string cameraParamUri = "package://depthai_examples/params/camera";
     std::string nnPath(BLOB_PATH);
-    bool syncNN;
-    int badParams = 0;
+    bool syncNN = true;
 
-    badParams += !pnh.getParam("tf_prefix", tfPrefix);
-    badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
-    badParams += !pnh.getParam("sync_nn", syncNN);
-
-    if (badParams > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
+    getParamWithWarning(pnh, "sync_nn", syncNN);
 
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
     if (pnh.hasParam("nn_path"))

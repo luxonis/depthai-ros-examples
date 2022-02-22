@@ -15,6 +15,8 @@
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/DisparityConverter.hpp>
 
+#include "common.hpp"
+
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution){
     dai::Pipeline pipeline;
@@ -25,7 +27,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck,
     auto xoutRight   = pipeline.create<dai::node::XLinkOut>();
     auto stereo      = pipeline.create<dai::node::StereoDepth>();
     auto xoutDepth   = pipeline.create<dai::node::XLinkOut>();
-
+    
     // XLinkOut
     xoutLeft->setStreamName("left");
     xoutRight->setStreamName("right");
@@ -91,36 +93,30 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck,
 }
 
 int main(int argc, char** argv){
-
     ros::init(argc, argv, "stereo_node");
     ros::NodeHandle pnh("~");
     
-    std::string tfPrefix, mode;
-    std::string cameraParamUri;
-    int badParams = 0;
-    bool lrcheck, extended, subpixel, enableDepth;
+    std::string tfPrefix = "oak", mode = "depth";
+    std::string cameraParamUri = "package://depthai_examples/params/camera";
+    bool lrcheck = true, extended = false, subpixel = true;
     int confidence = 200;
     int monoWidth, monoHeight;
     int LRchecktresh = 5;
     std::string monoResolution = "720p";
     dai::Pipeline pipeline;
 
-    badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
-    badParams += !pnh.getParam("tf_prefix",        tfPrefix);
-    badParams += !pnh.getParam("mode",             mode);
-    badParams += !pnh.getParam("lrcheck",          lrcheck);
-    badParams += !pnh.getParam("extended",         extended);
-    badParams += !pnh.getParam("subpixel",         subpixel);
-    badParams += !pnh.getParam("confidence",       confidence);
-    badParams += !pnh.getParam("LRchecktresh",     LRchecktresh);
-    badParams += !pnh.getParam("monoResolution",   monoResolution);
 
-    if (badParams > 0)
-    {   
-        std::cout << " Bad parameters -> " << badParams << std::endl;
-        throw std::runtime_error("Couldn't find %d of the parameters");
-    }
+    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
+    getParamWithWarning(pnh, "lrcheck",  lrcheck);
+    getParamWithWarning(pnh, "extended",  extended);
+    getParamWithWarning(pnh, "subpixel",  subpixel);
+    getParamWithWarning(pnh, "confidence",   confidence);
+    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
+    getParamWithWarning(pnh, "mode",   mode);
+    getParamWithWarning(pnh, "monoResolution", monoResolution);
 
+    bool enableDepth;
     if(mode == "depth"){
         enableDepth = true;
     }

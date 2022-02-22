@@ -13,6 +13,7 @@
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
+#include "common.hpp"
 
 dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution){
 
@@ -74,26 +75,16 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int con
     return pipeline;
 }
 
-template <typename T>
-static inline void getParamWithWarning(ros::NodeHandle& pnh, const char* key, T val) {
-    bool gotParam = pnh.getParam(key, val);
-    if(!gotParam) {
-        std::stringstream ss;
-        ss << val;
-        ROS_WARN("Could not find param '%s' on node '%s'. Defaulting to '%s'", key, pnh.getNamespace().c_str(), ss.str().c_str());
-    }
-}
-
 int main(int argc, char** argv){
 
     ros::init(argc, argv, "rgb_stereo_node");
     ros::NodeHandle pnh("~");
     
-    std::string tfPrefix = "dai";
-    std::string camera_param_uri;
+    std::string tfPrefix = "oak";
+    std::string camera_param_uri = "package://depthai_examples/params/camera";
     std::string monoResolution = "720p";
 
-    bool lrcheck, extended, subpixel;
+    bool lrcheck = true, extended = false, subpixel = false;
     int confidence = 200;
     int LRchecktresh = 5;
 
