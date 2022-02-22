@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- <args for urdf/> -->
-    <arg name="camera_model"         default="OAK-D"   /> <!-- 'zed' or 'zedm' -->
+    <arg name="camera_model"         default="OAK-D"       /> <!-- 'zed' or 'zedm' -->
     <arg name="tf_prefix"            default="oak"         />
     <arg name="mode"                 default="depth"       />
     <arg name="base_frame"           default="oak-d_frame" />
@@ -10,19 +10,20 @@
     <arg name="cam_pos_x"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
     <arg name="cam_pos_y"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
     <arg name="cam_pos_z"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
-    <arg name="cam_roll"              default="0.0"     /> <!-- Orientation respect to base frame (i.e. "base_link) -->
+    <arg name="cam_roll"              default="0.0"        /> <!-- Orientation respect to base frame (i.e. "base_link) -->
     <arg name="cam_pitch"             default="0.0"        /> <!-- Orientation respect to base frame (i.e. "base_link) -->
-    <arg name="cam_yaw"               default="0.0"     /> <!-- Orientation respect to base frame (i.e. "base_link) -->
+    <arg name="cam_yaw"               default="0.0"        /> <!-- Orientation respect to base frame (i.e. "base_link) -->
 
     <arg name="lrcheck"               default="true"       /> 
     <arg name="extended"              default="false"      /> 
     <arg name="subpixel"              default="true"       />
-    <arg name="rectify"               default="true"      />
-    <arg name="depth_aligned"         default="false"      />
+    <arg name="rectify"               default="true"       />
+    <arg name="depth_aligned"         default="true"      />
      <!-- see https://docs.luxonis.com/projects/api/en/latest/components/nodes/stereo_depth/#currently-configurable-blocks for possible combination of optionf for higher fps-->
     <arg name="stereo_fps"            default="15"         />
     <arg name="confidence"            default="200"        />
     <arg name="LRchecktresh"          default="5"          />
+    <arg name="monoResolution"        default="720p"       /> 
 
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -49,6 +50,7 @@
         <param name="stereo_fps" value="$(arg stereo_fps)" />
         <param name="confidence" value="$(arg confidence)" />
         <param name="LRchecktresh" value="$(arg LRchecktresh)" />
+        <param name="monoResolution" value="$(arg monoResolution)" />
     </node>            
 
 </launch>
