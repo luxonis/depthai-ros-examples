@@ -74,32 +74,36 @@ dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int con
     return pipeline;
 }
 
+template <typename T>
+static inline void getParamWithWarning(ros::NodeHandle& pnh, const char* key, T val) {
+    bool gotParam = pnh.getParam(key, val);
+    if(!gotParam) {
+        std::stringstream ss;
+        ss << val;
+        ROS_WARN("Could not find param '%s' on node '%s'. Defaulting to '%s'", key, pnh.getNamespace().c_str(), ss.str().c_str());
+    }
+}
 
 int main(int argc, char** argv){
 
     ros::init(argc, argv, "rgb_stereo_node");
     ros::NodeHandle pnh("~");
     
-    std::string tfPrefix;
+    std::string tfPrefix = "dai";
     std::string camera_param_uri;
     std::string monoResolution = "720p";
-    int badParams = 0;
+
     bool lrcheck, extended, subpixel;
     int confidence = 200;
     int LRchecktresh = 5;
 
-    badParams += !pnh.getParam("tf_prefix", tfPrefix);
-    badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
-    badParams += !pnh.getParam("lrcheck",  lrcheck);
-    badParams += !pnh.getParam("extended",  extended);
-    badParams += !pnh.getParam("subpixel",  subpixel);
-    badParams += !pnh.getParam("confidence",   confidence);
-    badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
-
-    if (badParams > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
+    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
+    getParamWithWarning(pnh, "lrcheck",  lrcheck);
+    getParamWithWarning(pnh, "extended",  extended);
+    getParamWithWarning(pnh, "subpixel",  subpixel);
+    getParamWithWarning(pnh, "confidence",   confidence);
+    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
 
     dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution);
     dai::Device device(pipeline);
