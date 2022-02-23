@@ -175,7 +175,7 @@ int main(int argc, char** argv){
     std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
 
     dai::Device device(pipeline);
-    device->setIrLaserDotProjectorBrightness(200);
+    device.setIrLaserDotProjectorBrightness(200);
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if (enableDepth) {
