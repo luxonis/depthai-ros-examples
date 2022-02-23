@@ -63,7 +63,7 @@ namespace depthai_examples{
             int monoWidth, monoHeight;
             std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution);
             _dev = std::make_unique<dai::Device>(pipeline);
-
+            _dev->setIrLaserDotProjectorBrightness(200);
             auto leftQueue = _dev->getOutputQueue("left", 30, false);
             auto rightQueue = _dev->getOutputQueue("right", 30, false);
 
@@ -204,6 +204,7 @@ namespace depthai_examples{
         stereo->initialConfig.setConfidenceThreshold(confidence);
         stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
         stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
+        stereo->initialConfig.setMedianFilter(dai::MedianFilter::KERNEL_5x5);
 
         stereo->setLeftRightCheck(lrcheck);
         stereo->setExtendedDisparity(extended);
