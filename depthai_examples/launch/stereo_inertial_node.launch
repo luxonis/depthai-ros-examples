@@ -40,18 +40,21 @@
 
     <!-- launch-prefix="xterm -e gdb (add [- - args] without space) -->
     <node name="stereo_inertial_publisher" pkg="depthai_examples" type="stereo_inertial_node" output="screen" required="true">
-        <param name="tf_prefix" value="$(arg tf_prefix)"/>
-        <param name="mode" value="$(arg mode)"/>
-        <param name="lrcheck" value="$(arg lrcheck)"/>
-        <param name="extended" value="$(arg extended)"/>
-        <param name="subpixel" value="$(arg subpixel)"/>
-        <param name="rectify" value="$(arg rectify)" />
-        <param name="depth_aligned" value="$(arg depth_aligned)" />
-        <param name="stereo_fps" value="$(arg stereo_fps)" />
-        <param name="confidence" value="$(arg confidence)" />
-        <param name="LRchecktresh" value="$(arg LRchecktresh)" />
+        <param name="tf_prefix"      value="$(arg tf_prefix)"/>
+        <param name="mode"           value="$(arg mode)"/>
+        <param name="lrcheck"        value="$(arg lrcheck)"/>
+        <param name="extended"       value="$(arg extended)"/>
+        <param name="subpixel"       value="$(arg subpixel)"/>
+        <param name="rectify"        value="$(arg rectify)" />
+        <param name="depth_aligned"  value="$(arg depth_aligned)" />
+        <param name="stereo_fps"     value="$(arg stereo_fps)" />
+        <param name="confidence"     value="$(arg confidence)" />
+        <param name="LRchecktresh"   value="$(arg LRchecktresh)" />
         <param name="monoResolution" value="$(arg monoResolution)" />
     </node>            
+
+  <node if="$(eval arg('depth_aligned') == true)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialDepthAlign.rviz" />
+  <node if="$(eval arg('depth_aligned') == false)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialROS1.rviz" />
 
 </launch>
 
