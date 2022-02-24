@@ -1,3 +1,4 @@
 *.blob
 settings.json
 .vscode
+.DS_Store
