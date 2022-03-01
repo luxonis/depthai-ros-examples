@@ -149,19 +149,11 @@ def generate_launch_description():
                                               'cam_yaw'     : cam_yaw}.items())
 
 
+    config = os.path.join(get_package_share_directory('depthai_examples'), 'config', 'ros2_yaml', 'stereo_node.yaml')
     streo_node = launch_ros.actions.Node(
             package='depthai_examples', executable='stereo_inertial_node',
             output='screen',
-            parameters=[{'tf_prefix':     tf_prefix},
-                        {'mode':          mode},
-                        {'lrcheck':       lrcheck},
-                        {'extended':      extended},
-                        {'subpixel':      subpixel},
-                        {'rectify':       rectify},
-                        {'depth_aligned': depth_aligned},
-                        {'stereo_fps':    stereo_fps},
-                        {'confidence':    confidence},
-                        {'LRchecktresh':  LRchecktresh}])
+            parameters=[config])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',

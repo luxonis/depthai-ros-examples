@@ -115,7 +115,7 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("yolov4_spatial_node");
     
     std::string tfPrefix;
-    std::string camera_param_uri;
+    std::string camera_param_uri = "package://depthai_examples/params/camera";
     std::string nnPath(BLOB_PATH); // Set your path for the model here
     bool syncNN, subpixel;
     int confidence = 200, LRchecktresh = 5;
@@ -144,7 +144,13 @@ int main(int argc, char** argv){
     {   
         node->get_parameter("nn_path", nnPath);
     }
-
+    // ROS_INFO("Pipeline parameters:");
+    // ROS_INFO("syncNN " + syncNN);
+    // ROS_INFO("subpixel " + subpixel);
+    // ROS_INFO("nnPath " + nnPath);
+    // ROS_INFO("confidence "  + confidence);
+    // ROS_INFO("LRchecktresh " + LRchecktresh);
+    // ROS_INFO("monoResolution " + monoResolution);
     dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh, monoResolution);
     dai::Device device(pipeline);
 

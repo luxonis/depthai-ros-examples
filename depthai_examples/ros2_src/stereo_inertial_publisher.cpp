@@ -18,7 +18,76 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 
 
-std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps, int confidence, int LRchecktresh, std::string resolution){
+class PostProcessing {
+    public:
+    dai::MedianFilter getMedianFilter() {
+        if (this->median_mode == "MEDIAN_OFF")
+            return dai::MedianFilter::MEDIAN_OFF;
+        if (this->median_mode == "KERNEL_3x3")
+            return dai::MedianFilter::KERNEL_3x3;
+        if (this->median_mode == "KERNEL_5x5")
+            return dai::MedianFilter::KERNEL_5x5;
+        if (this->median_mode == "KERNEL_7x7")
+            return dai::MedianFilter::KERNEL_7x7;
+        return dai::MedianFilter::MEDIAN_OFF;
+    }
+
+    using TemporalMode = dai::RawStereoDepthConfig::PostProcessing::TemporalFilter::PersistencyMode;
+    TemporalMode getTemporalMode() {
+        if (this->temporal_mode == "PERSISTENCY_OFF")
+            return TemporalMode::PERSISTENCY_OFF;
+        if (this->temporal_mode == "VALID_8_OUT_OF_8")
+            return TemporalMode::VALID_8_OUT_OF_8;
+        if (this->temporal_mode == "VALID_2_IN_LAST_3")
+            return TemporalMode::VALID_2_IN_LAST_3;
+        if (this->temporal_mode == "VALID_2_IN_LAST_4")
+            return TemporalMode::VALID_2_IN_LAST_4;
+        if (this->temporal_mode == "VALID_2_OUT_OF_8")
+            return TemporalMode::VALID_2_OUT_OF_8;        
+        if (this->temporal_mode == "VALID_1_IN_LAST_2")
+            return TemporalMode::VALID_1_IN_LAST_2;
+        if (this->temporal_mode == "VALID_1_IN_LAST_5")
+            return TemporalMode::VALID_1_IN_LAST_5;
+        if (this->temporal_mode == "VALID_1_IN_LAST_8")
+            return TemporalMode::VALID_1_IN_LAST_8;
+        if (this->temporal_mode == "PERSISTENCY_INDEFINITELY")
+            return TemporalMode::PERSISTENCY_INDEFINITELY;
+        return TemporalMode::PERSISTENCY_OFF;
+    }
+
+    using DecimationMode = dai::RawStereoDepthConfig::PostProcessing::DecimationFilter::DecimationMode;
+    DecimationMode getDecimationMode() {
+        if (this->decimation_mode == "PIXEL_SKIPPING")
+            return DecimationMode::PIXEL_SKIPPING;
+        if (this->decimation_mode == "NON_ZERO_MEDIAN")
+            return DecimationMode::NON_ZERO_MEDIAN;
+        if (this->decimation_mode == "NON_ZERO_MEAN")
+            return DecimationMode::NON_ZERO_MEAN;
+        return DecimationMode::PIXEL_SKIPPING;
+    }
+
+    bool median_enable          = false;
+    std::string median_mode     = "MEDIAN_OFF";
+    bool speckle_enable         = false;
+    int speckle_range           = 50;
+    bool temporal_enable        = false;
+    std::string temporal_mode   = "PERSISTENCY_OFF";
+    double temporal_alpha       = 0.4;
+    int temporal_delta          = 0;
+    bool spatial_enable         = false;
+    int spatial_radius          = 2;
+    double spatial_alpha        = 0.5;
+    int spatial_delta           = 0;
+    int spatial_iterations      = 1;
+    bool threshold_enable       = false;
+    int threshold_max           = 0;
+    int threshold_min           = 0;
+    bool decimation_enable      = false;
+    std::string decimation_mode = "NON_ZERO_MEDIAN";
+    int decimation_factor       = 1;
+};
+
+std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps, int confidence, int LRchecktresh, std::string resolution, PostProcessing postProcessing){
     dai::Pipeline pipeline;
 
     auto monoLeft  = pipeline.create<dai::node::MonoCamera>();
@@ -69,12 +138,42 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrchec
     monoRight->setFps(stereo_fps);
 
     // StereoDepth
+    if (postProcessing.median_enable)
+        stereo->initialConfig.setMedianFilter(postProcessing.getMedianFilter());
+
     stereo->initialConfig.setConfidenceThreshold(confidence); //Known to be best
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh); //Known to be best
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
+    auto config = stereo->initialConfig.get();
+    if (postProcessing.speckle_enable) {
+        config.postProcessing.speckleFilter.enable = postProcessing.speckle_enable;
+        config.postProcessing.speckleFilter.speckleRange = postProcessing.speckle_range;
+    }
+    if (postProcessing.temporal_enable) {
+        config.postProcessing.temporalFilter.enable = postProcessing.temporal_enable;
+        config.postProcessing.temporalFilter.alpha = postProcessing.temporal_alpha;
+        config.postProcessing.temporalFilter.delta = postProcessing.temporal_delta;
+        config.postProcessing.temporalFilter.persistencyMode = postProcessing.getTemporalMode();
+    }
+    if (postProcessing.spatial_enable) {
+        config.postProcessing.spatialFilter.enable = postProcessing.spatial_enable;
+        config.postProcessing.spatialFilter.holeFillingRadius = postProcessing.spatial_radius;
+        config.postProcessing.spatialFilter.alpha = postProcessing.spatial_alpha;
+        config.postProcessing.spatialFilter.delta = postProcessing.spatial_delta;
+        config.postProcessing.spatialFilter.numIterations = postProcessing.spatial_iterations;
+    }
+    if (postProcessing.threshold_enable) {
+        config.postProcessing.thresholdFilter.minRange = postProcessing.threshold_min;
+        config.postProcessing.thresholdFilter.maxRange = postProcessing.threshold_max;
+    }
+    if (postProcessing.decimation_enable) {
+        config.postProcessing.decimationFilter.decimationFactor = postProcessing.decimation_factor;
+        config.postProcessing.decimationFilter.decimationMode = postProcessing.getDecimationMode();
+    }
+    stereo->initialConfig.set(config);
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     //Imu
@@ -132,6 +231,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrchec
     return std::make_tuple(pipeline, width, height);
 }
 
+
 int main(int argc, char** argv){
     
     rclcpp::init(argc, argv);
@@ -153,6 +253,27 @@ int main(int argc, char** argv){
     node->declare_parameter("LRchecktresh",  5);
     node->declare_parameter("monoResolution",  "720p");
 
+    PostProcessing postProcessing;
+    node->declare_parameter("median_enable",        postProcessing.median_enable);
+    node->declare_parameter("median_mode",          postProcessing.median_mode);
+    node->declare_parameter("speckle_enable",       postProcessing.speckle_enable);
+    node->declare_parameter("speckle_range",        postProcessing.speckle_range);
+    node->declare_parameter("temporal_enable",      postProcessing.temporal_enable);
+    node->declare_parameter("temporal_mode",        postProcessing.temporal_mode);
+    node->declare_parameter("temporal_alpha",       postProcessing.temporal_alpha);
+    node->declare_parameter("temporal_delta",       postProcessing.temporal_delta);
+    node->declare_parameter("spatial_enable",       postProcessing.spatial_enable);
+    node->declare_parameter("spatial_radius",       postProcessing.spatial_radius);
+    node->declare_parameter("spatial_alpha",        postProcessing.spatial_alpha);
+    node->declare_parameter("spatial_delta",        postProcessing.spatial_delta);
+    node->declare_parameter("spatial_iterations",   postProcessing.spatial_iterations);
+    node->declare_parameter("threshold_enable",     postProcessing.threshold_enable);
+    node->declare_parameter("threshold_max",        postProcessing.threshold_max);
+    node->declare_parameter("threshold_min",        postProcessing.threshold_min);
+    node->declare_parameter("decimation_enable",    postProcessing.decimation_enable);
+    node->declare_parameter("decimation_mode",      postProcessing.decimation_mode);
+    node->declare_parameter("decimation_factor",    postProcessing.decimation_factor);
+
     node->get_parameter("tf_prefix",     tfPrefix);
     node->get_parameter("mode",          mode);
     node->get_parameter("lrcheck",       lrcheck);
@@ -165,6 +286,26 @@ int main(int argc, char** argv){
     node->get_parameter("LRchecktresh",  LRchecktresh);
     node->get_parameter("monoResolution", monoResolution);
 
+    node->get_parameter("median_enable",        postProcessing.median_enable);
+    node->get_parameter("median_mode",          postProcessing.median_mode);
+    node->get_parameter("speckle_enable",       postProcessing.speckle_enable);
+    node->get_parameter("speckle_range",        postProcessing.speckle_range);
+    node->get_parameter("temporal_enable",      postProcessing.temporal_enable);
+    node->get_parameter("temporal_mode",        postProcessing.temporal_mode);
+    node->get_parameter("temporal_alpha",       postProcessing.temporal_alpha);
+    node->get_parameter("temporal_delta",       postProcessing.temporal_delta);
+    node->get_parameter("spatial_enable",       postProcessing.spatial_enable);
+    node->get_parameter("spatial_radius",       postProcessing.spatial_radius);
+    node->get_parameter("spatial_alpha",        postProcessing.spatial_alpha);
+    node->get_parameter("spatial_delta",        postProcessing.spatial_delta);
+    node->get_parameter("spatial_iterations",   postProcessing.spatial_iterations);
+    node->get_parameter("threshold_enable",     postProcessing.threshold_enable);
+    node->get_parameter("threshold_max",        postProcessing.threshold_max);
+    node->get_parameter("threshold_min",        postProcessing.threshold_min);
+    node->get_parameter("decimation_enable",    postProcessing.decimation_enable);
+    node->get_parameter("decimation_mode",      postProcessing.decimation_mode);
+    node->get_parameter("decimation_factor",    postProcessing.decimation_factor);
+
     if(mode == "depth"){
         enableDepth = true;
     }
@@ -174,7 +315,7 @@ int main(int argc, char** argv){
 
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
-    std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
+    std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
 
     dai::Device device(pipeline);
 

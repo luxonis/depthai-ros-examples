@@ -31,7 +31,7 @@ int main() {
 
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("depth_crop_control");
-    std::string cameraName, monoResolution;
+    std::string tfPrefix, monoResolution;
     int confidence, LRchecktresh;
     bool lrcheck, extended, subpixel;
 
@@ -43,7 +43,7 @@ int main() {
     node->declare_parameter("LRchecktresh",  5);
     node->declare_parameter("monoResolution",  "400p");
 
-    node->get_parameter("tf_prefix", cameraName);
+    node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("lrcheck",      lrcheck);
     node->get_parameter("extended",     extended);
     node->get_parameter("subpixel",     subpixel);
@@ -135,7 +135,7 @@ int main() {
         monoHeight = 480;
     }
 
-    dai::rosBridge::ImageConverter depthConverter(cameraName + "_right_camera_optical_frame", true);
+    dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
     // TODO(sachin): Modify the calibration based on crop from service
     auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight); 
 
