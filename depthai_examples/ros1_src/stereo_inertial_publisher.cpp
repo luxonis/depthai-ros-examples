@@ -91,10 +91,15 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrchec
         camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
         // the ColorCamera is downscaled from 1080p to 720p.
         // Otherwise, the aligned depth is automatically upscaled to 1080p
-        camRgb->setIspScale(2, 3);
+        if (height < 720){
+            camRgb->setIspScale(1, 3);            
+        }
+        else{
+            camRgb->setIspScale(2, 3);
+        }
         // For now, RGB needs fixed focus to properly align with depth.
         // This value was used during calibration
-        camRgb->initialControl.setManualFocus(135);
+        // camRgb->initialControl.setManualFocus(135);
         camRgb->isp.link(xoutRgb->input);
     }else{
         // Stereo imges
@@ -202,13 +207,17 @@ int main(int argc, char** argv){
                                                                                      "imu");
 
     ImuPublish.addPublisherCallback();
-
+    int colorWidth = 1280, colorHeight = 720;
+    if (monoHeight < 720) {
+        colorWidth = 640; 
+        colorHeight = 360;
+    }
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
-    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720);
+    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
     
      if(enableDepth){
         std::cout << "In depth";
-        auto depthCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
+        auto depthCameraInfo = depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight) : rightCameraInfo;
         auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
         dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(stereoQueue,
                                                                                      pnh, 
