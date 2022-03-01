@@ -72,11 +72,11 @@ class PostProcessing {
     int speckle_range           = 50;
     bool temporal_enable        = false;
     std::string temporal_mode   = "PERSISTENCY_OFF";
-    double temporal_alpha       = 0.4;
+    float temporal_alpha       = 0.4;
     int temporal_delta          = 0;
     bool spatial_enable         = false;
     int spatial_radius          = 2;
-    double spatial_alpha        = 0.5;
+    float spatial_alpha        = 0.5;
     int spatial_delta           = 0;
     int spatial_iterations      = 1;
     bool threshold_enable       = false;
@@ -150,27 +150,27 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrchec
     auto config = stereo->initialConfig.get();
     if (postProcessing.speckle_enable) {
         config.postProcessing.speckleFilter.enable = postProcessing.speckle_enable;
-        config.postProcessing.speckleFilter.speckleRange = postProcessing.speckle_range;
+        config.postProcessing.speckleFilter.speckleRange = static_cast<std::uint32_t>(postProcessing.speckle_range);
     }
     if (postProcessing.temporal_enable) {
         config.postProcessing.temporalFilter.enable = postProcessing.temporal_enable;
         config.postProcessing.temporalFilter.alpha = postProcessing.temporal_alpha;
-        config.postProcessing.temporalFilter.delta = postProcessing.temporal_delta;
+        config.postProcessing.temporalFilter.delta = static_cast<std::int32_t>(postProcessing.temporal_delta);
         config.postProcessing.temporalFilter.persistencyMode = postProcessing.getTemporalMode();
     }
     if (postProcessing.spatial_enable) {
         config.postProcessing.spatialFilter.enable = postProcessing.spatial_enable;
-        config.postProcessing.spatialFilter.holeFillingRadius = postProcessing.spatial_radius;
+        config.postProcessing.spatialFilter.holeFillingRadius = static_cast<std::uint8_t>(postProcessing.spatial_radius);
         config.postProcessing.spatialFilter.alpha = postProcessing.spatial_alpha;
-        config.postProcessing.spatialFilter.delta = postProcessing.spatial_delta;
-        config.postProcessing.spatialFilter.numIterations = postProcessing.spatial_iterations;
+        config.postProcessing.spatialFilter.delta = static_cast<std::int32_t>(postProcessing.spatial_delta);
+        config.postProcessing.spatialFilter.numIterations = static_cast<std::int32_t>(postProcessing.spatial_iterations);
     }
     if (postProcessing.threshold_enable) {
         config.postProcessing.thresholdFilter.minRange = postProcessing.threshold_min;
         config.postProcessing.thresholdFilter.maxRange = postProcessing.threshold_max;
     }
     if (postProcessing.decimation_enable) {
-        config.postProcessing.decimationFilter.decimationFactor = postProcessing.decimation_factor;
+        config.postProcessing.decimationFilter.decimationFactor = static_cast<std::uint32_t>(postProcessing.decimation_factor);
         config.postProcessing.decimationFilter.decimationMode = postProcessing.getDecimationMode();
     }
     stereo->initialConfig.set(config);
