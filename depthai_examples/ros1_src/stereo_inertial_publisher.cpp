@@ -19,7 +19,7 @@
 #include "common.hpp"
 
 
-std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps, int confidence, int LRchecktresh, std::string resolution){
+std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrcheck, bool extended, bool subpixel, bool rectify, bool depth_aligned, int stereo_fps, int confidence, int LRchecktresh, std::string resolution, PostProcessing postProcessing){
     dai::Pipeline pipeline;
 
     auto monoLeft             = pipeline.create<dai::node::MonoCamera>();
@@ -70,12 +70,14 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrchec
     monoRight->setFps(stereo_fps);
 
     // StereoDepth
+    postProcessing.setMedianFilter(stereo);
     stereo->initialConfig.setConfidenceThreshold(confidence); //Known to be best
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh); //Known to be best
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
+    postProcessing.setFilters(stereo);
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     //Imu
@@ -156,6 +158,27 @@ int main(int argc, char** argv){
     getParamWithWarning(pnh, "rectify", rectify);
     getParamWithWarning(pnh, "depth_aligned", depth_aligned);
 
+    PostProcessing postProcessing;
+    getParamWithWarning(pnh, "median_enable",       postProcessing.median_enable);
+    getParamWithWarning(pnh, "median_mode",         postProcessing.median_mode);
+    getParamWithWarning(pnh, "speckle_enable",      postProcessing.speckle_enable);
+    getParamWithWarning(pnh, "speckle_range",       postProcessing.speckle_range);
+    getParamWithWarning(pnh, "temporal_enable",     postProcessing.temporal_enable);
+    getParamWithWarning(pnh, "temporal_mode",       postProcessing.temporal_mode);
+    getParamWithWarning(pnh, "temporal_alpha",      postProcessing.temporal_alpha);
+    getParamWithWarning(pnh, "temporal_delta",      postProcessing.temporal_delta);
+    getParamWithWarning(pnh, "spatial_enable",      postProcessing.spatial_enable);
+    getParamWithWarning(pnh, "spatial_radius",      postProcessing.spatial_radius);
+    getParamWithWarning(pnh, "spatial_alpha",       postProcessing.spatial_alpha);
+    getParamWithWarning(pnh, "spatial_delta",       postProcessing.spatial_delta);
+    getParamWithWarning(pnh, "spatial_iterations",  postProcessing.spatial_iterations);
+    getParamWithWarning(pnh, "threshold_enable",    postProcessing.threshold_enable);
+    getParamWithWarning(pnh, "threshold_max",       postProcessing.threshold_max);
+    getParamWithWarning(pnh, "threshold_min",       postProcessing.threshold_min);
+    getParamWithWarning(pnh, "decimation_enable",   postProcessing.decimation_enable);
+    getParamWithWarning(pnh, "decimation_mode",     postProcessing.decimation_mode);
+    getParamWithWarning(pnh, "decimation_factor",   postProcessing.decimation_factor);
+
     bool enableDepth;
     if(mode == "depth"){
         enableDepth = true;
@@ -166,7 +189,7 @@ int main(int argc, char** argv){
 
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
-    std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
+    std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
 
     dai::Device device(pipeline);
 
