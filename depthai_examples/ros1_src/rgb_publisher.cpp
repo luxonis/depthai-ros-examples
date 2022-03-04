@@ -1,23 +1,26 @@
 
-#include "ros/ros.h"
-
-#include <iostream>
 #include <cstdio>
+#include <iostream>
+
+#include "ros/ros.h"
 // #include "utility.hpp"
-#include "sensor_msgs/Image.h"
 #include <camera_info_manager/camera_info_manager.h>
 
+#include "sensor_msgs/Image.h"
+
 // Inludes common necessary includes for development using depthai library
-#include "depthai/depthai.hpp"
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-dai::Pipeline createPipeline(){
+#include "common.hpp"
+#include "depthai/depthai.hpp"
+
+dai::Pipeline createPipeline() {
     dai::Pipeline pipeline;
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
     auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
     xlinkOut->setStreamName("video");
-    
+
     colorCam->setPreviewSize(300, 300);
     colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     colorCam->setInterleaved(false);
@@ -27,38 +30,31 @@ dai::Pipeline createPipeline(){
     return pipeline;
 }
 
-int main(int argc, char** argv){
-
+int main(int argc, char** argv) {
     ros::init(argc, argv, "rgb_node");
     ros::NodeHandle pnh("~");
-    
-    std::string tfPrefix;
-    std::string camera_param_uri;
-    int badParams = 0;
 
-    badParams += !pnh.getParam("tf_prefix", tfPrefix);
-    badParams += !pnh.getParam("camera_param_uri", camera_param_uri);
+    std::string tfPrefix = "oak";
+    std::string camera_param_uri = "package://depthai_examples/params/camera";
 
-    if (badParams > 0)
-    {
-        throw std::runtime_error("Couldn't find one of the parameters");
-    }
-    
+    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
+
     dai::Pipeline pipeline = createPipeline();
     dai::Device device(pipeline);
     std::shared_ptr<dai::DataOutputQueue> imgQueue = device.getOutputQueue("video", 30, false);
-    
+
     std::string color_uri = camera_param_uri + "/" + "color.yaml";
 
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
     dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(imgQueue,
-                                                                                  pnh, 
+                                                                                  pnh,
                                                                                   std::string("color/image"),
-                                                                                  std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                                                                                  &rgbConverter, // since the converter has the same frame name
-                                                                                                  // and image type is also same we can reuse it
-                                                                                  std::placeholders::_1, 
-                                                                                  std::placeholders::_2) , 
+                                                                                  std::bind(&dai::rosBridge::ImageConverter::toRosMsg,
+                                                                                            &rgbConverter,  // since the converter has the same frame name
+                                                                                                            // and image type is also same we can reuse it
+                                                                                            std::placeholders::_1,
+                                                                                            std::placeholders::_2),
                                                                                   30,
                                                                                   color_uri,
                                                                                   "color");
@@ -68,4 +64,3 @@ int main(int argc, char** argv){
 
     return 0;
 }
-

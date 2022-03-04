@@ -1,0 +1,32 @@
+stereo_inertial_node:
+    ros__parameters:
+        tf_prefix: "oak"
+        mode: "depth"
+        lrcheck: true
+        extended: false
+        subpixel: true
+        rectify: false
+        depth_aligned: false
+        stereo_fps: 30
+        confidence: 200
+        LRchecktresh: 5
+        monoResolution: "720p"
+
+        median_enable: false
+        median_mode: "MEDIAN_OFF"
+        speckle_enable: false
+        speckle_range: 50
+        temporal_enable: false
+        temporal_mode: "PERSISTENCY_OFF"
+        temporal_alpha: 0.4
+        temporal_delta: 0
+        spatial_enable: false
+        spatial_radius: 2
+        spatial_alpha: 0.5
+        spatial_iterations: 1
+        threshold_enable: false
+        threshold_max: 0
+        threshold_min: 0
+        decimatrion_enable: false
+        decimation_mode: "NON_ZERO_MEDIAN"
+        decimation_factor: 1
