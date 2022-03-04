@@ -6,6 +6,7 @@
 #include <depthai_bridge/ImuConverter.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/DisparityConverter.hpp>
+#include <memory>
 
 #ifndef IS_ROS2
 #include <iostream>
@@ -55,6 +56,16 @@ class PostProcessing {
     bool decimation_enable      = false;
     std::string decimation_mode = "NON_ZERO_MEDIAN";
     int decimation_factor       = 1;
+};
+
+class ExposureSettings {
+    public:
+    void setExposure(dai::Device& device);
+    bool auto_exposure = true;
+    std::array<int, 4> exposure_region = {0, 0, 0, 0};
+    int compensation = 0;
+    int exposure_time_us = 8333;
+    int sensitivity_iso = 100;    
 };
 
 #endif

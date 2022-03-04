@@ -144,13 +144,6 @@ int main(int argc, char** argv){
     {   
         node->get_parameter("nn_path", nnPath);
     }
-    // ROS_INFO("Pipeline parameters:");
-    // ROS_INFO("syncNN " + syncNN);
-    // ROS_INFO("subpixel " + subpixel);
-    // ROS_INFO("nnPath " + nnPath);
-    // ROS_INFO("confidence "  + confidence);
-    // ROS_INFO("LRchecktresh " + LRchecktresh);
-    // ROS_INFO("monoResolution " + monoResolution);
     dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh, monoResolution);
     dai::Device device(pipeline);
 

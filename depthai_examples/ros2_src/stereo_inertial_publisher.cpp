@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdio>
 #include <tuple>
+#include <memory>
 #include "sensor_msgs/msg/imu.h"
 #include <sensor_msgs/msg/image.hpp>
 #include <stereo_msgs/msg/disparity_image.hpp>
@@ -177,6 +178,16 @@ int main(int argc, char** argv){
     node->declare_parameter("decimation_mode",      postProcessing.decimation_mode);
     node->declare_parameter("decimation_factor",    postProcessing.decimation_factor);
 
+    ExposureSettings exposureSettings;
+    node->declare_parameter("auto_exposure",           exposureSettings.auto_exposure);
+    node->declare_parameter("exposure_start_x",        exposureSettings.exposure_region.at(0));
+    node->declare_parameter("exposure_start_y",        exposureSettings.exposure_region.at(1));
+    node->declare_parameter("exposure_width",          exposureSettings.exposure_region.at(2));
+    node->declare_parameter("exposure_height",         exposureSettings.exposure_region.at(3));
+    node->declare_parameter("exposure_compensation",   exposureSettings.compensation);
+    node->declare_parameter("exposure_time_us",        exposureSettings.exposure_time_us);
+    node->declare_parameter("exposure_iso",            exposureSettings.sensitivity_iso);
+
     node->get_parameter("tf_prefix",     tfPrefix);
     node->get_parameter("mode",          mode);
     node->get_parameter("lrcheck",       lrcheck);
@@ -209,6 +220,15 @@ int main(int argc, char** argv){
     node->get_parameter("decimation_mode",      postProcessing.decimation_mode);
     node->get_parameter("decimation_factor",    postProcessing.decimation_factor);
 
+    node->get_parameter("auto_exposure",           exposureSettings.auto_exposure);
+    node->get_parameter("exposure_start_x",        exposureSettings.exposure_region.at(0));
+    node->get_parameter("exposure_start_y",        exposureSettings.exposure_region.at(1));
+    node->get_parameter("exposure_width",          exposureSettings.exposure_region.at(2));
+    node->get_parameter("exposure_height",         exposureSettings.exposure_region.at(3));
+    node->get_parameter("exposure_compensation",   exposureSettings.compensation);
+    node->get_parameter("exposure_time_us",        exposureSettings.exposure_time_us);
+    node->get_parameter("exposure_iso",            exposureSettings.sensitivity_iso);
+    
     if(mode == "depth"){
         enableDepth = true;
     }
@@ -221,6 +241,7 @@ int main(int argc, char** argv){
     std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
 
     dai::Device device(pipeline);
+    exposureSettings.setExposure(device);
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if (enableDepth) {

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <memory>
 #include <tuple>
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/Image.h"
@@ -28,6 +29,11 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth, bool lrchec
     auto xoutDepth            = pipeline.create<dai::node::XLinkOut>();
     auto imu                  = pipeline.create<dai::node::IMU>();
     auto xoutImu              = pipeline.create<dai::node::XLinkOut>();
+    auto controlIn            = pipeline.create<dai::node::XLinkIn>();
+    auto configIn             = pipeline.create<dai::node::XLinkIn>();
+    
+    controlIn->setStreamName("control");
+    configIn->setStreamName("config");
 
     if (enableDepth) {
         xoutDepth->setStreamName("depth");
@@ -146,17 +152,17 @@ int main(int argc, char** argv){
     int stereo_fps = 15, confidence = 200, LRchecktresh = 5;
     bool lrcheck = true, extended = false, subpixel = true, rectify = true, depth_aligned = true;
 
-    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
-    getParamWithWarning(pnh, "mode",   mode);
-    getParamWithWarning(pnh, "monoResolution", monoResolution);
-    getParamWithWarning(pnh, "stereo_fps", stereo_fps);
-    getParamWithWarning(pnh, "confidence",   confidence);
-    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
-    getParamWithWarning(pnh, "lrcheck",  lrcheck);
-    getParamWithWarning(pnh, "extended",  extended);
-    getParamWithWarning(pnh, "subpixel",  subpixel);
-    getParamWithWarning(pnh, "rectify", rectify);
-    getParamWithWarning(pnh, "depth_aligned", depth_aligned);
+    getParamWithWarning(pnh, "tf_prefix",       tfPrefix);
+    getParamWithWarning(pnh, "mode",            mode);
+    getParamWithWarning(pnh, "monoResolution",  monoResolution);
+    getParamWithWarning(pnh, "stereo_fps",      stereo_fps);
+    getParamWithWarning(pnh, "confidence",      confidence);
+    getParamWithWarning(pnh, "LRchecktresh",    LRchecktresh);
+    getParamWithWarning(pnh, "lrcheck",         lrcheck);
+    getParamWithWarning(pnh, "extended",        extended);
+    getParamWithWarning(pnh, "subpixel",        subpixel);
+    getParamWithWarning(pnh, "rectify",         rectify);
+    getParamWithWarning(pnh, "depth_aligned",   depth_aligned);
 
     PostProcessing postProcessing;
     getParamWithWarning(pnh, "median_enable",       postProcessing.median_enable);
@@ -179,6 +185,17 @@ int main(int argc, char** argv){
     getParamWithWarning(pnh, "decimation_mode",     postProcessing.decimation_mode);
     getParamWithWarning(pnh, "decimation_factor",   postProcessing.decimation_factor);
 
+    ExposureSettings exposureSettings;
+    getParamWithWarning(pnh, "auto_exposure",           exposureSettings.auto_exposure);
+    getParamWithWarning(pnh, "exposure_start_x",        exposureSettings.exposure_region.at(0));
+    getParamWithWarning(pnh, "exposure_start_y",        exposureSettings.exposure_region.at(1));
+    getParamWithWarning(pnh, "exposure_width",          exposureSettings.exposure_region.at(2));
+    getParamWithWarning(pnh, "exposure_height",         exposureSettings.exposure_region.at(3));
+    getParamWithWarning(pnh, "exposure_compensation",   exposureSettings.compensation);
+    getParamWithWarning(pnh, "exposure_time_us",        exposureSettings.exposure_time_us);
+    getParamWithWarning(pnh, "exposure_iso",            exposureSettings.sensitivity_iso);
+
+
     bool enableDepth;
     if(mode == "depth"){
         enableDepth = true;
@@ -192,6 +209,7 @@ int main(int argc, char** argv){
     std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
 
     dai::Device device(pipeline);
+    exposureSettings.setExposure(device);
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if (enableDepth) {

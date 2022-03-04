@@ -12,7 +12,7 @@
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
-#include <depthai_bridge/SpatialDetectionConverter.hpp>\
+#include <depthai_bridge/SpatialDetectionConverter.hpp>
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
