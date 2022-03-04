@@ -27,8 +27,8 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck,
     auto xoutDepth   = pipeline.create<dai::node::XLinkOut>();
 
     // XLinkOut
-    xoutLeft->setStreamName("left");
-    xoutRight->setStreamName("right");
+    xoutLeft->setStreamName("rectified_left");
+    xoutRight->setStreamName("rectified_right");
 
     if (withDepth) {
         xoutDepth->setStreamName("depth");
@@ -77,8 +77,8 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck,
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
 
-    stereo->syncedLeft.link(xoutLeft->input);
-    stereo->syncedRight.link(xoutRight->input);
+    stereo->rectifiedLeft.link(xoutLeft->input);
+    stereo->rectifiedRight.link(xoutRight->input);
 
     if(withDepth){
         stereo->depth.link(xoutDepth->input);
@@ -131,8 +131,8 @@ int main(int argc, char** argv){
     std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution);
 
     dai::Device device(pipeline);
-    auto leftQueue = device.getOutputQueue("left", 30, false);
-    auto rightQueue = device.getOutputQueue("right", 30, false);
+    auto leftQueue = device.getOutputQueue("rectified_left", 30, false);
+    auto rightQueue = device.getOutputQueue("rectified_right", 30, false);
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if (enableDepth) {
         stereoQueue = device.getOutputQueue("depth", 30, false);
