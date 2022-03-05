@@ -139,7 +139,8 @@ int main(int argc, char** argv){
 
     std::string tfPrefix, mode, monoResolution;
     int badParams = 0, stereo_fps, confidence, LRchecktresh;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, imuModeParam;
+    float angularVelCovariance, linearAccelCovariance;
 
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("mode", "depth");
@@ -152,6 +153,9 @@ int main(int argc, char** argv){
     node->declare_parameter("confidence",  200);
     node->declare_parameter("LRchecktresh",  5);
     node->declare_parameter("monoResolution",  "720p");
+    node->declare_parameter("imuMode", 1);
+    node->declare_parameter("angularVelCovariance", 0.02);
+    node->declare_parameter("linearAccelCovariance", 0.0);
 
     node->get_parameter("tf_prefix",     tfPrefix);
     node->get_parameter("mode",          mode);
@@ -164,6 +168,9 @@ int main(int argc, char** argv){
     node->get_parameter("confidence",    confidence);
     node->get_parameter("LRchecktresh",  LRchecktresh);
     node->get_parameter("monoResolution", monoResolution);
+    node->get_parameter("imuMode",        imuModeParam);
+    node->get_parameter("angularVelCovariance", angularVelCovariance);
+    node->get_parameter("linearAccelCovariance", linearAccelCovariance);
 
     if(mode == "depth"){
         enableDepth = true;
@@ -172,6 +179,7 @@ int main(int argc, char** argv){
         enableDepth = false;
     }
 
+    dai::ros::ImuSyncMethod imuMode = dai::ros::ImuSyncMethod imuMode(imuModeParam);
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
     std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
@@ -201,7 +209,7 @@ int main(int argc, char** argv){
     const std::string leftPubName = rectify?std::string("left/image_rect"):std::string("left/image_raw");
     const std::string rightPubName = rectify?std::string("right/image_rect"):std::string("right/image_raw");
 
-    dai::rosBridge::ImuConverter imuConverter(tfPrefix +"_imu_frame");
+    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame", imuMode, linearAccelCovariance, angularVelCovariance);
 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Imu, dai::IMUData> ImuPublish(imuQueue,
                                                                                      node, 
