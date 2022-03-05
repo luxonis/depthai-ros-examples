@@ -143,10 +143,12 @@ int main(int argc, char** argv){
     std::string tfPrefix, mode;
     std::string monoResolution = "720p";
     int badParams = 0, stereo_fps, confidence, LRchecktresh;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, imuModeParam;
+    float angularVelCovariance, linearAccelCovariance;
 
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("mode", mode);
+    badParams += !pnh.getParam("imuMode", imuModeParam);
     badParams += !pnh.getParam("lrcheck",  lrcheck);
     badParams += !pnh.getParam("extended",  extended);
     badParams += !pnh.getParam("subpixel",  subpixel);
@@ -156,6 +158,8 @@ int main(int argc, char** argv){
     badParams += !pnh.getParam("confidence",  confidence);
     badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
     badParams += !pnh.getParam("monoResolution",   monoResolution);
+    badParams += !pnh.getParam("angularVelCovariance",   angularVelCovariance);
+    badParams += !pnh.getParam("linearAccelCovariance",   linearAccelCovariance);
 
     if (badParams > 0)
     {   
@@ -169,6 +173,9 @@ int main(int argc, char** argv){
     else{
         enableDepth = false;
     }
+
+
+    dai::ros::ImuSyncMethod imuMode = dai::ros::ImuSyncMethod imuMode(imuModeParam);
 
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
@@ -199,7 +206,7 @@ int main(int argc, char** argv){
     const std::string leftPubName = rectify?std::string("left/image_rect"):std::string("left/image_raw");
     const std::string rightPubName = rectify?std::string("right/image_rect"):std::string("right/image_raw");
 
-    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame");
+    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame", imuMode, linearAccelCovariance, angularVelCovariance);
 
     dai::rosBridge::BridgePublisher<sensor_msgs::Imu, dai::IMUData> ImuPublish(imuQueue,
                                                                                      pnh, 
