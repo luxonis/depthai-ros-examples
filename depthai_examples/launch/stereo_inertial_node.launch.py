@@ -149,7 +149,7 @@ def generate_launch_description():
     declare_linearAccelCovariance_cmd = DeclareLaunchArgument(
         'linearAccelCovariance',
         default_value=linearAccelCovariance,
-        description='Set the Linear acceleration covariance of the IMU.'')
+        description='Set the Linear acceleration covariance of the IMU.')
    
     
     urdf_launch = IncludeLaunchDescription(

@@ -85,8 +85,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
-    imu->enableIMUSensor({dai::IMUSensor::ROTATION_VECTOR, dai::IMUSensor::ACCELEROMETER_RAW, dai::IMUSensor::GYROSCOPE_RAW}, 400);
-    imu->setMaxBatchReports(1);  // Get one message only for now.
+    imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
+    imu->enableIMUSensor(dai::IMUSensor::GYROSCOPE_RAW, 400);
+    imu->setBatchReportThreshold(5);
+    imu->setMaxBatchReports(20);  // Get one message only for now.
 
     if(enableDepth && depth_aligned) {
         // RGB image
@@ -101,9 +103,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             camRgb->setIspScale(1, 3);
         } else {
             camRgb->setIspScale(2, 3);
-        }  // For now, RGB needs fixed focus to properly align with depth.
-        // This value was used during calibration
-        camRgb->initialControl.setManualFocus(135);
+        }
         camRgb->isp.link(xoutRgb->input);
     } else {
         // Stereo imges

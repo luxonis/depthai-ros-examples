@@ -106,9 +106,6 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         } else {
             camRgb->setIspScale(2, 3);
         }
-        // For now, RGB needs fixed focus to properly align with depth.
-        // This value was used during calibration
-        // camRgb->initialControl.setManualFocus(135);
         camRgb->isp.link(xoutRgb->input);
     } else {
         // Stereo imges
