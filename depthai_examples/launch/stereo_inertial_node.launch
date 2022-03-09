@@ -4,8 +4,10 @@
     <arg name="camera_model"         default="OAK-D"       /> <!-- 'zed' or 'zedm' -->
     <arg name="tf_prefix"            default="oak"         />
     <arg name="mode"                 default="depth"       />
+    <arg name="world_frame"           default="map" />
     <arg name="base_frame"           default="oak-d_frame" />
     <arg name="parent_frame"         default="oak-d-base-frame" />
+    <arg name="publish_imu_transform"   default="false" />
 
     <arg name="cam_pos_x"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
     <arg name="cam_pos_y"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
@@ -51,6 +53,9 @@
         <param name="confidence"     value="$(arg confidence)" />
         <param name="LRchecktresh"   value="$(arg LRchecktresh)" />
         <param name="monoResolution" value="$(arg monoResolution)" />
+        <param name="base_frame"            value="$(arg base_frame)" />
+        <param name="world_frame"            value="$(arg world_frame)" />
+        <param name="publish_imu_transform" value="$(arg publish_imu_transform)" />
     </node>            
 
     <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>

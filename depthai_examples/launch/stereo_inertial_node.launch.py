@@ -19,6 +19,8 @@ def generate_launch_description():
     tf_prefix    = LaunchConfiguration('tf_prefix',   default = 'oak')
     base_frame   = LaunchConfiguration('base_frame',    default = 'oak-d_frame')
     parent_frame = LaunchConfiguration('parent_frame',  default = 'oak-d-base-frame')
+    world_frame = LaunchConfiguration('world_frame',  default = 'map')
+    publish_imu_transform = LaunchConfiguration('publish_imu_transform',  default = False)
     
     cam_pos_x    = LaunchConfiguration('cam_pos_x',     default = '0.0')
     cam_pos_y    = LaunchConfiguration('cam_pos_y',     default = '0.0')
@@ -132,6 +134,16 @@ def generate_launch_description():
         'confidence',
         default_value=confidence,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+
+    declare_publish_imu_transform_cmd = DeclareLaunchArgument(
+        'publish_imu_transform',
+        default_value=publish_imu_transform,
+        description='set whether to publish IMU orientaion as a transform in the parent frame')
+
+    declare_world_frame_cmd = DeclareLaunchArgument(
+        'world_frame',
+        default_value=world_frame,
+        description='set world frame for transforms')
     
     
     urdf_launch = IncludeLaunchDescription(
@@ -161,7 +173,10 @@ def generate_launch_description():
                         {'depth_aligned': depth_aligned},
                         {'stereo_fps':    stereo_fps},
                         {'confidence':    confidence},
-                        {'LRchecktresh':  LRchecktresh}])
+                        {'LRchecktresh':  LRchecktresh},
+                        {'world_frame':  world_frame},
+                        {'parent_frame':  base_frame},
+                        {'publish_imu_transform': publish_imu_transform}])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -229,6 +244,8 @@ def generate_launch_description():
     ld.add_action(declare_stereo_fps_cmd)
     ld.add_action(declare_LRchecktresh_cmd)
     ld.add_action(declare_confidence_cmd)
+    ld.add_action(declare_world_frame_cmd)
+    ld.add_action(declare_publish_imu_transform_cmd)
 
     ld.add_action(streo_node)
     ld.add_action(urdf_launch)
