@@ -138,10 +138,10 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "stereo_inertial_node");
     ros::NodeHandle pnh("~");
 
-    std::string tfPrefix, mode;
+    std::string tfPrefix, mode, base_frame, world_frame;
     std::string monoResolution = "720p";
     int badParams = 0, stereo_fps, confidence, LRchecktresh;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, publish_imu_transform;
 
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("mode", mode);
@@ -154,6 +154,9 @@ int main(int argc, char** argv){
     badParams += !pnh.getParam("confidence",  confidence);
     badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
     badParams += !pnh.getParam("monoResolution",   monoResolution);
+    badParams += !pnh.getParam("base_frame",  base_frame);
+    badParams += !pnh.getParam("world_frame",  world_frame);
+    badParams += !pnh.getParam("publish_imu_transform",  publish_imu_transform);
 
     if (badParams > 0)
     {   
@@ -197,7 +200,7 @@ int main(int argc, char** argv){
     const std::string leftPubName = rectify?std::string("left/image_rect"):std::string("left/image_raw");
     const std::string rightPubName = rectify?std::string("right/image_rect"):std::string("right/image_raw");
 
-    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame");
+    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame", publish_imu_transform, base_frame, world_frame);
 
     dai::rosBridge::BridgePublisher<sensor_msgs::Imu, dai::IMUData> ImuPublish(imuQueue,
                                                                                      pnh, 
@@ -208,7 +211,8 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_2) , 
                                                                                      30,
                                                                                      "",
-                                                                                     "imu");
+                                                                                     "imu",
+                                                                                     publish_imu_transform);
 
     ImuPublish.addPublisherCallback();
     int colorWidth = 1280, colorHeight = 720;

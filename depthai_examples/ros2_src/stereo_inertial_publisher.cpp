@@ -137,9 +137,9 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("stereo_inertial_node");
 
-    std::string tfPrefix, mode, monoResolution;
+    std::string tfPrefix, mode, monoResolution, base_frame, world_frame;
     int badParams = 0, stereo_fps, confidence, LRchecktresh;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, publish_imu_transform;
 
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("mode", "depth");
@@ -152,6 +152,9 @@ int main(int argc, char** argv){
     node->declare_parameter("confidence",  200);
     node->declare_parameter("LRchecktresh",  5);
     node->declare_parameter("monoResolution",  "720p");
+    node->declare_parameter("base_frame",  "oak-d-base-frame");
+    node->declare_parameter("world_frame",  "map");
+    node->declare_parameter("publish_imu_transform",  false);
 
     node->get_parameter("tf_prefix",     tfPrefix);
     node->get_parameter("mode",          mode);
@@ -164,6 +167,9 @@ int main(int argc, char** argv){
     node->get_parameter("confidence",    confidence);
     node->get_parameter("LRchecktresh",  LRchecktresh);
     node->get_parameter("monoResolution", monoResolution);
+    node->get_parameter("base_frame",  base_frame);
+    node->get_parameter("world_frame",  world_frame);
+    node->get_parameter("publish_imu_transform",  publish_imu_transform);
 
     if(mode == "depth"){
         enableDepth = true;
@@ -201,7 +207,7 @@ int main(int argc, char** argv){
     const std::string leftPubName = rectify?std::string("left/image_rect"):std::string("left/image_raw");
     const std::string rightPubName = rectify?std::string("right/image_rect"):std::string("right/image_raw");
 
-    dai::rosBridge::ImuConverter imuConverter(tfPrefix +"_imu_frame");
+    dai::rosBridge::ImuConverter imuConverter(tfPrefix +"_imu_frame", node, publish_imu_transform, base_frame, world_frame);
 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Imu, dai::IMUData> ImuPublish(imuQueue,
                                                                                      node, 
@@ -212,7 +218,8 @@ int main(int argc, char** argv){
                                                                                      std::placeholders::_2) , 
                                                                                      30,
                                                                                      "",
-                                                                                     "imu");
+                                                                                     "imu",
+                                                                                     publish_imu_transform);
 
     ImuPublish.addPublisherCallback();
     int colorWidth = 1280, colorHeight = 720;
