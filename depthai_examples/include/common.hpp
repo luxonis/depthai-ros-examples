@@ -70,4 +70,13 @@ class ExposureSettings {
     int sensitivity_iso = 100;
 };
 
+class FocusSettings {
+    public:
+    void setFocus(dai::Device& device);
+    std::string focus_mode = "AUTO";
+    std::array<int, 4> focus_region = {0, 0, 0, 0};
+    private:
+    dai::CameraControl::AutoFocusMode getFocusMode();
+};
+
 #endif

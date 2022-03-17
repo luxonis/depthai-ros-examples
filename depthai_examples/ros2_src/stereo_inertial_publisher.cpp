@@ -193,6 +193,13 @@ int main(int argc, char** argv) {
     node->declare_parameter("exposure_time_us", exposureSettings.exposure_time_us);
     node->declare_parameter("exposure_iso", exposureSettings.sensitivity_iso);
 
+    FocusSettings focusSettings;
+    node->declare_parameter("focus_mode", focusSettings.focus_mode);
+    node->declare_parameter("focus_region_x", focusSettings.focus_region.at(0));
+    node->declare_parameter("focus_region_y", focusSettings.focus_region.at(1));
+    node->declare_parameter("focus_region_width", focusSettings.focus_region.at(2));
+    node->declare_parameter("focus_region_height", focusSettings.focus_region.at(3));
+
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("mode", mode);
     node->get_parameter("lrcheck", lrcheck);
@@ -234,6 +241,12 @@ int main(int argc, char** argv) {
     node->get_parameter("exposure_time_us", exposureSettings.exposure_time_us);
     node->get_parameter("exposure_iso", exposureSettings.sensitivity_iso);
 
+    node->get_parameter("focus_mode", focusSettings.focus_mode);
+    node->get_parameter("focus_region_x", focusSettings.focus_region.at(0));
+    node->get_parameter("focus_region_y", focusSettings.focus_region.at(1));
+    node->get_parameter("focus_region_width", focusSettings.focus_region.at(2));
+    node->get_parameter("focus_region_height", focusSettings.focus_region.at(3));
+
     if(mode == "depth") {
         enableDepth = true;
     } else {
@@ -247,6 +260,7 @@ int main(int argc, char** argv) {
 
     dai::Device device(pipeline);
     exposureSettings.setExposure(device);
+    focusSettings.setFocus(device);
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {

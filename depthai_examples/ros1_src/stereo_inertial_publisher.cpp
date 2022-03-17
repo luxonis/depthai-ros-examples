@@ -202,6 +202,14 @@ int main(int argc, char** argv) {
     getParamWithWarning(pnh, "exposure_time_us", exposureSettings.exposure_time_us);
     getParamWithWarning(pnh, "exposure_iso", exposureSettings.sensitivity_iso);
 
+    FocusSettings focusSettings;
+
+    getParamWithWarning(pnh, "focus_mode", focusSettings.focus_mode);
+    getParamWithWarning(pnh, "focus_region_x", focusSettings.focus_region.at(0));
+    getParamWithWarning(pnh, "focus_region_y", focusSettings.focus_region.at(1));
+    getParamWithWarning(pnh, "focus_region_width", focusSettings.focus_region.at(2));
+    getParamWithWarning(pnh, "focus_region_height", focusSettings.focus_region.at(3));
+
     bool enableDepth;
     if(mode == "depth") {
         enableDepth = true;
@@ -216,6 +224,7 @@ int main(int argc, char** argv) {
 
     dai::Device device(pipeline);
     exposureSettings.setExposure(device);
+    focusSettings.setFocus(device);
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
