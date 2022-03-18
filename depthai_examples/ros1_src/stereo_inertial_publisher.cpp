@@ -31,7 +31,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    int confidence,
                                                    int LRchecktresh,
                                                    std::string resolution,
-                                                   PostProcessing postProcessing) {
+                                                   DepthPostProcessing postProcessing) {
     dai::Pipeline pipeline;
 
     auto monoLeft = pipeline.create<dai::node::MonoCamera>();
@@ -86,14 +86,15 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     monoRight->setFps(stereo_fps);
 
     // StereoDepth
-    postProcessing.setMedianFilter(stereo);
+    postProcessing.setDevice(stereo);
+    postProcessing.setMedianFilter();
     stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
     stereo->setRectifyEdgeFillColor(0);                              // black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);  // Known to be best
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
-    postProcessing.setFilters(stereo);
+    postProcessing.setFilters();
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
@@ -171,7 +172,7 @@ int main(int argc, char** argv) {
     getParamWithWarning(pnh, "rectify", rectify);
     getParamWithWarning(pnh, "depth_aligned", depth_aligned);
 
-    PostProcessing postProcessing;
+    DepthPostProcessing postProcessing;
     getParamWithWarning(pnh, "median_enable", postProcessing.median_enable);
     getParamWithWarning(pnh, "median_mode", postProcessing.median_mode);
     getParamWithWarning(pnh, "speckle_enable", postProcessing.speckle_enable);
@@ -192,15 +193,15 @@ int main(int argc, char** argv) {
     getParamWithWarning(pnh, "decimation_mode", postProcessing.decimation_mode);
     getParamWithWarning(pnh, "decimation_factor", postProcessing.decimation_factor);
 
-    ExposureSettings exposureSettings;
-    getParamWithWarning(pnh, "auto_exposure", exposureSettings.auto_exposure);
-    getParamWithWarning(pnh, "exposure_start_x", exposureSettings.exposure_region.at(0));
-    getParamWithWarning(pnh, "exposure_start_y", exposureSettings.exposure_region.at(1));
-    getParamWithWarning(pnh, "exposure_width", exposureSettings.exposure_region.at(2));
-    getParamWithWarning(pnh, "exposure_height", exposureSettings.exposure_region.at(3));
-    getParamWithWarning(pnh, "exposure_compensation", exposureSettings.compensation);
-    getParamWithWarning(pnh, "exposure_time_us", exposureSettings.exposure_time_us);
-    getParamWithWarning(pnh, "exposure_iso", exposureSettings.sensitivity_iso);
+    CameraControl cameraControl;
+    getParamWithWarning(pnh, "auto_exposure", cameraControl.auto_exposure);
+    getParamWithWarning(pnh, "exposure_start_x", cameraControl.exposure_region.at(0));
+    getParamWithWarning(pnh, "exposure_start_y", cameraControl.exposure_region.at(1));
+    getParamWithWarning(pnh, "exposure_width", cameraControl.exposure_region.at(2));
+    getParamWithWarning(pnh, "exposure_height", cameraControl.exposure_region.at(3));
+    getParamWithWarning(pnh, "exposure_compensation", cameraControl.compensation);
+    getParamWithWarning(pnh, "exposure_time_us", cameraControl.exposure_time_us);
+    getParamWithWarning(pnh, "exposure_iso", cameraControl.sensitivity_iso);
 
     FocusSettings focusSettings;
 
@@ -222,19 +223,21 @@ int main(int argc, char** argv) {
     std::tie(pipeline, monoWidth, monoHeight) =
         createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
 
-    dai::Device device(pipeline);
-    exposureSettings.setExposure(device);
-    focusSettings.setFocus(device);
+    std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>(pipeline);
+    cameraControl.setDevice(device);
+    cameraControl.setExposure();
+    focusSettings.setDevice(device);
+    focusSettings.setFocus();
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
-        stereoQueue = device.getOutputQueue("depth", 30, false);
+        stereoQueue = device->getOutputQueue("depth", 30, false);
     } else {
-        stereoQueue = device.getOutputQueue("disparity", 30, false);
+        stereoQueue = device->getOutputQueue("disparity", 30, false);
     }
-    auto imuQueue = device.getOutputQueue("imu", 30, false);
+    auto imuQueue = device->getOutputQueue("imu", 30, false);
 
-    auto calibrationHandler = device.readCalibration();
+    auto calibrationHandler = device->readCalibration();
 
     auto boardName = calibrationHandler.getEepromData().boardName;
     if(monoHeight > 480 && boardName == "OAK-D-LITE") {
@@ -289,7 +292,7 @@ int main(int argc, char** argv) {
         depthPublish.addPublisherCallback();
 
         if(depth_aligned) {
-            auto imgQueue = device.getOutputQueue("rgb", 30, false);
+            auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
                 pnh,
@@ -301,8 +304,8 @@ int main(int argc, char** argv) {
             rgbPublish.addPublisherCallback();
             ros::spin();
         } else {
-            auto leftQueue = device.getOutputQueue("left", 30, false);
-            auto rightQueue = device.getOutputQueue("right", 30, false);
+            auto leftQueue = device->getOutputQueue("left", 30, false);
+            auto rightQueue = device->getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 pnh,
@@ -339,7 +342,7 @@ int main(int argc, char** argv) {
             "stereo");
         dispPublish.addPublisherCallback();
         if(depth_aligned) {
-            auto imgQueue = device.getOutputQueue("rgb", 30, false);
+            auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
@@ -352,8 +355,8 @@ int main(int argc, char** argv) {
             rgbPublish.addPublisherCallback();
             ros::spin();
         } else {
-            auto leftQueue = device.getOutputQueue("left", 30, false);
-            auto rightQueue = device.getOutputQueue("right", 30, false);
+            auto leftQueue = device->getOutputQueue("left", 30, false);
+            auto rightQueue = device->getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 pnh,

@@ -1,8 +1,8 @@
 #include "common.hpp"
 
-void ExposureSettings::setExposure(dai::Device& device) {
-    auto controlQueue = device.getInputQueue("control");
-    auto configQueue = device.getInputQueue("config");
+void CameraControl::setExposure() {
+    auto controlQueue = _device->getInputQueue("control");
+    auto configQueue = _device->getInputQueue("config");
     dai::CameraControl ctrl;
     if(auto_exposure) {
         ctrl.setAutoExposureEnable();
@@ -18,4 +18,8 @@ void ExposureSettings::setExposure(dai::Device& device) {
     }
     ctrl.setAutoExposureCompensation(compensation);
     controlQueue->send(ctrl);
+}
+
+void CameraControl::setDevice(std::shared_ptr<dai::Device> device) {
+    _device = device;
 }

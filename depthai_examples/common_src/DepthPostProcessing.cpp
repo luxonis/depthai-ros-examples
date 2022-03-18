@@ -3,7 +3,7 @@
 using TemporalMode = dai::RawStereoDepthConfig::PostProcessing::TemporalFilter::PersistencyMode;
 using DecimationMode = dai::RawStereoDepthConfig::PostProcessing::DecimationFilter::DecimationMode;
 
-dai::MedianFilter PostProcessing::getMedianFilter() {
+dai::MedianFilter DepthPostProcessing::getMedianFilter() {
     if(this->median_mode == "MEDIAN_OFF") return dai::MedianFilter::MEDIAN_OFF;
     if(this->median_mode == "KERNEL_3x3") return dai::MedianFilter::KERNEL_3x3;
     if(this->median_mode == "KERNEL_5x5") return dai::MedianFilter::KERNEL_5x5;
@@ -11,7 +11,7 @@ dai::MedianFilter PostProcessing::getMedianFilter() {
     return dai::MedianFilter::MEDIAN_OFF;
 }
 
-TemporalMode PostProcessing::getTemporalMode() {
+TemporalMode DepthPostProcessing::getTemporalMode() {
     if(this->temporal_mode == "PERSISTENCY_OFF") return TemporalMode::PERSISTENCY_OFF;
     if(this->temporal_mode == "VALID_8_OUT_OF_8") return TemporalMode::VALID_8_OUT_OF_8;
     if(this->temporal_mode == "VALID_2_IN_LAST_3") return TemporalMode::VALID_2_IN_LAST_3;
@@ -24,19 +24,19 @@ TemporalMode PostProcessing::getTemporalMode() {
     return TemporalMode::PERSISTENCY_OFF;
 }
 
-DecimationMode PostProcessing::getDecimationMode() {
+DecimationMode DepthPostProcessing::getDecimationMode() {
     if(this->decimation_mode == "PIXEL_SKIPPING") return DecimationMode::PIXEL_SKIPPING;
     if(this->decimation_mode == "NON_ZERO_MEDIAN") return DecimationMode::NON_ZERO_MEDIAN;
     if(this->decimation_mode == "NON_ZERO_MEAN") return DecimationMode::NON_ZERO_MEAN;
     return DecimationMode::PIXEL_SKIPPING;
 }
 
-void PostProcessing::setMedianFilter(std::shared_ptr<dai::node::StereoDepth> stereo) {
-    if(this->median_enable) stereo->initialConfig.setMedianFilter(this->getMedianFilter());
+void DepthPostProcessing::setMedianFilter() {
+    if(this->median_enable) _stereo->initialConfig.setMedianFilter(this->getMedianFilter());
 }
 
-void PostProcessing::setFilters(std::shared_ptr<dai::node::StereoDepth> stereo) {
-    auto config = stereo->initialConfig.get();
+void DepthPostProcessing::setFilters() {
+    auto config = _stereo->initialConfig.get();
     if(this->speckle_enable) {
         config.postProcessing.speckleFilter.enable = this->speckle_enable;
         config.postProcessing.speckleFilter.speckleRange = static_cast<std::uint32_t>(this->speckle_range);
@@ -62,5 +62,9 @@ void PostProcessing::setFilters(std::shared_ptr<dai::node::StereoDepth> stereo) 
         config.postProcessing.decimationFilter.decimationFactor = static_cast<std::uint32_t>(this->decimation_factor);
         config.postProcessing.decimationFilter.decimationMode = this->getDecimationMode();
     }
-    stereo->initialConfig.set(config);
+    _stereo->initialConfig.set(config);
+}
+
+void DepthPostProcessing::setDevice(std::shared_ptr<dai::node::StereoDepth> stereo) {
+    _stereo = stereo;
 }

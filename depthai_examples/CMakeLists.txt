@@ -95,8 +95,8 @@ if ( ament_cmake_FOUND )
   # dai_add_node_ros2(rgb_subscriber_node ros2_src/rgb_video_subscriber.cpp)
   set(STEREO_INERTIAL_SRC
     ros2_src/stereo_inertial_publisher.cpp
-    common_src/PostProcessing.cpp
-    common_src/ExposureParameters.cpp
+    common_src/DepthPostProcessing.cpp
+    common_src/CameraControl.cpp
     common_src/FocusSettings.cpp)
   
   dai_add_node_ros2(stereo_inertial_node "${STEREO_INERTIAL_SRC}")
@@ -201,8 +201,8 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   # dai_add_node(stereo_mimic_node ros1_src/stereo_mimic_node.cpp)
   set(STEREO_INERTIAL_SRC 
     ros1_src/stereo_inertial_publisher.cpp
-    common_src/PostProcessing.cpp
-    common_src/ExposureParameters.cpp
+    common_src/DepthPostProcessing.cpp
+    common_src/CameraControl.cpp
     common_src/FocusSettings.cpp)
   dai_add_node(stereo_inertial_node "${STEREO_INERTIAL_SRC}")
 

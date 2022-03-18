@@ -1,13 +1,13 @@
 #include "common.hpp"
 
-void FocusSettings::setFocus(dai::Device& device) {
+void FocusSettings::setFocus() {
     dai::CameraControl ctrl;
-    auto controlQueue = device.getInputQueue("control");
+    auto controlQueue = _device->getInputQueue("control");
     auto focus = getFocusMode();
     ctrl.setAutoFocusMode(focus);
     
     if (focus_mode == "OFF") {
-        auto configQueue = device.getInputQueue("config");
+        auto configQueue = _device->getInputQueue("config");
         dai::ImageManipConfig cfg;
         cfg.setCropRect(focus_region.at(0), focus_region.at(1), 0, 0);
         configQueue->send(cfg);
@@ -30,4 +30,8 @@ dai::CameraControl::AutoFocusMode FocusSettings::getFocusMode() {
     if (focus_mode == "OFF")
         return dai::CameraControl::AutoFocusMode::OFF;
     return dai::CameraControl::AutoFocusMode::AUTO;
+}
+
+void FocusSettings::setDevice(std::shared_ptr<dai::Device> device) {
+    _device = device;
 }

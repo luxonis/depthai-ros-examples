@@ -25,7 +25,7 @@ static void getParamWithWarning(ros::NodeHandle& pnh, const char* key, T val) {
 }
 #endif
 
-class PostProcessing {
+class DepthPostProcessing {
    public:
     dai::MedianFilter getMedianFilter();
 
@@ -35,9 +35,11 @@ class PostProcessing {
     using DecimationMode = dai::RawStereoDepthConfig::PostProcessing::DecimationFilter::DecimationMode;
     DecimationMode getDecimationMode();
 
-    void setMedianFilter(std::shared_ptr<dai::node::StereoDepth> stereo);
+    void setDevice(std::shared_ptr<dai::node::StereoDepth> stereo);
 
-    void setFilters(std::shared_ptr<dai::node::StereoDepth> stereo);
+    void setMedianFilter();
+
+    void setFilters();
 
     bool median_enable = false;
     std::string median_mode = "MEDIAN_OFF";
@@ -58,25 +60,32 @@ class PostProcessing {
     bool decimation_enable = false;
     std::string decimation_mode = "NON_ZERO_MEDIAN";
     int decimation_factor = 1;
+    private:
+    std::shared_ptr<dai::node::StereoDepth> _stereo;
 };
 
-class ExposureSettings {
-   public:
-    void setExposure(dai::Device& device);
+class CameraControl {
+    public:
+    void setDevice(std::shared_ptr<dai::Device> device);
+    void setExposure();
     bool auto_exposure = true;
     std::array<int, 4> exposure_region = {0, 0, 0, 0};
     int compensation = 0;
     int exposure_time_us = 8333;
     int sensitivity_iso = 100;
+    private:
+    std::shared_ptr<dai::Device> _device;
 };
 
 class FocusSettings {
     public:
-    void setFocus(dai::Device& device);
+    void setDevice(std::shared_ptr<dai::Device> device);
+    void setFocus();
     std::string focus_mode = "AUTO";
     std::array<int, 4> focus_region = {0, 0, 0, 0};
     private:
     dai::CameraControl::AutoFocusMode getFocusMode();
+    std::shared_ptr<dai::Device> _device;
 };
 
 #endif
