@@ -1,4 +1,3 @@
-
 #include <camera_info_manager/camera_info_manager.hpp>
 #include <cstdio>
 #include <functional>
@@ -410,11 +409,11 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
-
-            // rclcpp::Service<example_interfaces::srv::AddTwoInts>::SharedPtr service =
-    // node->create_service<example_interfaces::srv::AddTwoInts>("add_two_ints", &add);
-            rclcpp::spin(node);
         }
+        auto boundSetExposure = std::bind(&setExposureRequest, std::ref(cameraControl), std::placeholders::_1, std::placeholders::_2);
+        // rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr service =
+            // node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_exposure", &boundSetExposure);
+        rclcpp::spin(node); 
     }
 
     return 0;

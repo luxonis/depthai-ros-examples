@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(depthai_examples)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 add_compile_options(-g)
@@ -50,6 +50,7 @@ if ( ament_cmake_FOUND )
   find_package(stereo_msgs REQUIRED)
   find_package(std_msgs REQUIRED)
   find_package(vision_msgs REQUIRED)
+  find_package(depthai_examples_interfaces REQUIRED)
 
   set(dependencies
     camera_info_manager
@@ -61,6 +62,7 @@ if ( ament_cmake_FOUND )
     stereo_msgs
     std_msgs
     vision_msgs
+    depthai_examples_interfaces
   )
 
   include_directories(
@@ -145,12 +147,13 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
     depthai_bridge
     message_filters
     nodelet
+    depthai_examples_interfaces
   )
 
   catkin_package(
     # INCLUDE_DIRS include
     LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS depthai_ros_msgs roscpp sensor_msgs std_msgs camera_info_manager depthai_bridge vision_msgs cv_bridge message_filters
+    CATKIN_DEPENDS depthai_examples_interfaces depthai_ros_msgs roscpp sensor_msgs std_msgs camera_info_manager depthai_bridge vision_msgs cv_bridge message_filters
     DEPENDS
     OpenCV
   )

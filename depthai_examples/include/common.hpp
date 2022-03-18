@@ -9,6 +9,10 @@
 
 #include "depthai/depthai.hpp"
 
+#include "depthai_examples_interfaces/srv/set_focus.hpp"
+#include "depthai_examples_interfaces/srv/set_exposure.hpp"
+
+
 #ifndef IS_ROS2
     #include <iostream>
     #include <string>
@@ -77,12 +81,19 @@ class CameraControl {
     std::shared_ptr<dai::Device> _device;
 };
 
+void setExposureRequest(CameraControl& camera,
+    const std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Request> request,
+    std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Response> response);
+
 class FocusSettings {
     public:
     void setDevice(std::shared_ptr<dai::Device> device);
     void setFocus();
     std::string focus_mode = "AUTO";
     std::array<int, 4> focus_region = {0, 0, 0, 0};
+    void setFocusRequest(
+    const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request> request,
+    std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response> response);
     private:
     dai::CameraControl::AutoFocusMode getFocusMode();
     std::shared_ptr<dai::Device> _device;
