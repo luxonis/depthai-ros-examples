@@ -38,15 +38,15 @@ void FocusSettings::setDevice(std::shared_ptr<dai::Device> device) {
     _device = device;
 }
 
-void FocusSettings::setFocusRequest(
+void setFocusRequest(FocusSettings& focus,
     const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request> request,
     std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response> response) {
-        focus_mode = request->focus_mode;
-        focus_region.at(0) = request->focus_x;
-        focus_region.at(1) = request->focus_y;
-        focus_region.at(2) = request->focus_width;
-        focus_region.at(3) = request->focus_height;
-        setFocus();
+        focus.focus_mode = request->focus_mode;
+        focus.focus_region.at(0) = request->focus_x;
+        focus.focus_region.at(1) = request->focus_y;
+        focus.focus_region.at(2) = request->focus_width;
+        focus.focus_region.at(3) = request->focus_height;
+        focus.setFocus();
         response->success = true;
         return;
 }

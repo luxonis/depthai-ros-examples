@@ -411,8 +411,17 @@ int main(int argc, char** argv) {
             leftPublish.addPublisherCallback();
         }
         auto boundSetExposure = std::bind(&setExposureRequest, std::ref(cameraControl), std::placeholders::_1, std::placeholders::_2);
-        // rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr service =
-            // node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_exposure", &boundSetExposure);
+        rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr exposureService =
+            node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_exposure", [&boundSetExposure](const std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Request> request,
+        std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Response> response) {
+            boundSetExposure(request, response);
+        });
+        // auto boundSetFocus = std::bind(&setFocusRequest, std::ref(focusSettings), std::placeholders::_1, std::placeholders::_2);
+        // rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr focusService =
+        //     node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_focus", [&boundSetFocus](const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request> request,
+        // std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response> response) {
+        //     boundSetFocus(request, response);
+        // });
         rclcpp::spin(node); 
     }
 

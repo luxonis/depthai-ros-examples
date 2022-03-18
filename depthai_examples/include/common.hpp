@@ -91,12 +91,13 @@ class FocusSettings {
     void setFocus();
     std::string focus_mode = "AUTO";
     std::array<int, 4> focus_region = {0, 0, 0, 0};
-    void setFocusRequest(
-    const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request> request,
-    std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response> response);
     private:
     dai::CameraControl::AutoFocusMode getFocusMode();
     std::shared_ptr<dai::Device> _device;
 };
+
+void setFocusRequest(FocusSettings& focus,
+    const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request> request,
+    std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response> response);
 
 #endif
