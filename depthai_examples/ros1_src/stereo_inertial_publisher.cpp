@@ -301,7 +301,6 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
-            ros::spin();
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
             auto rightQueue = device->getOutputQueue("right", 30, false);
@@ -323,7 +322,6 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
-            ros::spin();
         }
     } else {
         std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
@@ -352,7 +350,6 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
-            ros::spin();
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
             auto rightQueue = device->getOutputQueue("right", 30, false);
@@ -374,8 +371,19 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
-            ros::spin();
         }
+
+        ros::ServiceServer service = pnh.advertiseService("set_camera_exposure", 
+        [&cameraControl](depthai_examples_interfaces::SetExposure::Request &request, depthai_examples_interfaces::SetExposure::Response &response) {
+            return setExposureRequest(cameraControl, request, response);
+            }
+        );
+
+        // ros::ServiceServer service = pnh.advertiseService("set_camera_exposure", std::bind(setExposureRequest, cameraControl, std::placeholders::_1, std::placeholders::_2);
+        // ros::ServiceServer service = pnh.advertiseService("set_camera_exposure", boost::bind(setExposureRequest, cameraControl, std::placeholders::_1, std::placeholders::_2);
+
+        
+        ros::spin();
     }
 
     return 0;
