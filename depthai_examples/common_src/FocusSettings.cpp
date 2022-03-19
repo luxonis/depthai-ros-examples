@@ -1,6 +1,4 @@
 #include "common.hpp"
-#include "depthai_examples_interfaces/srv/set_focus.hpp"
-#include "depthai_examples_interfaces/srv/set_exposure.hpp"
 
 void FocusSettings::setFocus() {
     dai::CameraControl ctrl;
@@ -38,6 +36,7 @@ void FocusSettings::setDevice(std::shared_ptr<dai::Device> device) {
     _device = device;
 }
 
+#ifdef IS_ROS2
 void setFocusRequest(FocusSettings& focus,
     const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request> request,
     std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response> response) {
@@ -50,3 +49,5 @@ void setFocusRequest(FocusSettings& focus,
         response->success = true;
         return;
 }
+#else
+#endif
