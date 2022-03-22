@@ -82,6 +82,25 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
+
+    // Post processing
+    stereo->initialConfig.setMedianFilter(dai::MedianFilter::KERNEL_5x5);
+    auto config = stereo->initialConfig.get();
+    config.postProcessing.spatialFilter.holeFillingRadius = 3;
+    config.postProcessing.spatialFilter.numIterations = 2;
+    config.postProcessing.spatialFilter.delta = 0;
+    config.postProcessing.spatialFilter.alpha = 0.5;
+
+    config.postProcessing.speckleFilter.enable = true;
+    config.postProcessing.speckleFilter.speckleRange = 50;
+
+    config.postProcessing.temporalFilter.enable = true;
+    config.postProcessing.temporalFilter.persistencyMode = dai::RawStereoDepthConfig::PostProcessing::TemporalFilter::PersistencyMode::VALID_2_IN_LAST_4;
+    config.postProcessing.temporalFilter.delta = 10;
+    config.postProcessing.temporalFilter.alpha = 0.4;
+
+    stereo->initialConfig.set(config);
+
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
