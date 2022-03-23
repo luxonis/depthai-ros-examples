@@ -24,36 +24,61 @@ void CameraControl::setDevice(std::shared_ptr<dai::Device> device) {
     _device = device;
 }
 
-#ifdef IS_ROS2
-void setExposureRequest(CameraControl& camera,
-    const std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Request> request,
-    std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Response> response) {
-        camera.auto_exposure = request->auto_exposure;
-        camera.exposure_region.at(0) = request->exposure_x;
-        camera.exposure_region.at(1) = request->exposure_y;
-        camera.exposure_region.at(2) = request->exposure_width;
-        camera.exposure_region.at(3) = request->exposure_height;
-        camera.compensation = request->compensation;
-        camera.exposure_time_us = request->exposure_time_us;
-        camera.sensitivity_iso = request->sensitivity_iso;
-        camera.setExposure();
-        response->success = true;
-        return;
+dai::CameraControl::AutoFocusMode CameraControl::getFocusMode() {
+    if (focus_mode == "AUTO")
+        return dai::CameraControl::AutoFocusMode::AUTO;
+    if (focus_mode == "CONTINUOUS_PICTURE")
+        return dai::CameraControl::AutoFocusMode::CONTINUOUS_PICTURE;
+    if (focus_mode == "CONTINUOUS_VIDEO ")
+        return dai::CameraControl::AutoFocusMode::CONTINUOUS_VIDEO;
+    if (focus_mode == "EDOF")
+        return dai::CameraControl::AutoFocusMode::EDOF;
+    if (focus_mode == "MACRO")
+        return dai::CameraControl::AutoFocusMode::MACRO;
+    if (focus_mode == "OFF")
+        return dai::CameraControl::AutoFocusMode::OFF;
+    return dai::CameraControl::AutoFocusMode::AUTO;
 }
-#else
-bool setExposureRequest(CameraControl& camera,
-        depthai_examples_interfaces::SetExposure::Request  &request,
-        depthai_examples_interfaces::SetExposure::Response &response) {
-        camera.auto_exposure = request.auto_exposure;
-        camera.exposure_region.at(0) = request.exposure_x;
-        camera.exposure_region.at(1) = request.exposure_y;
-        camera.exposure_region.at(2) = request.exposure_width;
-        camera.exposure_region.at(3) = request.exposure_height;
-        camera.compensation = request.compensation;
-        camera.exposure_time_us = request.exposure_time_us;
-        camera.sensitivity_iso = request.sensitivity_iso;
-        camera.setExposure();
-        response.success = true;
-        return true;
+
+void CameraControl::setFocus() {
+    dai::CameraControl ctrl;
+    auto controlQueue = _device->getInputQueue("control");
+    auto focus = getFocusMode();
+    ctrl.setAutoFocusMode(focus);
+    
+    if (focus_mode == "OFF") {
+        auto configQueue = _device->getInputQueue("config");
+        dai::ImageManipConfig cfg;
+        cfg.setCropRect(focus_region.at(0), focus_region.at(1), 0, 0);
+        configQueue->send(cfg);
+    } else if (focus_region.at(2) > 0 && focus_region.at(3) > 0)
+        ctrl.setAutoFocusRegion(focus_region.at(0), focus_region.at(1), focus_region.at(2), focus_region.at(3));
+    controlQueue->send(ctrl);
 }
-#endif
+
+req_type CameraControl::setExposureRequest(exp_req_msg request, exp_rep_msg response) {
+    auto_exposure = req_get(auto_exposure);
+    exposure_region.at(0) = req_get(exposure_x);
+    exposure_region.at(1) = req_get(exposure_y);
+    exposure_region.at(2) = req_get(exposure_width);
+    exposure_region.at(3) = req_get(exposure_height);
+    compensation = req_get(compensation);
+    exposure_time_us = req_get(exposure_time_us);
+    sensitivity_iso = req_get(sensitivity_iso);
+    setExposure();
+    rep_get(success) = true;
+    bool result = true;
+    return (req_type)result;
+}
+
+req_type CameraControl::setFocusRequest(foc_req_msg request, foc_rep_msg response) {
+    focus_mode = req_get(focus_mode);
+    focus_region.at(0) = req_get(focus_x);
+    focus_region.at(1) = req_get(focus_y);
+    focus_region.at(2) = req_get(focus_width);
+    focus_region.at(3) = req_get(focus_height);
+    setFocus();
+    rep_get(success) = true;
+    bool result = true;
+    return (req_type)result;
+}

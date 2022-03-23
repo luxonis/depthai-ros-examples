@@ -193,12 +193,11 @@ int main(int argc, char** argv) {
     node->declare_parameter("exposure_time_us", cameraControl.exposure_time_us);
     node->declare_parameter("exposure_iso", cameraControl.sensitivity_iso);
 
-    FocusSettings focusSettings;
-    node->declare_parameter("focus_mode", focusSettings.focus_mode);
-    node->declare_parameter("focus_region_x", focusSettings.focus_region.at(0));
-    node->declare_parameter("focus_region_y", focusSettings.focus_region.at(1));
-    node->declare_parameter("focus_region_width", focusSettings.focus_region.at(2));
-    node->declare_parameter("focus_region_height", focusSettings.focus_region.at(3));
+    node->declare_parameter("focus_mode", cameraControl.focus_mode);
+    node->declare_parameter("focus_region_x", cameraControl.focus_region.at(0));
+    node->declare_parameter("focus_region_y", cameraControl.focus_region.at(1));
+    node->declare_parameter("focus_region_width", cameraControl.focus_region.at(2));
+    node->declare_parameter("focus_region_height", cameraControl.focus_region.at(3));
 
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("mode", mode);
@@ -241,11 +240,11 @@ int main(int argc, char** argv) {
     node->get_parameter("exposure_time_us", cameraControl.exposure_time_us);
     node->get_parameter("exposure_iso", cameraControl.sensitivity_iso);
 
-    node->get_parameter("focus_mode", focusSettings.focus_mode);
-    node->get_parameter("focus_region_x", focusSettings.focus_region.at(0));
-    node->get_parameter("focus_region_y", focusSettings.focus_region.at(1));
-    node->get_parameter("focus_region_width", focusSettings.focus_region.at(2));
-    node->get_parameter("focus_region_height", focusSettings.focus_region.at(3));
+    node->get_parameter("focus_mode", cameraControl.focus_mode);
+    node->get_parameter("focus_region_x", cameraControl.focus_region.at(0));
+    node->get_parameter("focus_region_y", cameraControl.focus_region.at(1));
+    node->get_parameter("focus_region_width", cameraControl.focus_region.at(2));
+    node->get_parameter("focus_region_height", cameraControl.focus_region.at(3));
 
     if(mode == "depth") {
         enableDepth = true;
@@ -261,8 +260,7 @@ int main(int argc, char** argv) {
     std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>(pipeline);
     cameraControl.setDevice(device);
     cameraControl.setExposure();
-    focusSettings.setDevice(device);
-    focusSettings.setFocus();
+    cameraControl.setFocus();
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
@@ -412,13 +410,13 @@ int main(int argc, char** argv) {
         }
         rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr exposureService =
             node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_exposure", 
-            [&cameraControl](const std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Request> request, std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Response> response) {
-            setExposureRequest(cameraControl, request, response);
+            [&cameraControl](exp_req_msg request, exp_rep_msg response) {
+            cameraControl.setExposureRequest(request, response);
             });
         rclcpp::Service<depthai_examples_interfaces::srv::SetFocus>::SharedPtr focusService =
             node->create_service<depthai_examples_interfaces::srv::SetFocus>("set_camera_focus",
-            [&focusSettings](const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request> request, std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response> response) {
-            setFocusRequest(focusSettings, request, response);
+            [&cameraControl](foc_req_msg request, foc_rep_msg response) {
+            cameraControl.setFocusRequest(request, response);
         });
         rclcpp::spin(node); 
     }

@@ -11,6 +11,43 @@
 #include <depthai_bridge/ImuConverter.hpp>
 #include "depthai/depthai.hpp"
 
+#ifndef IS_ROS2
+
+#include "depthai_examples_interfaces/SetFocus.h"
+#include "depthai_examples_interfaces/SetExposure.h"
+
+#include "ros/ros.h"
+
+template <typename T>
+static void getParamWithWarning(ros::NodeHandle& pnh, const char* key, T val) {
+    bool gotParam = pnh.getParam(key, val);
+    if(!gotParam) {
+        std::stringstream ss;
+        ss << val;
+        ROS_WARN("Could not find param '%s' on node '%s'. Defaulting to '%s'", key, pnh.getNamespace().c_str(), ss.str().c_str());
+    }
+}
+#define req_type bool
+using exp_req_msg = depthai_examples_interfaces::SetExposure::Request&;
+using exp_rep_msg = depthai_examples_interfaces::SetExposure::Response&;
+using foc_req_msg = depthai_examples_interfaces::SetFocus::Request&;
+using foc_rep_msg = depthai_examples_interfaces::SetFocus::Response&;
+#define req_get(x) (request.x)
+#define rep_get(x) (response.x)
+
+#else
+
+#include "depthai_examples_interfaces/srv/set_focus.hpp"
+#include "depthai_examples_interfaces/srv/set_exposure.hpp"
+#define req_type void
+using exp_req_msg = const std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Request>;
+using exp_rep_msg = std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Response>;
+using foc_req_msg = const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request>;
+using foc_rep_msg = std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response>;
+#define req_get(x) ((*request).x)
+#define rep_get(x) ((*response).x)
+#endif
+
 class DepthPostProcessing {
    public:
     dai::MedianFilter getMedianFilter();
@@ -52,6 +89,7 @@ class DepthPostProcessing {
 
 class CameraControl {
     public:
+    // Exposure
     void setDevice(std::shared_ptr<dai::Device> device);
     void setExposure();
     bool auto_exposure = true;
@@ -59,50 +97,15 @@ class CameraControl {
     int compensation = 0;
     int exposure_time_us = 8333;
     int sensitivity_iso = 100;
-    private:
-    std::shared_ptr<dai::Device> _device;
-};
-
-class FocusSettings {
-    public:
-    void setDevice(std::shared_ptr<dai::Device> device);
+    req_type setExposureRequest(exp_req_msg request, exp_rep_msg response);
+    // Focus
     void setFocus();
     std::string focus_mode = "AUTO";
     std::array<int, 4> focus_region = {0, 0, 0, 0};
+    req_type setFocusRequest(foc_req_msg request, foc_rep_msg response);
     private:
     dai::CameraControl::AutoFocusMode getFocusMode();
     std::shared_ptr<dai::Device> _device;
 };
-
-#ifndef IS_ROS2
-#include "depthai_examples_interfaces/SetFocus.h"
-#include "depthai_examples_interfaces/SetExposure.h"
-
-#include "ros/ros.h"
-
-template <typename T>
-static void getParamWithWarning(ros::NodeHandle& pnh, const char* key, T val) {
-    bool gotParam = pnh.getParam(key, val);
-    if(!gotParam) {
-        std::stringstream ss;
-        ss << val;
-        ROS_WARN("Could not find param '%s' on node '%s'. Defaulting to '%s'", key, pnh.getNamespace().c_str(), ss.str().c_str());
-    }
-}
-
-bool setExposureRequest(CameraControl& camera,
-        depthai_examples_interfaces::SetExposure::Request  &request,
-        depthai_examples_interfaces::SetExposure::Response &response);
-#else
-#include "depthai_examples_interfaces/srv/set_focus.hpp"
-#include "depthai_examples_interfaces/srv/set_exposure.hpp"
-void setExposureRequest(CameraControl& camera,
-    const std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Request> request,
-    std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Response> response);
-
-void setFocusRequest(FocusSettings& focus,
-    const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request> request,
-    std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response> response);
-#endif
 
 #endif

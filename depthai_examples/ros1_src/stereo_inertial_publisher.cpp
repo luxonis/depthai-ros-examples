@@ -202,13 +202,11 @@ int main(int argc, char** argv) {
     getParamWithWarning(pnh, "exposure_time_us", cameraControl.exposure_time_us);
     getParamWithWarning(pnh, "exposure_iso", cameraControl.sensitivity_iso);
 
-    FocusSettings focusSettings;
-
-    getParamWithWarning(pnh, "focus_mode", focusSettings.focus_mode);
-    getParamWithWarning(pnh, "focus_region_x", focusSettings.focus_region.at(0));
-    getParamWithWarning(pnh, "focus_region_y", focusSettings.focus_region.at(1));
-    getParamWithWarning(pnh, "focus_region_width", focusSettings.focus_region.at(2));
-    getParamWithWarning(pnh, "focus_region_height", focusSettings.focus_region.at(3));
+    getParamWithWarning(pnh, "focus_mode", cameraControl.focus_mode);
+    getParamWithWarning(pnh, "focus_region_x", cameraControl.focus_region.at(0));
+    getParamWithWarning(pnh, "focus_region_y", cameraControl.focus_region.at(1));
+    getParamWithWarning(pnh, "focus_region_width", cameraControl.focus_region.at(2));
+    getParamWithWarning(pnh, "focus_region_height", cameraControl.focus_region.at(3));
 
     bool enableDepth;
     if(mode == "depth") {
@@ -225,8 +223,7 @@ int main(int argc, char** argv) {
     std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>(pipeline);
     cameraControl.setDevice(device);
     cameraControl.setExposure();
-    focusSettings.setDevice(device);
-    focusSettings.setFocus();
+    cameraControl.setFocus();
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
@@ -372,17 +369,8 @@ int main(int argc, char** argv) {
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
         }
-
-        ros::ServiceServer service = pnh.advertiseService("set_camera_exposure", 
-        [&cameraControl](depthai_examples_interfaces::SetExposure::Request &request, depthai_examples_interfaces::SetExposure::Response &response) {
-            return setExposureRequest(cameraControl, request, response);
-            }
-        );
-
-        // ros::ServiceServer service = pnh.advertiseService("set_camera_exposure", std::bind(setExposureRequest, cameraControl, std::placeholders::_1, std::placeholders::_2);
-        // ros::ServiceServer service = pnh.advertiseService("set_camera_exposure", boost::bind(setExposureRequest, cameraControl, std::placeholders::_1, std::placeholders::_2);
-
-        
+        ros::ServiceServer exposureService = pnh.advertiseService("setExposure", &CameraControl::setExposureRequest, &cameraControl);
+        ros::ServiceServer focusService = pnh.advertiseService("setFocus", &CameraControl::setFocusRequest, &cameraControl);
         ros::spin();
     }
 
