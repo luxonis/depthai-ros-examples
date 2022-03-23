@@ -98,8 +98,7 @@ if ( ament_cmake_FOUND )
   set(STEREO_INERTIAL_SRC
     ros2_src/stereo_inertial_publisher.cpp
     common_src/DepthPostProcessing.cpp
-    common_src/CameraControl.cpp
-    common_src/FocusSettings.cpp)
+    common_src/CameraControl.cpp)
   
   dai_add_node_ros2(stereo_inertial_node "${STEREO_INERTIAL_SRC}")
   dai_add_node_ros2(stereo_node ros2_src/stereo_publisher.cpp)
@@ -205,8 +204,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   set(STEREO_INERTIAL_SRC 
     ros1_src/stereo_inertial_publisher.cpp
     common_src/DepthPostProcessing.cpp
-    common_src/CameraControl.cpp
-    common_src/FocusSettings.cpp)
+    common_src/CameraControl.cpp)
   dai_add_node(stereo_inertial_node "${STEREO_INERTIAL_SRC}")
 
   dai_add_node(stereo_node ros1_src/stereo_publisher.cpp)
