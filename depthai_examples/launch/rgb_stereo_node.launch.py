@@ -4,6 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription, launch_description_sources
 from launch.actions import IncludeLaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 import launch_ros.actions
 import launch_ros.descriptions
@@ -13,12 +14,12 @@ def generate_launch_description():
     default_rviz = os.path.join(get_package_share_directory('depthai_examples'),
                                 'rviz', 'pointCloud.rviz')
     urdf_launch_dir = os.path.join(get_package_share_directory('depthai_bridge'), 'launch')
-    
 
     tf_prefix    = LaunchConfiguration('tf_prefix',    default = 'oak')
     camera_model = LaunchConfiguration('camera_model', default = 'OAK-D')
     base_frame   = LaunchConfiguration('base_frame',   default = 'oak-d_frame')
     parent_frame = LaunchConfiguration('parent_frame', default = 'oak-d-base-frame')
+    publish_urdf = LaunchConfiguration('publish_urdf', default = True)
 
     cam_pos_x = LaunchConfiguration('cam_pos_x',       default = '0.0')
     cam_pos_y = LaunchConfiguration('cam_pos_y',       default = '0.0')
@@ -33,6 +34,10 @@ def generate_launch_description():
     confidence   = LaunchConfiguration('confidence',   default = 200)
     LRchecktresh = LaunchConfiguration('LRchecktresh', default = 5)
 
+    colorResolution = LaunchConfiguration('colorResolution', default = "1080p")
+    usePreview      = LaunchConfiguration('usePreview',      default = False)
+    previewWidth    = LaunchConfiguration('previewWidth',    default = 300)
+    previewHeight   = LaunchConfiguration('previewHeight',   default = 300)
 
     declare_camera_model_cmd = DeclareLaunchArgument(
         'camera_model',
@@ -53,6 +58,12 @@ def generate_launch_description():
         'parent_frame',
         default_value=parent_frame,
         description='Name of the parent link from other a robot TF for example that can be connected to the base of the OAK.')
+
+    declare_publish_urdf_cmd = DeclareLaunchArgument(
+        'publish_urdf',
+        choices=[True, False],
+        default_value=publish_urdf,
+        description='Whether to publish the urdf')
 
     declare_pos_x_cmd = DeclareLaunchArgument(
         'cam_pos_x',
@@ -108,6 +119,28 @@ def generate_launch_description():
         'LRchecktresh',
         default_value=LRchecktresh,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+
+    declare_colorResolution_cmd = DeclareLaunchArgument(
+        'colorResolution',
+        choices=['1080p', '4K'],
+        default_value=colorResolution,
+        description='The resolution of the color camera')
+
+    declare_usePreview_cmd = DeclareLaunchArgument(
+        'usePreview',
+        choices=[True, False],
+        default_value=usePreview,
+        description='Whether to publish a preview of color image')
+
+    declare_previewWidth_cmd = DeclareLaunchArgument(
+        'previewWidth',
+        default_value=previewWidth,
+        description='Width of preview image')
+
+    declare_previewHeight_cmd = DeclareLaunchArgument(
+        'previewHeight',
+        default_value=previewHeight,
+        description='Height of preview image')
     
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
@@ -121,7 +154,8 @@ def generate_launch_description():
                                               'cam_pos_z'   : cam_pos_z,
                                               'cam_roll'    : cam_roll,
                                               'cam_pitch'   : cam_pitch,
-                                              'cam_yaw'     : cam_yaw}.items())
+                                              'cam_yaw'     : cam_yaw}.items(),
+                            condition=IfCondition(publish_urdf))
 
     rgb_stereo_node = launch_ros.actions.Node(
             package='depthai_examples', executable='rgb_stereo_node',
@@ -131,7 +165,11 @@ def generate_launch_description():
                         {'extended': extended},
                         {'subpixel': subpixel},
                         {'confidence': confidence},
-                        {'LRchecktresh': LRchecktresh}])
+                        {'LRchecktresh': LRchecktresh},
+                        {'colorResolution': colorResolution},
+                        {'usePreview': usePreview},
+                        {'previewWidth': previewWidth},
+                        {'previewHeight': previewHeight}])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -181,6 +219,8 @@ def generate_launch_description():
     
     ld.add_action(declare_base_frame_cmd)
     ld.add_action(declare_parent_frame_cmd)
+
+    ld.add_action(declare_publish_urdf_cmd)
     
     ld.add_action(declare_pos_x_cmd)
     ld.add_action(declare_pos_y_cmd)
@@ -194,6 +234,11 @@ def generate_launch_description():
     ld.add_action(declare_subpixel_cmd)
     ld.add_action(declare_confidence_cmd)
     ld.add_action(declare_LRchecktresh_cmd)
+
+    ld.add_action(declare_colorResolution_cmd)
+    ld.add_action(declare_usePreview_cmd)
+    ld.add_action(declare_previewWidth_cmd)
+    ld.add_action(declare_previewHeight_cmd)
 
     ld.add_action(rgb_stereo_node)
     ld.add_action(urdf_launch)
