@@ -110,6 +110,13 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         // This value was used during calibration
         camRgb->initialControl.setManualFocus(135);
         camRgb->isp.link(xoutRgb->input);
+        auto camControlIn = pipeline.create<dai::node::XLinkIn>();
+        camControlIn->setStreamName("control");
+        camControlIn->out.link(camRgb->inputControl);
+        auto camConfigIn = pipeline.create<dai::node::XLinkIn>();
+        camConfigIn->setStreamName("config");
+        camConfigIn->out.link(camRgb->inputConfig);
+
     } else {
         // Stereo imges
         auto xoutLeft = pipeline.create<dai::node::XLinkOut>();
@@ -143,6 +150,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 }
 
 int main(int argc, char** argv) {
+    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<START PROGRAM>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("stereo_inertial_node");
 
@@ -156,7 +164,7 @@ int main(int argc, char** argv) {
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
     node->declare_parameter("rectify", false);
-    node->declare_parameter("depth_aligned", false);
+    node->declare_parameter("depth_aligned", true);
     node->declare_parameter("stereo_fps", 30);
     node->declare_parameter("confidence", 200);
     node->declare_parameter("LRchecktresh", 5);
@@ -258,9 +266,11 @@ int main(int argc, char** argv) {
         createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
 
     std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>(pipeline);
-    cameraControl.setDevice(device);
-    cameraControl.setExposure();
-    cameraControl.setFocus();
+    if (enableDepth && depth_aligned) {
+        cameraControl.setDevice(device);
+        cameraControl.setExposure();
+        cameraControl.setFocus();
+    }
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
@@ -304,7 +314,7 @@ int main(int argc, char** argv) {
     }
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
-
+    bool startSpin = true;
     if(enableDepth) {
         auto depthCameraInfo =
             depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight) : rightCameraInfo;
@@ -334,7 +344,12 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
-            rclcpp::spin(node);
+            rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr exposureService =
+                node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_exposure", 
+                std::bind(&CameraControl::setExposureRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
+            rclcpp::Service<depthai_examples_interfaces::srv::SetFocus>::SharedPtr focusService =
+                node->create_service<depthai_examples_interfaces::srv::SetFocus>("set_camera_focus",
+                std::bind(&CameraControl::setFocusRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
             auto rightQueue = device->getOutputQueue("right", 30, false);
@@ -356,7 +371,6 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
-            rclcpp::spin(node);
         }
     } else {
         std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
@@ -385,7 +399,6 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
-            rclcpp::spin(node);
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
             auto rightQueue = device->getOutputQueue("right", 30, false);
@@ -407,15 +420,10 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
+            startSpin = false;
         }
-        rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr exposureService =
-            node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_exposure", 
-            std::bind(&CameraControl::setExposureRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
-        rclcpp::Service<depthai_examples_interfaces::srv::SetFocus>::SharedPtr focusService =
-            node->create_service<depthai_examples_interfaces::srv::SetFocus>("set_camera_focus",
-            std::bind(&CameraControl::setFocusRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
-        rclcpp::spin(node); 
+        if (startSpin)
+            rclcpp::spin(node);
     }
-
     return 0;
 }
