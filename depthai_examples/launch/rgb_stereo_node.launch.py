@@ -35,6 +35,7 @@ def generate_launch_description():
     LRchecktresh = LaunchConfiguration('LRchecktresh', default = 5)
 
     colorResolution = LaunchConfiguration('colorResolution', default = "1080p")
+    useVideo        = LaunchConfiguration('useVideo',        default = True)
     usePreview      = LaunchConfiguration('usePreview',      default = False)
     previewWidth    = LaunchConfiguration('previewWidth',    default = 300)
     previewHeight   = LaunchConfiguration('previewHeight',   default = 300)
@@ -61,7 +62,6 @@ def generate_launch_description():
 
     declare_publish_urdf_cmd = DeclareLaunchArgument(
         'publish_urdf',
-        choices=[True, False],
         default_value=publish_urdf,
         description='Whether to publish the urdf')
 
@@ -126,9 +126,13 @@ def generate_launch_description():
         default_value=colorResolution,
         description='The resolution of the color camera')
 
+    declare_useVideo_cmd = DeclareLaunchArgument(
+        'useVideo',
+        default_value=useVideo,
+        description='Whether to publish a video of color image')
+
     declare_usePreview_cmd = DeclareLaunchArgument(
         'usePreview',
-        choices=[True, False],
         default_value=usePreview,
         description='Whether to publish a preview of color image')
 
@@ -141,7 +145,7 @@ def generate_launch_description():
         'previewHeight',
         default_value=previewHeight,
         description='Height of preview image')
-    
+
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
                                     os.path.join(urdf_launch_dir, 'urdf_launch.py')),
@@ -167,6 +171,7 @@ def generate_launch_description():
                         {'confidence': confidence},
                         {'LRchecktresh': LRchecktresh},
                         {'colorResolution': colorResolution},
+                        {'useVideo': useVideo},
                         {'usePreview': usePreview},
                         {'previewWidth': previewWidth},
                         {'previewHeight': previewHeight}])
@@ -236,6 +241,7 @@ def generate_launch_description():
     ld.add_action(declare_LRchecktresh_cmd)
 
     ld.add_action(declare_colorResolution_cmd)
+    ld.add_action(declare_useVideo_cmd)
     ld.add_action(declare_usePreview_cmd)
     ld.add_action(declare_previewWidth_cmd)
     ld.add_action(declare_previewHeight_cmd)
