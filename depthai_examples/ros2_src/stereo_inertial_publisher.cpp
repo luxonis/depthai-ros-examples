@@ -410,14 +410,10 @@ int main(int argc, char** argv) {
         }
         rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr exposureService =
             node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_exposure", 
-            [&cameraControl](exp_req_msg request, exp_rep_msg response) {
-            cameraControl.setExposureRequest(request, response);
-            });
+            std::bind(&CameraControl::setExposureRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
         rclcpp::Service<depthai_examples_interfaces::srv::SetFocus>::SharedPtr focusService =
             node->create_service<depthai_examples_interfaces::srv::SetFocus>("set_camera_focus",
-            [&cameraControl](foc_req_msg request, foc_rep_msg response) {
-            cameraControl.setFocusRequest(request, response);
-        });
+            std::bind(&CameraControl::setFocusRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
         rclcpp::spin(node); 
     }
 
