@@ -87,25 +87,36 @@ class DepthPostProcessing {
     std::shared_ptr<dai::node::StereoDepth> _stereo;
 };
 
+struct ExposureParameters{
+    int compensation = 0;
+    int time_us = 8333;
+    int sensitivity_iso = 100;
+    bool auto_exposure = true;
+    std::array<int, 4> region = {0, 0, 0, 0};
+    std::string name;
+};
+
 class CameraControl {
     public:
-    // Exposure
+    CameraControl();
     void setDevice(std::shared_ptr<dai::Device> device);
+    // Exposure
+    ExposureParameters rgb, stereo;
     void setExposure();
-    bool auto_exposure = true;
-    std::array<int, 4> exposure_region = {0, 0, 0, 0};
-    int compensation = 0;
-    int exposure_time_us = 8333;
-    int sensitivity_iso = 100;
-    req_type setExposureRequest(exp_req_msg request, exp_rep_msg response);
+    req_type setRgbExposureRequest(exp_req_msg request, exp_rep_msg response);
+    req_type setStereoExposureRequest(exp_req_msg request, exp_rep_msg response);
+    void setRgbExposure(bool value);
     // Focus
     void setFocus();
     std::string focus_mode = "AUTO";
     std::array<int, 4> focus_region = {0, 0, 0, 0};
     req_type setFocusRequest(foc_req_msg request, foc_rep_msg response);
+
     private:
+    void setExposure(ExposureParameters exposure);
     dai::CameraControl::AutoFocusMode getFocusMode();
     std::shared_ptr<dai::Device> _device;
+    bool _exposure_rgb = false;
 };
 
 #endif

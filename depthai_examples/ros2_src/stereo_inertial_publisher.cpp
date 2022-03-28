@@ -93,7 +93,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     imu->enableIMUSensor({dai::IMUSensor::ROTATION_VECTOR, dai::IMUSensor::ACCELEROMETER_RAW, dai::IMUSensor::GYROSCOPE_RAW}, 400);
     imu->setMaxBatchReports(1);  // Get one message only for now.
 
-    if(enableDepth && depth_aligned) {
+    if(depth_aligned) {
         // RGB image
         auto camRgb = pipeline.create<dai::node::ColorCamera>();
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
@@ -110,12 +110,12 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         // This value was used during calibration
         camRgb->initialControl.setManualFocus(135);
         camRgb->isp.link(xoutRgb->input);
-        auto camControlIn = pipeline.create<dai::node::XLinkIn>();
-        camControlIn->setStreamName("control");
-        camControlIn->out.link(camRgb->inputControl);
-        auto camConfigIn = pipeline.create<dai::node::XLinkIn>();
-        camConfigIn->setStreamName("config");
-        camConfigIn->out.link(camRgb->inputConfig);
+        auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
+        rgbControlIn->setStreamName("control_rgb");
+        rgbControlIn->out.link(camRgb->inputControl);
+        auto rgbConfigIn = pipeline.create<dai::node::XLinkIn>();
+        rgbConfigIn->setStreamName("config_rgb");
+        rgbConfigIn->out.link(camRgb->inputConfig);
 
     } else {
         // Stereo imges
@@ -150,7 +150,6 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 }
 
 int main(int argc, char** argv) {
-    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<START PROGRAM>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("stereo_inertial_node");
 
@@ -192,14 +191,23 @@ int main(int argc, char** argv) {
     node->declare_parameter("decimation_factor", postProcessing.decimation_factor);
 
     CameraControl cameraControl;
-    node->declare_parameter("auto_exposure", cameraControl.auto_exposure);
-    node->declare_parameter("exposure_start_x", cameraControl.exposure_region.at(0));
-    node->declare_parameter("exposure_start_y", cameraControl.exposure_region.at(1));
-    node->declare_parameter("exposure_width", cameraControl.exposure_region.at(2));
-    node->declare_parameter("exposure_height", cameraControl.exposure_region.at(3));
-    node->declare_parameter("exposure_compensation", cameraControl.compensation);
-    node->declare_parameter("exposure_time_us", cameraControl.exposure_time_us);
-    node->declare_parameter("exposure_iso", cameraControl.sensitivity_iso);
+    node->declare_parameter("auto_exposure_rgb", cameraControl.rgb.auto_exposure);
+    node->declare_parameter("exposure_start_x_rgb", cameraControl.rgb.region.at(0));
+    node->declare_parameter("exposure_start_y_rgb", cameraControl.rgb.region.at(1));
+    node->declare_parameter("exposure_width_rgb", cameraControl.rgb.region.at(2));
+    node->declare_parameter("exposure_height_rgb", cameraControl.rgb.region.at(3));
+    node->declare_parameter("exposure_compensation_rgb", cameraControl.rgb.compensation);
+    node->declare_parameter("exposure_time_us_rgb", cameraControl.rgb.time_us);
+    node->declare_parameter("exposure_iso_rgb", cameraControl.rgb.sensitivity_iso);
+    
+    node->declare_parameter("auto_exposure_stereo", cameraControl.stereo.auto_exposure);
+    node->declare_parameter("exposure_start_x_stereo", cameraControl.stereo.region.at(0));
+    node->declare_parameter("exposure_start_y_stereo", cameraControl.stereo.region.at(1));
+    node->declare_parameter("exposure_width_stereo", cameraControl.stereo.region.at(2));
+    node->declare_parameter("exposure_height_stereo", cameraControl.stereo.region.at(3));
+    node->declare_parameter("exposure_compensation_stereo", cameraControl.stereo.compensation);
+    node->declare_parameter("exposure_time_us_stereo", cameraControl.stereo.time_us);
+    node->declare_parameter("exposure_iso_stereo", cameraControl.stereo.sensitivity_iso);
 
     node->declare_parameter("focus_mode", cameraControl.focus_mode);
     node->declare_parameter("focus_region_x", cameraControl.focus_region.at(0));
@@ -239,14 +247,23 @@ int main(int argc, char** argv) {
     node->get_parameter("decimation_mode", postProcessing.decimation_mode);
     node->get_parameter("decimation_factor", postProcessing.decimation_factor);
 
-    node->get_parameter("auto_exposure", cameraControl.auto_exposure);
-    node->get_parameter("exposure_start_x", cameraControl.exposure_region.at(0));
-    node->get_parameter("exposure_start_y", cameraControl.exposure_region.at(1));
-    node->get_parameter("exposure_width", cameraControl.exposure_region.at(2));
-    node->get_parameter("exposure_height", cameraControl.exposure_region.at(3));
-    node->get_parameter("exposure_compensation", cameraControl.compensation);
-    node->get_parameter("exposure_time_us", cameraControl.exposure_time_us);
-    node->get_parameter("exposure_iso", cameraControl.sensitivity_iso);
+    node->get_parameter("auto_exposure_rgb", cameraControl.rgb.auto_exposure);
+    node->get_parameter("exposure_start_x_rgb", cameraControl.rgb.region.at(0));
+    node->get_parameter("exposure_start_y_rgb", cameraControl.rgb.region.at(1));
+    node->get_parameter("exposure_width_rgb", cameraControl.rgb.region.at(2));
+    node->get_parameter("exposure_height_rgb", cameraControl.rgb.region.at(3));
+    node->get_parameter("exposure_compensation_rgb", cameraControl.rgb.compensation);
+    node->get_parameter("exposure_time_us_rgb", cameraControl.rgb.time_us);
+    node->get_parameter("exposure_iso_rgb", cameraControl.rgb.sensitivity_iso);
+    
+    node->get_parameter("auto_exposure_stereo", cameraControl.stereo.auto_exposure);
+    node->get_parameter("exposure_start_x_stereo", cameraControl.stereo.region.at(0));
+    node->get_parameter("exposure_start_y_stereo", cameraControl.stereo.region.at(1));
+    node->get_parameter("exposure_width_stereo", cameraControl.stereo.region.at(2));
+    node->get_parameter("exposure_height_stereo", cameraControl.stereo.region.at(3));
+    node->get_parameter("exposure_compensation_stereo", cameraControl.stereo.compensation);
+    node->get_parameter("exposure_time_us_stereo", cameraControl.stereo.time_us);
+    node->get_parameter("exposure_iso_stereo", cameraControl.stereo.sensitivity_iso);
 
     node->get_parameter("focus_mode", cameraControl.focus_mode);
     node->get_parameter("focus_region_x", cameraControl.focus_region.at(0));
@@ -345,8 +362,8 @@ int main(int argc, char** argv) {
                 "color");
             rgbPublish.addPublisherCallback();
             rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr exposureService =
-                node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_camera_exposure", 
-                std::bind(&CameraControl::setExposureRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
+                node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_rgb_exposure", 
+                std::bind(&CameraControl::setRgbExposureRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
             rclcpp::Service<depthai_examples_interfaces::srv::SetFocus>::SharedPtr focusService =
                 node->create_service<depthai_examples_interfaces::srv::SetFocus>("set_camera_focus",
                 std::bind(&CameraControl::setFocusRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));

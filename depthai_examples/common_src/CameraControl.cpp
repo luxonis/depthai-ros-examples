@@ -1,22 +1,37 @@
 #include "common.hpp"
 
+CameraControl::CameraControl() {
+    rgb.name = "rgb";
+    stereo.name = "stereo";
+}
+
+void CameraControl::setRgbExposure(bool value){
+    _exposure_rgb = value;
+}
+
 void CameraControl::setExposure() {
-    auto controlQueue = _device->getInputQueue("control");
-    auto configQueue = _device->getInputQueue("config");
+    setExposure(stereo);
+    if (_exposure_rgb)
+        setExposure(rgb);
+}
+
+void CameraControl::setExposure(ExposureParameters exposure) {
+    auto controlQueue = _device->getInputQueue("control_" + exposure.name);
+    auto configQueue = _device->getInputQueue("config_" + exposure.name);
     dai::CameraControl ctrl;
-    if(auto_exposure) {
+    if(exposure.auto_exposure) {
         ctrl.setAutoExposureEnable();
     } else {
-        if(exposure_region.at(2) != 0 || exposure_region.at(3) != 0) {
+        if(exposure.region.at(2) != 0 || exposure.region.at(3) != 0) {
             dai::ImageManipConfig cfg;
-            cfg.setCropRect(exposure_region.at(0), exposure_region.at(1), exposure_region.at(2), exposure_region.at(3));
+            cfg.setCropRect(exposure.region.at(0), exposure.region.at(1), exposure.region.at(2), exposure.region.at(3));
             configQueue->send(cfg);
         }
         else {
-            ctrl.setManualExposure(exposure_time_us, sensitivity_iso);
+            ctrl.setManualExposure(exposure.time_us, exposure.sensitivity_iso);
         }
     }
-    ctrl.setAutoExposureCompensation(compensation);
+    ctrl.setAutoExposureCompensation(exposure.compensation);
     controlQueue->send(ctrl);
 }
 
@@ -56,16 +71,31 @@ void CameraControl::setFocus() {
     controlQueue->send(ctrl);
 }
 
-req_type CameraControl::setExposureRequest(exp_req_msg request, exp_rep_msg response) {
-    auto_exposure = req_get(auto_exposure);
-    exposure_region.at(0) = req_get(exposure_x);
-    exposure_region.at(1) = req_get(exposure_y);
-    exposure_region.at(2) = req_get(exposure_width);
-    exposure_region.at(3) = req_get(exposure_height);
-    compensation = req_get(compensation);
-    exposure_time_us = req_get(exposure_time_us);
-    sensitivity_iso = req_get(sensitivity_iso);
-    setExposure();
+req_type CameraControl::setRgbExposureRequest(exp_req_msg request, exp_rep_msg response) {
+    rgb.auto_exposure = req_get(auto_exposure);
+    rgb.region.at(0) = req_get(exposure_x);
+    rgb.region.at(1) = req_get(exposure_y);
+    rgb.region.at(2) = req_get(exposure_width);
+    rgb.region.at(3) = req_get(exposure_height);
+    rgb.compensation = req_get(compensation);
+    rgb.time_us = req_get(exposure_time_us);
+    rgb.sensitivity_iso = req_get(sensitivity_iso);
+    setExposure(rgb);
+    rep_get(success) = true;
+    bool result = true;
+    return (req_type)result;
+}
+
+req_type CameraControl::setStereoExposureRequest(exp_req_msg request, exp_rep_msg response) {
+    stereo.auto_exposure = req_get(auto_exposure);
+    stereo.region.at(0) = req_get(exposure_x);
+    stereo.region.at(1) = req_get(exposure_y);
+    stereo.region.at(2) = req_get(exposure_width);
+    stereo.region.at(3) = req_get(exposure_height);
+    stereo.compensation = req_get(compensation);
+    stereo.time_us = req_get(exposure_time_us);
+    stereo.sensitivity_iso = req_get(sensitivity_iso);
+    setExposure(rgb);
     rep_get(success) = true;
     bool result = true;
     return (req_type)result;
