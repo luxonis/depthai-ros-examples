@@ -137,6 +137,14 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
+    auto stereoControlIn = pipeline.create<dai::node::XLinkIn>();
+    stereoControlIn->setStreamName("control_stereo");
+    stereoControlIn->out.link(monoLeft->inputControl);
+    stereoControlIn->out.link(monoRight->inputControl);
+    auto stereoConfigIn = pipeline.create<dai::node::XLinkIn>();
+    stereoConfigIn->setStreamName("config_stereo");
+    stereoConfigIn->out.link(stereo->inputConfig);
+    // stereoConfigIn->out.link(monoRight->inputConfig);
 
     if(enableDepth) {
         stereo->depth.link(xoutDepth->input);

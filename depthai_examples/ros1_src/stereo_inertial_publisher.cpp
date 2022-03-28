@@ -100,7 +100,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     imu->enableIMUSensor({dai::IMUSensor::ROTATION_VECTOR, dai::IMUSensor::ACCELEROMETER_RAW, dai::IMUSensor::GYROSCOPE_RAW}, 400);
     imu->setMaxBatchReports(1);  // Get one message only for now.
 
-    if(enableDepth && depth_aligned) {
+    if(depth_aligned) {
         // RGB image
         auto camRgb = pipeline.create<dai::node::ColorCamera>();
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
@@ -118,6 +118,12 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         // This value was used during calibration
         // camRgb->initialControl.setManualFocus(135);
         camRgb->isp.link(xoutRgb->input);
+        auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
+        rgbControlIn->setStreamName("control_rgb");
+        rgbControlIn->out.link(camRgb->inputControl);
+        auto rgbConfigIn = pipeline.create<dai::node::XLinkIn>();
+        rgbConfigIn->setStreamName("config_rgb");
+        rgbConfigIn->out.link(camRgb->inputConfig);
     } else {
         // Stereo imges
         auto xoutLeft = pipeline.create<dai::node::XLinkOut>();
@@ -135,9 +141,16 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     }
 
     // Link plugins CAM -> STEREO -> XLINK
-
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
+    auto stereoControlIn = pipeline.create<dai::node::XLinkIn>();
+    stereoControlIn->setStreamName("control_stereo");
+    stereoControlIn->out.link(monoLeft->inputControl);
+    stereoControlIn->out.link(monoRight->inputControl);
+    auto stereoConfigIn = pipeline.create<dai::node::XLinkIn>();
+    stereoConfigIn->setStreamName("config_stereo");
+    stereoConfigIn->out.link(stereo->inputConfig);
+    // stereoConfigIn->out.link(monoRight->inputConfig);
 
     if(enableDepth) {
         stereo->depth.link(xoutDepth->input);
@@ -193,14 +206,23 @@ int main(int argc, char** argv) {
     getParamWithWarning(pnh, "decimation_factor", postProcessing.decimation_factor);
 
     CameraControl cameraControl;
-    getParamWithWarning(pnh, "auto_exposure", cameraControl.auto_exposure);
-    getParamWithWarning(pnh, "exposure_start_x", cameraControl.exposure_region.at(0));
-    getParamWithWarning(pnh, "exposure_start_y", cameraControl.exposure_region.at(1));
-    getParamWithWarning(pnh, "exposure_width", cameraControl.exposure_region.at(2));
-    getParamWithWarning(pnh, "exposure_height", cameraControl.exposure_region.at(3));
-    getParamWithWarning(pnh, "exposure_compensation", cameraControl.compensation);
-    getParamWithWarning(pnh, "exposure_time_us", cameraControl.exposure_time_us);
-    getParamWithWarning(pnh, "exposure_iso", cameraControl.sensitivity_iso);
+    getParamWithWarning(pnh, "auto_exposure_rgb", cameraControl.rgb.auto_exposure);
+    getParamWithWarning(pnh, "exposure_start_x_rgb", cameraControl.rgb.region.at(0));
+    getParamWithWarning(pnh, "exposure_start_y_rgb", cameraControl.rgb.region.at(1));
+    getParamWithWarning(pnh, "exposure_width_rgb", cameraControl.rgb.region.at(2));
+    getParamWithWarning(pnh, "exposure_height_rgb", cameraControl.rgb.region.at(3));
+    getParamWithWarning(pnh, "exposure_compensation_rgb", cameraControl.rgb.compensation);
+    getParamWithWarning(pnh, "exposure_time_us_rgb", cameraControl.rgb.time_us);
+    getParamWithWarning(pnh, "exposure_iso_rgb", cameraControl.rgb.sensitivity_iso);
+
+    getParamWithWarning(pnh, "auto_exposure_stereo", cameraControl.stereo.auto_exposure);
+    getParamWithWarning(pnh, "exposure_start_x_stereo", cameraControl.stereo.region.at(0));
+    getParamWithWarning(pnh, "exposure_start_y_stereo", cameraControl.stereo.region.at(1));
+    getParamWithWarning(pnh, "exposure_width_stereo", cameraControl.stereo.region.at(2));
+    getParamWithWarning(pnh, "exposure_height_stereo", cameraControl.stereo.region.at(3));
+    getParamWithWarning(pnh, "exposure_compensation_stereo", cameraControl.stereo.compensation);
+    getParamWithWarning(pnh, "exposure_time_us_stereo", cameraControl.stereo.time_us);
+    getParamWithWarning(pnh, "exposure_iso_stereo", cameraControl.stereo.sensitivity_iso);
 
     getParamWithWarning(pnh, "focus_mode", cameraControl.focus_mode);
     getParamWithWarning(pnh, "focus_region_x", cameraControl.focus_region.at(0));
@@ -369,7 +391,7 @@ int main(int argc, char** argv) {
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
         }
-        ros::ServiceServer exposureService = pnh.advertiseService("setExposure", &CameraControl::setExposureRequest, &cameraControl);
+        ros::ServiceServer exposureService = pnh.advertiseService("setExposure", &CameraControl::setRgbExposureRequest, &cameraControl);
         ros::ServiceServer focusService = pnh.advertiseService("setFocus", &CameraControl::setFocusRequest, &cameraControl);
         ros::spin();
     }
