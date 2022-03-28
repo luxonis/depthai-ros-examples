@@ -37,6 +37,7 @@ def generate_launch_description():
     colorResolution = LaunchConfiguration('colorResolution', default = "1080p")
     useVideo        = LaunchConfiguration('useVideo',        default = True)
     usePreview      = LaunchConfiguration('usePreview',      default = False)
+    useDepth        = LaunchConfiguration('useDepth',        default = True)
     previewWidth    = LaunchConfiguration('previewWidth',    default = 300)
     previewHeight   = LaunchConfiguration('previewHeight',   default = 300)
 
@@ -109,12 +110,12 @@ def generate_launch_description():
         'subpixel',
         default_value=subpixel,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
-    
+
     declare_confidence_cmd = DeclareLaunchArgument(
         'confidence',
         default_value=confidence,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
-    
+
     declare_LRchecktresh_cmd = DeclareLaunchArgument(
         'LRchecktresh',
         default_value=LRchecktresh,
@@ -135,6 +136,11 @@ def generate_launch_description():
         'usePreview',
         default_value=usePreview,
         description='Whether to publish a preview of color image')
+
+    declare_useDepth_cmd = DeclareLaunchArgument(
+        'useDepth',
+        default_value=useDepth,
+        description='Whether to publish the depth image')
 
     declare_previewWidth_cmd = DeclareLaunchArgument(
         'previewWidth',
@@ -173,6 +179,7 @@ def generate_launch_description():
                         {'colorResolution': colorResolution},
                         {'useVideo': useVideo},
                         {'usePreview': usePreview},
+                        {'useDepth': useDepth},
                         {'previewWidth': previewWidth},
                         {'previewHeight': previewHeight}])
 
@@ -221,12 +228,12 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(declare_tf_prefix_cmd)
     ld.add_action(declare_camera_model_cmd)
-    
+
     ld.add_action(declare_base_frame_cmd)
     ld.add_action(declare_parent_frame_cmd)
 
     ld.add_action(declare_publish_urdf_cmd)
-    
+
     ld.add_action(declare_pos_x_cmd)
     ld.add_action(declare_pos_y_cmd)
     ld.add_action(declare_pos_z_cmd)
@@ -243,6 +250,7 @@ def generate_launch_description():
     ld.add_action(declare_colorResolution_cmd)
     ld.add_action(declare_useVideo_cmd)
     ld.add_action(declare_usePreview_cmd)
+    ld.add_action(declare_useDepth_cmd)
     ld.add_action(declare_previewWidth_cmd)
     ld.add_action(declare_previewHeight_cmd)
 

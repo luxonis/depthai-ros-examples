@@ -118,7 +118,8 @@ int main(int argc, char** argv){
     auto node = rclcpp::Node::make_shared("rgb_stereo_node");
     
     std::string tfPrefix, monoResolution, colorResolution;
-    bool lrcheck, extended, subpixel, useVideo, usePreview;
+    bool lrcheck, extended, subpixel;
+    bool useVideo, usePreview, useDepth;
     int confidence, LRchecktresh, previewWidth, previewHeight;
 
     node->declare_parameter("tf_prefix", "oak");
@@ -131,6 +132,7 @@ int main(int argc, char** argv){
     node->declare_parameter("colorResolution", "1080p");
     node->declare_parameter("useVideo", true);
     node->declare_parameter("usePreview", false);
+    node->declare_parameter("useDepth", true);
     node->declare_parameter("previewWidth", 300);
     node->declare_parameter("previewHeight", 300);
 
@@ -144,6 +146,7 @@ int main(int argc, char** argv){
     node->get_parameter("colorResolution", colorResolution);
     node->get_parameter("useVideo", useVideo);
     node->get_parameter("usePreview", usePreview);
+    node->get_parameter("useDepth", useDepth);
     node->get_parameter("previewWidth", previewWidth);
     node->get_parameter("previewHeight", previewHeight);
 
@@ -179,13 +182,17 @@ int main(int argc, char** argv){
         monoHeight = 480;
     }
 
+    std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>> depthPublish, rgbPreviewPublish, rgbPublish;
+
     dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", true);
 
     auto stereoCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight); 
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
+    if(useDepth)
+    {
+        depthPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>>(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -196,8 +203,11 @@ int main(int argc, char** argv){
                                                                                      30,
                                                                                      stereoCameraInfo,
                                                                                      "stereo");
+    }
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPreviewPublish(previewQueue,
+    if(usePreview)
+    {
+        rgbPreviewPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>>(previewQueue,
                                                                             node, 
                                                                             std::string("color/preview"),
                                                                             std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -208,7 +218,11 @@ int main(int argc, char** argv){
                                                                             30,
                                                                             rgbCameraInfo,
                                                                             "color");
-    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(videoQueue,
+    }
+
+    if(useVideo)
+    {
+        rgbPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>>(videoQueue,
                                                                                 node, 
                                                                                 std::string("color/image"),
                                                                                 std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -219,18 +233,22 @@ int main(int argc, char** argv){
                                                                                 30,
                                                                                 rgbCameraInfo,
                                                                                 "color");
+    }
+
+    if(useDepth)
+    {
+        depthPublish->addPublisherCallback(); // addPublisherCallback works only when the dataqueue is non blocking.
+    }
 
     if(usePreview)
     {
-        rgbPreviewPublish.addPublisherCallback();
+        rgbPreviewPublish->addPublisherCallback();
     }
 
     if(useVideo)
     {
-        rgbPublish.addPublisherCallback();
+        rgbPublish->addPublisherCallback();
     }
-
-    depthPublish.addPublisherCallback(); // addPublisherCallback works only when the dataqueue is non blocking.
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
