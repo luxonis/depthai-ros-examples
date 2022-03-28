@@ -1,3 +1,4 @@
+
 #include <camera_info_manager/camera_info_manager.hpp>
 #include <cstdio>
 #include <functional>
@@ -90,8 +91,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
-    imu->enableIMUSensor({dai::IMUSensor::ROTATION_VECTOR, dai::IMUSensor::ACCELEROMETER_RAW, dai::IMUSensor::GYROSCOPE_RAW}, 400);
-    imu->setMaxBatchReports(1);  // Get one message only for now.
+    imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
+    imu->enableIMUSensor(dai::IMUSensor::GYROSCOPE_RAW, 400);
+    imu->setBatchReportThreshold(5);
+    imu->setMaxBatchReports(20);  // Get one message only for now.
 
     if(depth_aligned) {
         // RGB image
@@ -108,7 +111,6 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             camRgb->setIspScale(2, 3);
         }  // For now, RGB needs fixed focus to properly align with depth.
         // This value was used during calibration
-        camRgb->initialControl.setManualFocus(135);
         camRgb->isp.link(xoutRgb->input);
         auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
         rgbControlIn->setStreamName("control_rgb");
@@ -161,21 +163,10 @@ int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("stereo_inertial_node");
 
-    std::string tfPrefix, mode, monoResolution;
-    int badParams = 0, stereo_fps, confidence, LRchecktresh;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
-
-    node->declare_parameter("tf_prefix", "oak");
-    node->declare_parameter("mode", "depth");
-    node->declare_parameter("lrcheck", true);
-    node->declare_parameter("extended", false);
-    node->declare_parameter("subpixel", true);
-    node->declare_parameter("rectify", false);
-    node->declare_parameter("depth_aligned", true);
-    node->declare_parameter("stereo_fps", 30);
-    node->declare_parameter("confidence", 200);
-    node->declare_parameter("LRchecktresh", 5);
-    node->declare_parameter("monoResolution", "720p");
+    std::string tfPrefix = "oak", mode = "depth", monoResolution = "720p";
+    int badParams = 0, stereo_fps = 30, confidence = 200, LRchecktresh = 5, imuModeParam = 1;
+    bool lrcheck = true, extended = false, subpixel = true, enableDepth, rectify = false, depth_aligned = true;
+    float angularVelCovariance = 0.02, linearAccelCovariance = 0.0;
 
     DepthPostProcessing postProcessing;
     node->declare_parameter("median_enable", postProcessing.median_enable);
@@ -222,7 +213,6 @@ int main(int argc, char** argv) {
     node->declare_parameter("focus_region_y", cameraControl.focus_region.at(1));
     node->declare_parameter("focus_region_width", cameraControl.focus_region.at(2));
     node->declare_parameter("focus_region_height", cameraControl.focus_region.at(3));
-
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("mode", mode);
     node->get_parameter("lrcheck", lrcheck);
@@ -234,6 +224,9 @@ int main(int argc, char** argv) {
     node->get_parameter("confidence", confidence);
     node->get_parameter("LRchecktresh", LRchecktresh);
     node->get_parameter("monoResolution", monoResolution);
+    node->get_parameter("imuMode", imuModeParam);
+    node->get_parameter("angularVelCovariance", angularVelCovariance);
+    node->get_parameter("linearAccelCovariance", linearAccelCovariance);
 
     node->get_parameter("median_enable", postProcessing.median_enable);
     node->get_parameter("median_mode", postProcessing.median_mode);
@@ -285,6 +278,7 @@ int main(int argc, char** argv) {
         enableDepth = false;
     }
 
+    dai::ros::ImuSyncMethod imuMode = static_cast<dai::ros::ImuSyncMethod>(imuModeParam);
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
     std::tie(pipeline, monoWidth, monoHeight) =
@@ -299,11 +293,11 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
-        stereoQueue = device->getOutputQueue("depth", 30, false);
+        stereoQueue = device.getOutputQueue("depth", 30, false);
     } else {
-        stereoQueue = device->getOutputQueue("disparity", 30, false);
+        stereoQueue = device.getOutputQueue("disparity", 30, false);
     }
-    auto imuQueue = device->getOutputQueue("imu", 30, false);
+    auto imuQueue = device.getOutputQueue("imu", 30, false);
 
     auto calibrationHandler = device->readCalibration();
 
@@ -320,7 +314,7 @@ int main(int argc, char** argv) {
     const std::string leftPubName = rectify ? std::string("left/image_rect") : std::string("left/image_raw");
     const std::string rightPubName = rectify ? std::string("right/image_rect") : std::string("right/image_raw");
 
-    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame");
+    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame", imuMode, linearAccelCovariance, angularVelCovariance);
 
     dai::rosBridge::BridgePublisher<sensor_msgs::msg::Imu, dai::IMUData> ImuPublish(
         imuQueue,
@@ -339,7 +333,6 @@ int main(int argc, char** argv) {
     }
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
-    bool startSpin = true;
     if(enableDepth) {
         auto depthCameraInfo =
             depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight) : rightCameraInfo;
@@ -359,7 +352,7 @@ int main(int argc, char** argv) {
         depthPublish.addPublisherCallback();
 
         if(depth_aligned) {
-            auto imgQueue = device->getOutputQueue("rgb", 30, false);
+            auto imgQueue = device.getOutputQueue("rgb", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
                 node,
@@ -375,6 +368,7 @@ int main(int argc, char** argv) {
             rclcpp::Service<depthai_examples_interfaces::srv::SetFocus>::SharedPtr focusService =
                 node->create_service<depthai_examples_interfaces::srv::SetFocus>("set_camera_focus",
                 std::bind(&CameraControl::setFocusRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
+            rclcpp::spin(node);
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
             auto rightQueue = device->getOutputQueue("right", 30, false);
@@ -413,7 +407,7 @@ int main(int argc, char** argv) {
             "stereo");
         dispPublish.addPublisherCallback();
         if(depth_aligned) {
-            auto imgQueue = device->getOutputQueue("rgb", 30, false);
+            auto imgQueue = device.getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
             dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
@@ -424,9 +418,10 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
+            rclcpp::spin(node);
         } else {
-            auto leftQueue = device->getOutputQueue("left", 30, false);
-            auto rightQueue = device->getOutputQueue("right", 30, false);
+            auto leftQueue = device.getOutputQueue("left", 30, false);
+            auto rightQueue = device.getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 node,
@@ -447,8 +442,6 @@ int main(int argc, char** argv) {
             leftPublish.addPublisherCallback();
             startSpin = false;
         }
-        if (startSpin)
-            rclcpp::spin(node);
     }
     return 0;
 }

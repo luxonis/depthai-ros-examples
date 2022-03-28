@@ -182,17 +182,14 @@ int main(int argc, char** argv) {
         "color");
 
     dai::rosBridge::SpatialDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 416, 416, false);
-    dai::rosBridge::BridgePublisher<depthai_ros_msgs::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(
-        detectionQueue,
-        pnh,
-        std::string("color/yolov4_Spatial_detections"),
-        std::bind(
-            static_cast<void (dai::rosBridge::SpatialDetectionConverter::*)(
-                std::shared_ptr<dai::SpatialImgDetections>, depthai_ros_msgs::SpatialDetectionArray&)>(&dai::rosBridge::SpatialDetectionConverter::toRosMsg),
-            &detConverter,
-            std::placeholders::_1,
-            std::placeholders::_2),
-        30);
+    dai::rosBridge::BridgePublisher<depthai_ros_msgs::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(detectionQueue,
+                                                                                                         pnh, 
+                                                                                                         std::string("color/yolov4_Spatial_detections"),
+                                                                                                         std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, 
+                                                                                                         &detConverter,
+                                                                                                         std::placeholders::_1, 
+                                                                                                         std::placeholders::_2) , 
+                                                                                                         30);
 
     dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
     auto rightCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, width, height);

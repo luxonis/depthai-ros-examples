@@ -92,16 +92,14 @@ int main(int argc, char** argv) {
                                                                                        "color");
 
     dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 300, 300, false);
-    dai::rosBridge::BridgePublisher<vision_msgs::msg::Detection2DArray, dai::ImgDetections> detectionPublish(
-        nNetDataQueue,
-        node,
-        std::string("color/mobilenet_detections"),
-        std::bind(static_cast<void (dai::rosBridge::ImgDetectionConverter::*)(std::shared_ptr<dai::ImgDetections>, vision_msgs::msg::Detection2DArray&)>(
-                      &dai::rosBridge::ImgDetectionConverter::toRosMsg),
-                  &detConverter,
-                  std::placeholders::_1,
-                  std::placeholders::_2),
-        30);
+    dai::rosBridge::BridgePublisher<vision_msgs::msg::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueue,
+                                                                                                         node, 
+                                                                                                         std::string("color/mobilenet_detections"),
+                                                                                                         std::bind(&dai::rosBridge::ImgDetectionConverter::toRosMsg, 
+                                                                                                         &detConverter,
+                                                                                                         std::placeholders::_1, 
+                                                                                                         std::placeholders::_2), 
+                                                                                                         30);
 
     detectionPublish.addPublisherCallback();
     rgbPublish.addPublisherCallback();  // addPublisherCallback works only when the dataqueue is non blocking.

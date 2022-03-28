@@ -5,7 +5,8 @@
     <arg name="tf_prefix"            default="oak"         />
     <arg name="mode"                 default="depth"       />
     <arg name="base_frame"           default="oak-d_frame" />
-    <arg name="parent_frame"         default="oak-d-base-frame" />
+    <arg name="parent_frame"         default="oak-d-base-frame" /> 
+    <arg name="imuMode"              default="1" />   <!-- 0 -> COPY, 1 -> LINEAR_INTERPOLATE_GYRO, 2 -> LINEAR_INTERPOLATE_ACCEL -->
 
     <arg name="cam_pos_x"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
     <arg name="cam_pos_y"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
@@ -24,6 +25,8 @@
     <arg name="confidence"            default="200"        />
     <arg name="LRchecktresh"          default="5"          />
     <arg name="monoResolution"        default="720p"       /> 
+    <arg name="angularVelCovariance"  default="0"       /> 
+    <arg name="linearAccelCovariance" default="0"       /> 
 
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -40,18 +43,46 @@
 
     <!-- launch-prefix="xterm -e gdb (add [- - args] without space) -->
     <node name="stereo_inertial_publisher" pkg="depthai_examples" type="stereo_inertial_node" output="screen" required="true">
-        <param name="tf_prefix"      value="$(arg tf_prefix)"/>
-        <param name="mode"           value="$(arg mode)"/>
-        <param name="lrcheck"        value="$(arg lrcheck)"/>
-        <param name="extended"       value="$(arg extended)"/>
-        <param name="subpixel"       value="$(arg subpixel)"/>
-        <param name="rectify"        value="$(arg rectify)" />
-        <param name="depth_aligned"  value="$(arg depth_aligned)" />
-        <param name="stereo_fps"     value="$(arg stereo_fps)" />
-        <param name="confidence"     value="$(arg confidence)" />
-        <param name="LRchecktresh"   value="$(arg LRchecktresh)" />
-        <param name="monoResolution" value="$(arg monoResolution)" />
+        <param name="tf_prefix"             value="$(arg tf_prefix)"/>
+        <param name="mode"                  value="$(arg mode)"/>
+        <param name="imuMode"               value="$(arg imuMode)"/>
+        <param name="lrcheck"               value="$(arg lrcheck)"/>
+        <param name="extended"              value="$(arg extended)"/>
+        <param name="subpixel"              value="$(arg subpixel)"/>
+        <param name="rectify"               value="$(arg rectify)" />
+        <param name="depth_aligned"         value="$(arg depth_aligned)" />
+        <param name="stereo_fps"            value="$(arg stereo_fps)" />
+        <param name="confidence"            value="$(arg confidence)" />
+        <param name="LRchecktresh"          value="$(arg LRchecktresh)" />
+        <param name="monoResolution"        value="$(arg monoResolution)" />
+        <param name="angularVelCovariance"  value="$(arg angularVelCovariance)" />
+        <param name="linearAccelCovariance" value="$(arg linearAccelCovariance)" />
     </node>            
+
+    <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>
+
+    <node pkg="nodelet" type="nodelet" name="depth_image_convertion_nodelet"
+        args="load depth_image_proc/convert_metric nodelet_manager">
+        <remap from="image_raw" to="/stereo_inertial_publisher/stereo/depth"/>    
+        <remap from="image" to="/stereo_inertial_publisher/stereo/image"/>
+    </node>
+
+
+    <node if="$(eval arg('depth_aligned') == true)" pkg="nodelet" type="nodelet" name="depth_image_to_rgb_pointcloud"
+        args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager">
+        <remap from="rgb/camera_info" to="/stereo_inertial_publisher/color/camera_info"/>
+        <remap from="rgb/image_rect_color" to="/stereo_inertial_publisher/color/image"/>
+        <remap from="depth_registered/image_rect" to="/stereo_inertial_publisher/stereo/image"/>    
+        <remap from="depth_registered/points" to="/stereo_inertial_publisher/stereo/points"/>
+    </node>
+
+    <node if="$(eval arg('depth_aligned') == false)" pkg="nodelet" type="nodelet" name="depth_image_to_pointcloud"
+        args="load depth_image_proc/point_cloud_xyz nodelet_manager">
+        <remap from="camera_info" to="/stereo_inertial_publisher/stereo/camera_info"/>
+        <remap from="image_rect" to="/stereo_inertial_publisher/stereo/image"/>    
+        <remap from="points" to="/stereo_inertial_publisher/stereo/points"/>
+    </node>
+
 
   <node if="$(eval arg('depth_aligned') == true)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialDepthAlign.rviz" />
   <node if="$(eval arg('depth_aligned') == false)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialROS1.rviz" />

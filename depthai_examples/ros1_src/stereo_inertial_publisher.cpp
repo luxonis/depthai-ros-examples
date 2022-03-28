@@ -1,9 +1,11 @@
 #include <camera_info_manager/camera_info_manager.h>
 
+// #include <memory>
+#include <camera_info_manager/camera_info_manager.h>
+
 #include <cstdio>
 #include <functional>
 #include <iostream>
-#include <memory>
 #include <tuple>
 
 #include "ros/ros.h"
@@ -97,8 +99,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
-    imu->enableIMUSensor({dai::IMUSensor::ROTATION_VECTOR, dai::IMUSensor::ACCELEROMETER_RAW, dai::IMUSensor::GYROSCOPE_RAW}, 400);
-    imu->setMaxBatchReports(1);  // Get one message only for now.
+    imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
+    imu->enableIMUSensor(dai::IMUSensor::GYROSCOPE_RAW, 400);
+    imu->setBatchReportThreshold(5);
+    imu->setMaxBatchReports(20);  // Get one message only for now.
 
     if(depth_aligned) {
         // RGB image
@@ -114,9 +118,6 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         } else {
             camRgb->setIspScale(2, 3);
         }
-        // For now, RGB needs fixed focus to properly align with depth.
-        // This value was used during calibration
-        // camRgb->initialControl.setManualFocus(135);
         camRgb->isp.link(xoutRgb->input);
         auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
         rgbControlIn->setStreamName("control_rgb");
@@ -237,6 +238,8 @@ int main(int argc, char** argv) {
         enableDepth = false;
     }
 
+    dai::ros::ImuSyncMethod imuMode = static_cast<dai::ros::ImuSyncMethod>(imuModeParam);
+
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
     std::tie(pipeline, monoWidth, monoHeight) =
@@ -249,11 +252,11 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
-        stereoQueue = device->getOutputQueue("depth", 30, false);
+        stereoQueue = device.getOutputQueue("depth", 30, false);
     } else {
-        stereoQueue = device->getOutputQueue("disparity", 30, false);
+        stereoQueue = device.getOutputQueue("disparity", 30, false);
     }
-    auto imuQueue = device->getOutputQueue("imu", 30, false);
+    auto imuQueue = device.getOutputQueue("imu", 30, false);
 
     auto calibrationHandler = device->readCalibration();
 
@@ -270,7 +273,7 @@ int main(int argc, char** argv) {
     const std::string leftPubName = rectify ? std::string("left/image_rect") : std::string("left/image_raw");
     const std::string rightPubName = rectify ? std::string("right/image_rect") : std::string("right/image_raw");
 
-    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame");
+    dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame", imuMode, linearAccelCovariance, angularVelCovariance);
 
     dai::rosBridge::BridgePublisher<sensor_msgs::Imu, dai::IMUData> ImuPublish(
         imuQueue,
@@ -310,7 +313,7 @@ int main(int argc, char** argv) {
         depthPublish.addPublisherCallback();
 
         if(depth_aligned) {
-            auto imgQueue = device->getOutputQueue("rgb", 30, false);
+            auto imgQueue = device.getOutputQueue("rgb", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
                 pnh,
@@ -320,9 +323,10 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
+            ros::spin();
         } else {
-            auto leftQueue = device->getOutputQueue("left", 30, false);
-            auto rightQueue = device->getOutputQueue("right", 30, false);
+            auto leftQueue = device.getOutputQueue("left", 30, false);
+            auto rightQueue = device.getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 pnh,
@@ -358,7 +362,7 @@ int main(int argc, char** argv) {
             "stereo");
         dispPublish.addPublisherCallback();
         if(depth_aligned) {
-            auto imgQueue = device->getOutputQueue("rgb", 30, false);
+            auto imgQueue = device.getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
@@ -369,9 +373,10 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
+            ros::spin();
         } else {
-            auto leftQueue = device->getOutputQueue("left", 30, false);
-            auto rightQueue = device->getOutputQueue("right", 30, false);
+            auto leftQueue = device.getOutputQueue("left", 30, false);
+            auto rightQueue = device.getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 pnh,
