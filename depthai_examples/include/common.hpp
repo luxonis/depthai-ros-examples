@@ -8,7 +8,6 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/DisparityConverter.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
-#include <depthai_bridge/ImuConverter.hpp>
 #include "depthai/depthai.hpp"
 
 #ifndef IS_ROS2

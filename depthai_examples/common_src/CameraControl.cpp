@@ -71,6 +71,12 @@ void CameraControl::setFocus() {
     controlQueue->send(ctrl);
 }
 
+int clamp(int v, int min, int max) {
+    if (v < min) return min;
+    if (v > max) return max;
+    return v;
+}
+
 req_type CameraControl::setRgbExposureRequest(exp_req_msg request, exp_rep_msg response) {
     rgb.auto_exposure = req_get(auto_exposure);
     rgb.region.at(0) = req_get(exposure_x);
@@ -78,8 +84,8 @@ req_type CameraControl::setRgbExposureRequest(exp_req_msg request, exp_rep_msg r
     rgb.region.at(2) = req_get(exposure_width);
     rgb.region.at(3) = req_get(exposure_height);
     rgb.compensation = req_get(compensation);
-    rgb.time_us = req_get(exposure_time_us);
-    rgb.sensitivity_iso = req_get(sensitivity_iso);
+    rgb.time_us = clamp(req_get(exposure_time_us), 1, 33000);
+    rgb.sensitivity_iso = clamp(req_get(exposure_time_us), 1, 33000);
     setExposure(rgb);
     rep_get(success) = true;
     bool result = true;
@@ -93,9 +99,9 @@ req_type CameraControl::setStereoExposureRequest(exp_req_msg request, exp_rep_ms
     stereo.region.at(2) = req_get(exposure_width);
     stereo.region.at(3) = req_get(exposure_height);
     stereo.compensation = req_get(compensation);
-    stereo.time_us = req_get(exposure_time_us);
-    stereo.sensitivity_iso = req_get(sensitivity_iso);
-    setExposure(rgb);
+    stereo.time_us = clamp(req_get(exposure_time_us), 1, 33000);
+    stereo.sensitivity_iso = clamp(req_get(exposure_time_us), 1, 33000);
+    setExposure(stereo);
     rep_get(success) = true;
     bool result = true;
     return (req_type)result;
