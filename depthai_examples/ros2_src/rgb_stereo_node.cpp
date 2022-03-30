@@ -187,8 +187,9 @@ int main(int argc, char** argv){
     dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", true);
 
-    auto stereoCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight); 
-    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
+    auto stereoCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight);
+    auto previewCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, previewWidth, previewHeight);
+    auto videoCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
 
     if(useDepth)
     {
@@ -209,30 +210,30 @@ int main(int argc, char** argv){
     {
         rgbPreviewPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>>(previewQueue,
                                                                             node, 
-                                                                            std::string("color/preview"),
+                                                                            std::string("color/preview/image"),
                                                                             std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                             &rgbConverter, // since the converter has the same frame name
                                                                                             // and image type is also same we can reuse it
                                                                             std::placeholders::_1, 
                                                                             std::placeholders::_2) , 
                                                                             30,
-                                                                            rgbCameraInfo,
-                                                                            "color");
+                                                                            previewCameraInfo,
+                                                                            "color/preview");
     }
 
     if(useVideo)
     {
         rgbPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>>(videoQueue,
                                                                                 node, 
-                                                                                std::string("color/image"),
+                                                                                std::string("color/video/image"),
                                                                                 std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
                                                                                 &rgbConverter, // since the converter has the same frame name
                                                                                                 // and image type is also same we can reuse it
                                                                                 std::placeholders::_1, 
                                                                                 std::placeholders::_2) , 
                                                                                 30,
-                                                                                rgbCameraInfo,
-                                                                                "color");
+                                                                                videoCameraInfo,
+                                                                                "color/video");
     }
 
     if(useDepth)
