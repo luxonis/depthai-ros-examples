@@ -15,7 +15,9 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-std::tuple<dai::Pipeline, int, int> createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution){
+std::tuple<dai::Pipeline, int, int> createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh,
+                                                   bool useVideo, bool usePreview, int previewWidth, int previewHeight,
+                                                   std::string mResolution, std::string cResolution){
 
     dai::Pipeline pipeline;
     auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
@@ -28,25 +30,25 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool lrcheck, bool extended, 
   
     int width, height;
     dai::node::MonoCamera::Properties::SensorResolution monoResolution; 
-    if(resolution == "720p"){
+    if(mResolution == "720p"){
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P; 
         width  = 1280;
         height = 720;
-    }else if(resolution == "400p" ){
+    }else if(mResolution == "400p" ){
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P; 
         width  = 640;
         height = 400;
-    }else if(resolution == "800p" ){
+    }else if(mResolution == "800p" ){
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P; 
         width  = 1280;
         height = 800;
-    }else if(resolution == "480p" ){
+    }else if(mResolution == "480p" ){
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P; 
         width  = 640;
         height = 480;
     }else{
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
-                    "Invalid parameter. -> monoResolution: %s", resolution.c_str());
+                    "Invalid parameter. -> monoResolution: %s", mResolution.c_str());
         throw std::runtime_error("Invalid mono camera resolution.");
     }
 
@@ -71,15 +73,40 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool lrcheck, bool extended, 
 
     // Color camers steream setup -------->
     auto colorCam = pipeline.create<dai::node::ColorCamera>();
-    auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
-    xlinkOut->setStreamName("video");
+
+    dai::ColorCameraProperties::SensorResolution colorResolution;
+    if (cResolution == "1080p"){
+        colorResolution = dai::ColorCameraProperties::SensorResolution::THE_1080_P;
+    }else if (cResolution == "4K"){
+        colorResolution = dai::ColorCameraProperties::SensorResolution::THE_4_K;
+    }
+
+    colorCam->setResolution(colorResolution);
+    if (cResolution == "1080p"){
+        colorCam->setVideoSize(1920, 1080);
+    }else{
+        colorCam->setVideoSize(3840, 2160);
+    }
     
-    colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
-    colorCam->setVideoSize(1920, 1080);
-    xlinkOut->input.setQueueSize(1);
+    colorCam->setPreviewSize(previewWidth, previewHeight);
     colorCam->setInterleaved(false);
-    // Link plugins CAM -> XLINK
-    colorCam->video.link(xlinkOut->input);
+    colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
+    colorCam->setFps(30);
+
+    auto xlinkPreviewOut = pipeline.create<dai::node::XLinkOut>();
+    xlinkPreviewOut->setStreamName("preview");
+
+    if(usePreview){
+        colorCam->preview.link(xlinkPreviewOut->input);
+    }
+    
+    auto xlinkVideoOut = pipeline.create<dai::node::XLinkOut>();
+    xlinkVideoOut->setStreamName("video");
+    xlinkVideoOut->input.setQueueSize(1);
+
+    if(useVideo){
+        colorCam->video.link(xlinkVideoOut->input);
+    }
 
     return std::make_tuple(pipeline, width, height);
 }
@@ -90,9 +117,10 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("rgb_stereo_node");
     
-    std::string tfPrefix, monoResolution;
+    std::string tfPrefix, monoResolution, colorResolution;
     bool lrcheck, extended, subpixel;
-    int confidence, LRchecktresh;
+    bool useVideo, usePreview, useDepth;
+    int confidence, LRchecktresh, previewWidth, previewHeight;
 
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("lrcheck", true);
@@ -101,6 +129,12 @@ int main(int argc, char** argv){
     node->declare_parameter("confidence",  200);
     node->declare_parameter("LRchecktresh",  5);
     node->declare_parameter("monoResolution",  "720p");
+    node->declare_parameter("colorResolution", "1080p");
+    node->declare_parameter("useVideo", true);
+    node->declare_parameter("usePreview", false);
+    node->declare_parameter("useDepth", true);
+    node->declare_parameter("previewWidth", 300);
+    node->declare_parameter("previewHeight", 300);
 
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("lrcheck",  lrcheck);
@@ -109,14 +143,36 @@ int main(int argc, char** argv){
     node->get_parameter("confidence",   confidence);
     node->get_parameter("LRchecktresh", LRchecktresh);
     node->get_parameter("monoResolution", monoResolution);
+    node->get_parameter("colorResolution", colorResolution);
+    node->get_parameter("useVideo", useVideo);
+    node->get_parameter("usePreview", usePreview);
+    node->get_parameter("useDepth", useDepth);
+    node->get_parameter("previewWidth", previewWidth);
+    node->get_parameter("previewHeight", previewHeight);
+
+    int colorWidth, colorHeight;
+    if(colorResolution == "1080p"){
+        colorWidth = 1920;
+        colorHeight = 1080;
+    }else if (colorResolution == "4K"){
+        colorWidth = 3840;
+        colorHeight = 2160;
+    }else{
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
+                    "Invalid parameter. -> colorResolution: %s", colorResolution.c_str());
+        throw std::runtime_error("Invalid color camera resolution.");
+    }
 
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
-    std::tie(pipeline, monoWidth, monoHeight) = createPipeline(lrcheck, extended, subpixel, confidence , LRchecktresh, monoResolution);
+    std::tie(pipeline, monoWidth, monoHeight) = createPipeline(lrcheck, extended, subpixel, confidence , LRchecktresh,
+                                                               useVideo, usePreview, previewWidth, previewHeight,
+                                                               monoResolution, colorResolution);
     dai::Device device(pipeline);
 
+    auto videoQueue = device.getOutputQueue("video", 30, false);
     auto stereoQueue = device.getOutputQueue("depth", 30, false);
-    auto previewQueue = device.getOutputQueue("video", 30, false);
+    auto previewQueue = device.getOutputQueue("preview", 30, false);
 
     auto calibrationHandler = device.readCalibration();
 
@@ -126,9 +182,18 @@ int main(int argc, char** argv){
         monoHeight = 480;
     }
 
+    std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>> depthPublish, rgbPreviewPublish, rgbPublish;
+
     dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
-    auto stereoCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight); 
-    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depthPublish(stereoQueue,
+    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", true);
+
+    auto stereoCameraInfo = depthConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, monoWidth, monoHeight);
+    auto previewCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, previewWidth, previewHeight);
+    auto videoCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
+
+    if(useDepth)
+    {
+        depthPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>>(stereoQueue,
                                                                                      node, 
                                                                                      std::string("stereo/depth"),
                                                                                      std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
@@ -139,23 +204,52 @@ int main(int argc, char** argv){
                                                                                      30,
                                                                                      stereoCameraInfo,
                                                                                      "stereo");
+    }
 
-    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", true);
-    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1920, 1080); 
-    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(previewQueue,
-                                                                                    node, 
-                                                                                    std::string("color/image"),
-                                                                                    std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
-                                                                                    &rgbConverter, // since the converter has the same frame name
-                                                                                                    // and image type is also same we can reuse it
-                                                                                    std::placeholders::_1, 
-                                                                                    std::placeholders::_2) , 
-                                                                                    30,
-                                                                                    rgbCameraInfo,
-                                                                                    "color");
+    if(usePreview)
+    {
+        rgbPreviewPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>>(previewQueue,
+                                                                            node, 
+                                                                            std::string("color/preview/image"),
+                                                                            std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+                                                                            &rgbConverter, // since the converter has the same frame name
+                                                                                            // and image type is also same we can reuse it
+                                                                            std::placeholders::_1, 
+                                                                            std::placeholders::_2) , 
+                                                                            30,
+                                                                            previewCameraInfo,
+                                                                            "color/preview");
+    }
 
-    depthPublish.addPublisherCallback(); // addPublisherCallback works only when the dataqueue is non blocking.
-    rgbPublish.addPublisherCallback();
+    if(useVideo)
+    {
+        rgbPublish = std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>>(videoQueue,
+                                                                                node, 
+                                                                                std::string("color/video/image"),
+                                                                                std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+                                                                                &rgbConverter, // since the converter has the same frame name
+                                                                                                // and image type is also same we can reuse it
+                                                                                std::placeholders::_1, 
+                                                                                std::placeholders::_2) , 
+                                                                                30,
+                                                                                videoCameraInfo,
+                                                                                "color/video");
+    }
+
+    if(useDepth)
+    {
+        depthPublish->addPublisherCallback(); // addPublisherCallback works only when the dataqueue is non blocking.
+    }
+
+    if(usePreview)
+    {
+        rgbPreviewPublish->addPublisherCallback();
+    }
+
+    if(useVideo)
+    {
+        rgbPublish->addPublisherCallback();
+    }
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
