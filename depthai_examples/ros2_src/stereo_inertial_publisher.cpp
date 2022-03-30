@@ -293,11 +293,11 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
-        stereoQueue = device.getOutputQueue("depth", 30, false);
+        stereoQueue = device->getOutputQueue("depth", 30, false);
     } else {
-        stereoQueue = device.getOutputQueue("disparity", 30, false);
+        stereoQueue = device->getOutputQueue("disparity", 30, false);
     }
-    auto imuQueue = device.getOutputQueue("imu", 30, false);
+    auto imuQueue = device->getOutputQueue("imu", 30, false);
 
     auto calibrationHandler = device->readCalibration();
 
@@ -352,7 +352,7 @@ int main(int argc, char** argv) {
         depthPublish.addPublisherCallback();
 
         if(depth_aligned) {
-            auto imgQueue = device.getOutputQueue("rgb", 30, false);
+            auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
                 node,
@@ -362,11 +362,11 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
-            rclcpp::Service<depthai_examples_interfaces::srv::SetExposure>::SharedPtr exposureService =
-                node->create_service<depthai_examples_interfaces::srv::SetExposure>("set_rgb_exposure", 
+            rclcpp::Service<depthai_ros_msgs::srv::SetExposure>::SharedPtr exposureService =
+                node->create_service<depthai_ros_msgs::srv::SetExposure>("set_rgb_exposure", 
                 std::bind(&CameraControl::setRgbExposureRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
-            rclcpp::Service<depthai_examples_interfaces::srv::SetFocus>::SharedPtr focusService =
-                node->create_service<depthai_examples_interfaces::srv::SetFocus>("set_camera_focus",
+            rclcpp::Service<depthai_ros_msgs::srv::SetFocus>::SharedPtr focusService =
+                node->create_service<depthai_ros_msgs::srv::SetFocus>("set_camera_focus",
                 std::bind(&CameraControl::setFocusRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
             rclcpp::spin(node);
         } else {
@@ -407,7 +407,7 @@ int main(int argc, char** argv) {
             "stereo");
         dispPublish.addPublisherCallback();
         if(depth_aligned) {
-            auto imgQueue = device.getOutputQueue("rgb", 30, false);
+            auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
             dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
@@ -420,8 +420,8 @@ int main(int argc, char** argv) {
             rgbPublish.addPublisherCallback();
             rclcpp::spin(node);
         } else {
-            auto leftQueue = device.getOutputQueue("left", 30, false);
-            auto rightQueue = device.getOutputQueue("right", 30, false);
+            auto leftQueue = device->getOutputQueue("left", 30, false);
+            auto rightQueue = device->getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 node,
@@ -440,7 +440,6 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
-            startSpin = false;
         }
     }
     return 0;

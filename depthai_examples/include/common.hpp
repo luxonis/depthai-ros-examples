@@ -13,8 +13,8 @@
 
 #ifndef IS_ROS2
 
-#include "depthai_examples_interfaces/SetFocus.h"
-#include "depthai_examples_interfaces/SetExposure.h"
+#include "depthai_ros_msgs/SetFocus.h"
+#include "depthai_ros_msgs/SetExposure.h"
 
 #include "ros/ros.h"
 
@@ -28,22 +28,22 @@ static void getParamWithWarning(ros::NodeHandle& pnh, const char* key, T val) {
     }
 }
 #define req_type bool
-using exp_req_msg = depthai_examples_interfaces::SetExposure::Request&;
-using exp_rep_msg = depthai_examples_interfaces::SetExposure::Response&;
-using foc_req_msg = depthai_examples_interfaces::SetFocus::Request&;
-using foc_rep_msg = depthai_examples_interfaces::SetFocus::Response&;
+using exp_req_msg = depthai_ros_msgs::SetExposure::Request&;
+using exp_rep_msg = depthai_ros_msgs::SetExposure::Response&;
+using foc_req_msg = depthai_ros_msgs::SetFocus::Request&;
+using foc_rep_msg = depthai_ros_msgs::SetFocus::Response&;
 #define req_get(x) (request.x)
 #define rep_get(x) (response.x)
 
 #else
 
-#include "depthai_examples_interfaces/srv/set_focus.hpp"
-#include "depthai_examples_interfaces/srv/set_exposure.hpp"
+#include "depthai_ros_msgs/srv/set_focus.hpp"
+#include "depthai_ros_msgs/srv/set_exposure.hpp"
 #define req_type void
-using exp_req_msg = const std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Request>;
-using exp_rep_msg = std::shared_ptr<depthai_examples_interfaces::srv::SetExposure::Response>;
-using foc_req_msg = const std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Request>;
-using foc_rep_msg = std::shared_ptr<depthai_examples_interfaces::srv::SetFocus::Response>;
+using exp_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetExposure::Request>;
+using exp_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetExposure::Response>;
+using foc_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetFocus::Request>;
+using foc_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetFocus::Response>;
 #define req_get(x) ((*request).x)
 #define rep_get(x) ((*response).x)
 #endif

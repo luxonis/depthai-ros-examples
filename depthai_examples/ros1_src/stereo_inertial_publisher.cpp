@@ -170,12 +170,16 @@ int main(int argc, char** argv) {
 
     std::string tfPrefix = "oak", mode = "depth";
     std::string monoResolution = "720p";
-    int stereo_fps = 15, confidence = 200, LRchecktresh = 5;
+    int stereo_fps = 15, confidence = 200, LRchecktresh = 5, imuModeParam = 1;
     bool lrcheck = true, extended = false, subpixel = true, rectify = true, depth_aligned = true;
+    float angularVelCovariance = 0.02, linearAccelCovariance = 0.0;
 
     getParamWithWarning(pnh, "tf_prefix", tfPrefix);
     getParamWithWarning(pnh, "mode", mode);
     getParamWithWarning(pnh, "monoResolution", monoResolution);
+    getParamWithWarning(pnh, "imuMode", imuModeParam);
+    getParamWithWarning(pnh, "angularVelCovariance", angularVelCovariance);
+    getParamWithWarning(pnh, "linearAccelCovariance", linearAccelCovariance);
     getParamWithWarning(pnh, "stereo_fps", stereo_fps);
     getParamWithWarning(pnh, "confidence", confidence);
     getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
@@ -252,11 +256,11 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
-        stereoQueue = device.getOutputQueue("depth", 30, false);
+        stereoQueue = device->getOutputQueue("depth", 30, false);
     } else {
-        stereoQueue = device.getOutputQueue("disparity", 30, false);
+        stereoQueue = device->getOutputQueue("disparity", 30, false);
     }
-    auto imuQueue = device.getOutputQueue("imu", 30, false);
+    auto imuQueue = device->getOutputQueue("imu", 30, false);
 
     auto calibrationHandler = device->readCalibration();
 
@@ -313,7 +317,7 @@ int main(int argc, char** argv) {
         depthPublish.addPublisherCallback();
 
         if(depth_aligned) {
-            auto imgQueue = device.getOutputQueue("rgb", 30, false);
+            auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
                 pnh,
@@ -325,8 +329,8 @@ int main(int argc, char** argv) {
             rgbPublish.addPublisherCallback();
             ros::spin();
         } else {
-            auto leftQueue = device.getOutputQueue("left", 30, false);
-            auto rightQueue = device.getOutputQueue("right", 30, false);
+            auto leftQueue = device->getOutputQueue("left", 30, false);
+            auto rightQueue = device->getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 pnh,
@@ -362,7 +366,7 @@ int main(int argc, char** argv) {
             "stereo");
         dispPublish.addPublisherCallback();
         if(depth_aligned) {
-            auto imgQueue = device.getOutputQueue("rgb", 30, false);
+            auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
@@ -375,8 +379,8 @@ int main(int argc, char** argv) {
             rgbPublish.addPublisherCallback();
             ros::spin();
         } else {
-            auto leftQueue = device.getOutputQueue("left", 30, false);
-            auto rightQueue = device.getOutputQueue("right", 30, false);
+            auto leftQueue = device->getOutputQueue("left", 30, false);
+            auto rightQueue = device->getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 pnh,
