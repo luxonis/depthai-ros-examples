@@ -97,10 +97,11 @@ void CameraControl::setFocus() {
         dai::ImageManipConfig cfg;
         cfg.setCropRect(_focus.region.at(0), _focus.region.at(1), 0, 0);
         configQueue->send(cfg);
-    } else if (_focus.region.at(2) > 0 && _focus.region.at(3) > 0)
+    } else if (_focus.region.at(2) > 0 && _focus.region.at(3) > 0) {
         ctrl.setAutoFocusRegion(_focus.region.at(0), _focus.region.at(1), _focus.region.at(2), _focus.region.at(3));
-    else
+    } else if (_focus.mode != "AUTO") {
         ctrl.setManualFocus(clamp(_lens_position, 0, 255));
+    }
 
     controlQueue->send(ctrl);
 }
@@ -147,26 +148,34 @@ req_type CameraControl::setFocusRequest(foc_req_msg request, foc_rep_msg respons
     return (req_type)result;
 }
 
-// void CameraControl::set_ros_parameters(ros_node node) {
-//     set_parameter("auto_exposure_rgb", _rgb.auto_exposure);
-//     set_parameter("exposure_start_x_rgb", _rgb.region.at(0));
-//     set_parameter("exposure_start_y_rgb", _rgb.region.at(1));
-//     set_parameter("exposure_width_rgb", _rgb.region.at(2));
-//     set_parameter("exposure_height_rgb", _rgb.region.at(3));
-//     set_parameter("exposure_compensation_rgb", _rgb.compensation);
-//     set_parameter("exposure_time_us_rgb", _rgb.time_us);
-//     set_parameter("exposure_iso_rgb", _rgb.sensitivity_iso);
-//     set_parameter("auto_exposure_stereo", _stereo.auto_exposure);
-//     set_parameter("exposure_start_x_stereo", _stereo.region.at(0));
-//     set_parameter("exposure_start_y_stereo", _stereo.region.at(1));
-//     set_parameter("exposure_width_stereo", _stereo.region.at(2));
-//     set_parameter("exposure_height_stereo", _stereo.region.at(3));
-//     set_parameter("exposure_compensation_stereo", _stereo.compensation);
-//     set_parameter("exposure_time_us_stereo", _stereo.time_us);
-//     set_parameter("exposure_iso_stereo", _stereo.sensitivity_iso);
-//     set_parameter("focus_mode", _focus.mode);
-//     set_parameter("focus_region_x", _focus.region.at(0));
-//     set_parameter("focus_region_y", _focus.region.at(1));
-//     set_parameter("focus_region_width", _focus.region.at(2));
-//     set_parameter("focus_region_height", _focus.region.at(3));
-// }
+dai::CameraControl::AutoWhiteBalanceMode CameraControl::getWhiteBalanceMode() {
+    if (_white_balance_mode == "OFF") return dai::CameraControl::AutoWhiteBalanceMode::OFF;
+    if (_white_balance_mode == "AUTO") return dai::CameraControl::AutoWhiteBalanceMode::AUTO;
+    if (_white_balance_mode == "INCANDESCENT") return dai::CameraControl::AutoWhiteBalanceMode::INCANDESCENT;
+    if (_white_balance_mode == "FLUORESCENT") return dai::CameraControl::AutoWhiteBalanceMode::FLUORESCENT;
+    if (_white_balance_mode == "WARM_FLUORESCENT") return dai::CameraControl::AutoWhiteBalanceMode::WARM_FLUORESCENT;
+    if (_white_balance_mode == "DAYLIGHT") return dai::CameraControl::AutoWhiteBalanceMode::DAYLIGHT;
+    if (_white_balance_mode == "CLOUDY_DAYLIGHT") return dai::CameraControl::AutoWhiteBalanceMode::CLOUDY_DAYLIGHT;
+    if (_white_balance_mode == "TWILIGHT") return dai::CameraControl::AutoWhiteBalanceMode::TWILIGHT;
+    if (_white_balance_mode == "SHADE") return dai::CameraControl::AutoWhiteBalanceMode::SHADE;
+    return dai::CameraControl::AutoWhiteBalanceMode::AUTO;
+}
+
+void CameraControl::setWhiteBalance() {
+    dai::CameraControl ctrl;
+    auto controlQueue = _device->getInputQueue("control");
+    auto mode = getWhiteBalanceMode();
+    ctrl.setAutoWhiteBalanceMode(mode);
+    if (mode == dai::CameraControl::AutoWhiteBalanceMode::OFF)
+        ctrl.setManualWhiteBalance(clamp(_color_temperature_k, 1000, 12000));
+    controlQueue->send(ctrl);
+}
+
+req_type CameraControl::setWhiteBalanceRequest(wb_req_msg request, wb_rep_msg response) {
+    _white_balance_mode = req_get(white_balance_mode);
+    _color_temperature_k = req_get(color_temperature_k);
+    setWhiteBalance();
+    rep_get(success) = true;
+    bool result = true;
+    return (req_type)result;
+}

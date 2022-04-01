@@ -14,6 +14,7 @@
 
 #include "depthai_ros_msgs/SetFocus.h"
 #include "depthai_ros_msgs/SetExposure.h"
+#include "depthai_ros_msgs/SetWhiteBalance.h"
 
 #include "ros/ros.h"
 
@@ -31,6 +32,8 @@ using exp_req_msg = depthai_ros_msgs::SetExposure::Request&;
 using exp_rep_msg = depthai_ros_msgs::SetExposure::Response&;
 using foc_req_msg = depthai_ros_msgs::SetFocus::Request&;
 using foc_rep_msg = depthai_ros_msgs::SetFocus::Response&;
+using wb_req_msg = depthai_ros_msgs::SetWhiteBalance::Request&;
+using wb_rep_msg = depthai_ros_msgs::SetWhiteBalance::Response&;
 using ros_node = ros::NodeHandle&;
 #define req_get(x) (request.x)
 #define rep_get(x) (response.x)
@@ -47,11 +50,14 @@ static void setRosParameter(std::shared_ptr<rclcpp::Node> node, const char* key,
 
 #include "depthai_ros_msgs/srv/set_focus.hpp"
 #include "depthai_ros_msgs/srv/set_exposure.hpp"
+#include "depthai_ros_msgs/srv/set_white_balance.hpp"
 #define req_type void
 using exp_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetExposure::Request>;
 using exp_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetExposure::Response>;
 using foc_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetFocus::Request>;
 using foc_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetFocus::Response>;
+using wb_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetWhiteBalance::Request>;
+using wb_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetWhiteBalance::Response>;
 using ros_node = std::shared_ptr<rclcpp::Node>;
 #define req_get(x) ((*request).x)
 #define rep_get(x) ((*response).x)
@@ -60,19 +66,19 @@ using ros_node = std::shared_ptr<rclcpp::Node>;
 
 class DepthPostProcessing {
     using TemporalMode = dai::RawStereoDepthConfig::PostProcessing::TemporalFilter::PersistencyMode;
-    TemporalMode getTemporalMode();
-
     using DecimationMode = dai::RawStereoDepthConfig::PostProcessing::DecimationFilter::DecimationMode;
-    DecimationMode getDecimationMode();
-    
+
     public:
+    DepthPostProcessing();
     DepthPostProcessing(ros_node node);
-    dai::MedianFilter getMedianFilter();
     void setDevice(std::shared_ptr<dai::node::StereoDepth> stereo);
     void setMedianFilter();
     void setFilters();
 
     private:
+    dai::MedianFilter getMedianFilter();
+    DecimationMode getDecimationMode();
+    TemporalMode getTemporalMode();
     bool _median_enable = false;
     std::string _median_mode = "MEDIAN_OFF";
     bool _speckle_enable = false;
@@ -110,6 +116,10 @@ struct FocusParameters {
     int lens_position = 0;
 };
 
+struct WhiteBalanceParameters {
+    std::string mode = "AUTO";
+};
+
 class CameraControl {
     public:
     CameraControl();
@@ -123,16 +133,25 @@ class CameraControl {
     // Focus
     void setFocus();
     req_type setFocusRequest(foc_req_msg request, foc_rep_msg response);
+    // White Balance
+    void setWhiteBalance();
+    req_type setWhiteBalanceRequest(wb_req_msg request, wb_rep_msg response);
 
     private:
-    FocusParameters _focus;
-    void setExposure(ExposureParameters exposure);
-    int _lens_position = 0;
-    dai::CameraControl::AutoFocusMode getFocusMode();
+    void set_ros_parameters(ros_node node);
+    // Exposure
     ExposureParameters _rgb, _stereo;
     std::shared_ptr<dai::Device> _device;
     bool _exposure_rgb = false;
-    void set_ros_parameters(ros_node node);
+    void setExposure(ExposureParameters exposure);
+    // Focus
+    FocusParameters _focus;
+    int _lens_position = 0;
+    dai::CameraControl::AutoFocusMode getFocusMode();
+    // White balance
+    dai::CameraControl::AutoWhiteBalanceMode getWhiteBalanceMode();
+    std::string _white_balance_mode = "AUTO";
+    int _color_temperature_k = 6000;
 };
 
 #endif
