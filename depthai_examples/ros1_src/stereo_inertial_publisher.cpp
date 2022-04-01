@@ -189,51 +189,9 @@ int main(int argc, char** argv) {
     getParamWithWarning(pnh, "rectify", rectify);
     getParamWithWarning(pnh, "depth_aligned", depth_aligned);
 
-    DepthPostProcessing postProcessing;
-    getParamWithWarning(pnh, "median_enable", postProcessing.median_enable);
-    getParamWithWarning(pnh, "median_mode", postProcessing.median_mode);
-    getParamWithWarning(pnh, "speckle_enable", postProcessing.speckle_enable);
-    getParamWithWarning(pnh, "speckle_range", postProcessing.speckle_range);
-    getParamWithWarning(pnh, "temporal_enable", postProcessing.temporal_enable);
-    getParamWithWarning(pnh, "temporal_mode", postProcessing.temporal_mode);
-    getParamWithWarning(pnh, "temporal_alpha", postProcessing.temporal_alpha);
-    getParamWithWarning(pnh, "temporal_delta", postProcessing.temporal_delta);
-    getParamWithWarning(pnh, "spatial_enable", postProcessing.spatial_enable);
-    getParamWithWarning(pnh, "spatial_radius", postProcessing.spatial_radius);
-    getParamWithWarning(pnh, "spatial_alpha", postProcessing.spatial_alpha);
-    getParamWithWarning(pnh, "spatial_delta", postProcessing.spatial_delta);
-    getParamWithWarning(pnh, "spatial_iterations", postProcessing.spatial_iterations);
-    getParamWithWarning(pnh, "threshold_enable", postProcessing.threshold_enable);
-    getParamWithWarning(pnh, "threshold_max", postProcessing.threshold_max);
-    getParamWithWarning(pnh, "threshold_min", postProcessing.threshold_min);
-    getParamWithWarning(pnh, "decimation_enable", postProcessing.decimation_enable);
-    getParamWithWarning(pnh, "decimation_mode", postProcessing.decimation_mode);
-    getParamWithWarning(pnh, "decimation_factor", postProcessing.decimation_factor);
+    DepthPostProcessing postProcessing(pnh);
 
-    CameraControl cameraControl;
-    getParamWithWarning(pnh, "auto_exposure_rgb", cameraControl.rgb.auto_exposure);
-    getParamWithWarning(pnh, "exposure_start_x_rgb", cameraControl.rgb.region.at(0));
-    getParamWithWarning(pnh, "exposure_start_y_rgb", cameraControl.rgb.region.at(1));
-    getParamWithWarning(pnh, "exposure_width_rgb", cameraControl.rgb.region.at(2));
-    getParamWithWarning(pnh, "exposure_height_rgb", cameraControl.rgb.region.at(3));
-    getParamWithWarning(pnh, "exposure_compensation_rgb", cameraControl.rgb.compensation);
-    getParamWithWarning(pnh, "exposure_time_us_rgb", cameraControl.rgb.time_us);
-    getParamWithWarning(pnh, "exposure_iso_rgb", cameraControl.rgb.sensitivity_iso);
-
-    getParamWithWarning(pnh, "auto_exposure_stereo", cameraControl.stereo.auto_exposure);
-    getParamWithWarning(pnh, "exposure_start_x_stereo", cameraControl.stereo.region.at(0));
-    getParamWithWarning(pnh, "exposure_start_y_stereo", cameraControl.stereo.region.at(1));
-    getParamWithWarning(pnh, "exposure_width_stereo", cameraControl.stereo.region.at(2));
-    getParamWithWarning(pnh, "exposure_height_stereo", cameraControl.stereo.region.at(3));
-    getParamWithWarning(pnh, "exposure_compensation_stereo", cameraControl.stereo.compensation);
-    getParamWithWarning(pnh, "exposure_time_us_stereo", cameraControl.stereo.time_us);
-    getParamWithWarning(pnh, "exposure_iso_stereo", cameraControl.stereo.sensitivity_iso);
-
-    getParamWithWarning(pnh, "focus_mode", cameraControl.focus_mode);
-    getParamWithWarning(pnh, "focus_region_x", cameraControl.focus_region.at(0));
-    getParamWithWarning(pnh, "focus_region_y", cameraControl.focus_region.at(1));
-    getParamWithWarning(pnh, "focus_region_width", cameraControl.focus_region.at(2));
-    getParamWithWarning(pnh, "focus_region_height", cameraControl.focus_region.at(3));
+    CameraControl cameraControl(pnh);
 
     bool enableDepth;
     if(mode == "depth") {

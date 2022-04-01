@@ -168,51 +168,9 @@ int main(int argc, char** argv) {
     bool lrcheck = true, extended = false, subpixel = true, enableDepth, rectify = false, depth_aligned = true;
     float angularVelCovariance = 0.02, linearAccelCovariance = 0.0;
 
-    DepthPostProcessing postProcessing;
-    node->declare_parameter("median_enable", postProcessing.median_enable);
-    node->declare_parameter("median_mode", postProcessing.median_mode);
-    node->declare_parameter("speckle_enable", postProcessing.speckle_enable);
-    node->declare_parameter("speckle_range", postProcessing.speckle_range);
-    node->declare_parameter("temporal_enable", postProcessing.temporal_enable);
-    node->declare_parameter("temporal_mode", postProcessing.temporal_mode);
-    node->declare_parameter("temporal_alpha", postProcessing.temporal_alpha);
-    node->declare_parameter("temporal_delta", postProcessing.temporal_delta);
-    node->declare_parameter("spatial_enable", postProcessing.spatial_enable);
-    node->declare_parameter("spatial_radius", postProcessing.spatial_radius);
-    node->declare_parameter("spatial_alpha", postProcessing.spatial_alpha);
-    node->declare_parameter("spatial_delta", postProcessing.spatial_delta);
-    node->declare_parameter("spatial_iterations", postProcessing.spatial_iterations);
-    node->declare_parameter("threshold_enable", postProcessing.threshold_enable);
-    node->declare_parameter("threshold_max", postProcessing.threshold_max);
-    node->declare_parameter("threshold_min", postProcessing.threshold_min);
-    node->declare_parameter("decimation_enable", postProcessing.decimation_enable);
-    node->declare_parameter("decimation_mode", postProcessing.decimation_mode);
-    node->declare_parameter("decimation_factor", postProcessing.decimation_factor);
+    DepthPostProcessing postProcessing(node);
 
-    CameraControl cameraControl;
-    node->declare_parameter("auto_exposure_rgb", cameraControl.rgb.auto_exposure);
-    node->declare_parameter("exposure_start_x_rgb", cameraControl.rgb.region.at(0));
-    node->declare_parameter("exposure_start_y_rgb", cameraControl.rgb.region.at(1));
-    node->declare_parameter("exposure_width_rgb", cameraControl.rgb.region.at(2));
-    node->declare_parameter("exposure_height_rgb", cameraControl.rgb.region.at(3));
-    node->declare_parameter("exposure_compensation_rgb", cameraControl.rgb.compensation);
-    node->declare_parameter("exposure_time_us_rgb", cameraControl.rgb.time_us);
-    node->declare_parameter("exposure_iso_rgb", cameraControl.rgb.sensitivity_iso);
-    
-    node->declare_parameter("auto_exposure_stereo", cameraControl.stereo.auto_exposure);
-    node->declare_parameter("exposure_start_x_stereo", cameraControl.stereo.region.at(0));
-    node->declare_parameter("exposure_start_y_stereo", cameraControl.stereo.region.at(1));
-    node->declare_parameter("exposure_width_stereo", cameraControl.stereo.region.at(2));
-    node->declare_parameter("exposure_height_stereo", cameraControl.stereo.region.at(3));
-    node->declare_parameter("exposure_compensation_stereo", cameraControl.stereo.compensation);
-    node->declare_parameter("exposure_time_us_stereo", cameraControl.stereo.time_us);
-    node->declare_parameter("exposure_iso_stereo", cameraControl.stereo.sensitivity_iso);
-
-    node->declare_parameter("focus_mode", cameraControl.focus_mode);
-    node->declare_parameter("focus_region_x", cameraControl.focus_region.at(0));
-    node->declare_parameter("focus_region_y", cameraControl.focus_region.at(1));
-    node->declare_parameter("focus_region_width", cameraControl.focus_region.at(2));
-    node->declare_parameter("focus_region_height", cameraControl.focus_region.at(3));
+    CameraControl cameraControl(node);
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("mode", mode);
     node->get_parameter("lrcheck", lrcheck);
@@ -228,49 +186,6 @@ int main(int argc, char** argv) {
     node->get_parameter("angularVelCovariance", angularVelCovariance);
     node->get_parameter("linearAccelCovariance", linearAccelCovariance);
 
-    node->get_parameter("median_enable", postProcessing.median_enable);
-    node->get_parameter("median_mode", postProcessing.median_mode);
-    node->get_parameter("speckle_enable", postProcessing.speckle_enable);
-    node->get_parameter("speckle_range", postProcessing.speckle_range);
-    node->get_parameter("temporal_enable", postProcessing.temporal_enable);
-    node->get_parameter("temporal_mode", postProcessing.temporal_mode);
-    node->get_parameter("temporal_alpha", postProcessing.temporal_alpha);
-    node->get_parameter("temporal_delta", postProcessing.temporal_delta);
-    node->get_parameter("spatial_enable", postProcessing.spatial_enable);
-    node->get_parameter("spatial_radius", postProcessing.spatial_radius);
-    node->get_parameter("spatial_alpha", postProcessing.spatial_alpha);
-    node->get_parameter("spatial_delta", postProcessing.spatial_delta);
-    node->get_parameter("spatial_iterations", postProcessing.spatial_iterations);
-    node->get_parameter("threshold_enable", postProcessing.threshold_enable);
-    node->get_parameter("threshold_max", postProcessing.threshold_max);
-    node->get_parameter("threshold_min", postProcessing.threshold_min);
-    node->get_parameter("decimation_enable", postProcessing.decimation_enable);
-    node->get_parameter("decimation_mode", postProcessing.decimation_mode);
-    node->get_parameter("decimation_factor", postProcessing.decimation_factor);
-
-    node->get_parameter("auto_exposure_rgb", cameraControl.rgb.auto_exposure);
-    node->get_parameter("exposure_start_x_rgb", cameraControl.rgb.region.at(0));
-    node->get_parameter("exposure_start_y_rgb", cameraControl.rgb.region.at(1));
-    node->get_parameter("exposure_width_rgb", cameraControl.rgb.region.at(2));
-    node->get_parameter("exposure_height_rgb", cameraControl.rgb.region.at(3));
-    node->get_parameter("exposure_compensation_rgb", cameraControl.rgb.compensation);
-    node->get_parameter("exposure_time_us_rgb", cameraControl.rgb.time_us);
-    node->get_parameter("exposure_iso_rgb", cameraControl.rgb.sensitivity_iso);
-    
-    node->get_parameter("auto_exposure_stereo", cameraControl.stereo.auto_exposure);
-    node->get_parameter("exposure_start_x_stereo", cameraControl.stereo.region.at(0));
-    node->get_parameter("exposure_start_y_stereo", cameraControl.stereo.region.at(1));
-    node->get_parameter("exposure_width_stereo", cameraControl.stereo.region.at(2));
-    node->get_parameter("exposure_height_stereo", cameraControl.stereo.region.at(3));
-    node->get_parameter("exposure_compensation_stereo", cameraControl.stereo.compensation);
-    node->get_parameter("exposure_time_us_stereo", cameraControl.stereo.time_us);
-    node->get_parameter("exposure_iso_stereo", cameraControl.stereo.sensitivity_iso);
-
-    node->get_parameter("focus_mode", cameraControl.focus_mode);
-    node->get_parameter("focus_region_x", cameraControl.focus_region.at(0));
-    node->get_parameter("focus_region_y", cameraControl.focus_region.at(1));
-    node->get_parameter("focus_region_width", cameraControl.focus_region.at(2));
-    node->get_parameter("focus_region_height", cameraControl.focus_region.at(3));
 
     if(mode == "depth") {
         enableDepth = true;
