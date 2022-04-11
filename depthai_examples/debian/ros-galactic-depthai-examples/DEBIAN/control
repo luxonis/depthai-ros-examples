@@ -1,0 +1,9 @@
+Package: ros-galactic-depthai-examples
+Version: 2.3.0-0focal
+Architecture: amd64
+Maintainer: sachin <sachin@luxonis.com>
+Installed-Size: 1865
+Depends: libc6 (>= 2.14), libgcc-s1 (>= 3.0), libstdc++6 (>= 9), libopencv-dev, ros-galactic-camera-info-manager, ros-galactic-cv-bridge, ros-galactic-depth-image-proc, ros-galactic-depthai-bridge, ros-galactic-depthai-ros-msgs, ros-galactic-image-transport, ros-galactic-rclcpp, ros-galactic-robot-state-publisher, ros-galactic-sensor-msgs, ros-galactic-std-msgs, ros-galactic-stereo-msgs, ros-galactic-vision-msgs, ros-galactic-xacro
+Section: misc
+Priority: optional
+Description: The depthai_examples package

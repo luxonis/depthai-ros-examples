@@ -1,0 +1,12 @@
+Source: ros-galactic-depthai-examples
+Section: misc
+Priority: optional
+Maintainer: sachin <sachin@luxonis.com>
+Build-Depends: debhelper (>= 9.0.0), libopencv-dev, ros-galactic-ament-cmake, ros-galactic-camera-info-manager, ros-galactic-cv-bridge, ros-galactic-depthai-bridge, ros-galactic-depthai-ros-msgs, ros-galactic-image-transport, ros-galactic-rclcpp, ros-galactic-sensor-msgs, ros-galactic-std-msgs, ros-galactic-stereo-msgs, ros-galactic-vision-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-galactic-depthai-examples
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libopencv-dev, ros-galactic-camera-info-manager, ros-galactic-cv-bridge, ros-galactic-depth-image-proc, ros-galactic-depthai-bridge, ros-galactic-depthai-ros-msgs, ros-galactic-image-transport, ros-galactic-rclcpp, ros-galactic-robot-state-publisher, ros-galactic-sensor-msgs, ros-galactic-std-msgs, ros-galactic-stereo-msgs, ros-galactic-vision-msgs, ros-galactic-xacro
+Description: The depthai_examples package
