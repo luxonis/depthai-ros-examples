@@ -1,0 +1,13 @@
+Package: ros-foxy-depthai-examples-dbgsym
+Package-Type: ddeb
+Source: ros-foxy-depthai-examples
+Version: 2.3.0-0focal
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: sachin <sachin@luxonis.com>
+Installed-Size: 10819
+Depends: ros-foxy-depthai-examples (= 2.3.0-0focal)
+Section: debug
+Priority: optional
+Description: debug symbols for ros-foxy-depthai-examples
+Build-Ids: 10202dd81aeb4771b2d916e2e0081243b1e01c8f 1b819782f6ac59fe2e30310f51bb3fcf17838a4b 1f3cb6e3e02a4426a972b6c432dafe11a76b4e19 549ba33b1ac5a12f1d27ba1cf1441e605661e75e c2879cad258789a6c26a1a5d0f49c7babf854b31 d2999e8bd18d0dc50669c1e0ea47ba1c463bd9af d86ae7fb6c26b067bd46eb6d2d2410e9785371ca

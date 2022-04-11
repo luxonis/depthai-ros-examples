@@ -1,0 +1,12 @@
+Source: ros-foxy-depthai-examples
+Section: misc
+Priority: optional
+Maintainer: sachin <sachin@luxonis.com>
+Build-Depends: debhelper (>= 9.0.0), libopencv-dev, ros-foxy-ament-cmake, ros-foxy-camera-info-manager, ros-foxy-cv-bridge, ros-foxy-depthai-bridge, ros-foxy-depthai-ros-msgs, ros-foxy-image-transport, ros-foxy-rclcpp, ros-foxy-sensor-msgs, ros-foxy-std-msgs, ros-foxy-stereo-msgs, ros-foxy-vision-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-foxy-depthai-examples
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libopencv-dev, ros-foxy-camera-info-manager, ros-foxy-cv-bridge, ros-foxy-depth-image-proc, ros-foxy-depthai-bridge, ros-foxy-depthai-ros-msgs, ros-foxy-image-transport, ros-foxy-rclcpp, ros-foxy-robot-state-publisher, ros-foxy-sensor-msgs, ros-foxy-std-msgs, ros-foxy-stereo-msgs, ros-foxy-vision-msgs, ros-foxy-xacro
+Description: The depthai_examples package
