@@ -118,6 +118,8 @@ struct FocusParameters {
 
 struct WhiteBalanceParameters {
     std::string mode = "AUTO";
+    bool lock = false;
+    int color_temperature = 6500;
 };
 
 class CameraControl {
