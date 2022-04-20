@@ -39,6 +39,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
     auto imu = pipeline.create<dai::node::IMU>();
     auto xoutImu = pipeline.create<dai::node::XLinkOut>();
+    auto xoutStereoCfg = pipeline.create<dai::node::XLinkOut>();
 
     if(enableDepth) {
         xoutDepth->setStreamName("depth");
@@ -87,7 +88,9 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
-    postProcessing.setFilters();
+    stereo->setRuntimeModeSwitch(true);
+    auto config = postProcessing.getFilters(stereo->initialConfig.get());
+    stereo->initialConfig.set(config);
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
@@ -134,7 +137,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             stereo->syncedRight.link(xoutRight->input);
         }
     }
-
+    stereo->outConfig.link(xoutStereoCfg->input);
     // Link plugins CAM -> STEREO -> XLINK
 
     monoLeft->out.link(stereo->left);

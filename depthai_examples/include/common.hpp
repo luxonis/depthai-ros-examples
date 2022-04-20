@@ -73,7 +73,8 @@ class DepthPostProcessing {
     DepthPostProcessing(ros_node node);
     void setDevice(std::shared_ptr<dai::node::StereoDepth> stereo);
     void setMedianFilter();
-    void setFilters();
+    // void setFilters();
+    dai::RawStereoDepthConfig getFilters(dai::RawStereoDepthConfig config);
 
     private:
     dai::MedianFilter getMedianFilter();
@@ -98,6 +99,7 @@ class DepthPostProcessing {
     bool _decimation_enable = false;
     std::string _decimation_mode = "NON_ZERO_MEDIAN";
     int _decimation_factor = 1;
+    dai::RawStereoDepthConfig _config;
     std::shared_ptr<dai::node::StereoDepth> _stereo;
 };
 

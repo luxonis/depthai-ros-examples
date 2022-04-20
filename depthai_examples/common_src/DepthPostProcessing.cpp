@@ -57,8 +57,9 @@ void DepthPostProcessing::setMedianFilter() {
     if(_median_enable) _stereo->initialConfig.setMedianFilter(getMedianFilter());
 }
 
-void DepthPostProcessing::setFilters() {
-    auto config = _stereo->initialConfig.get();
+dai::RawStereoDepthConfig DepthPostProcessing::getFilters(dai::RawStereoDepthConfig config) {
+    // auto config = _stereo->initialConfig.get();
+    // auto config = dai::StereoDepthConfig();
     if(_speckle_enable) {
         config.postProcessing.speckleFilter.enable = _speckle_enable;
         config.postProcessing.speckleFilter.speckleRange = static_cast<std::uint32_t>(_speckle_range);
@@ -84,7 +85,8 @@ void DepthPostProcessing::setFilters() {
         config.postProcessing.decimationFilter.decimationFactor = static_cast<std::uint32_t>(_decimation_factor);
         config.postProcessing.decimationFilter.decimationMode = getDecimationMode();
     }
-    _stereo->initialConfig.set(config);
+    return config;
+    // _stereo->initialConfig.set(config);
 }
 
 void DepthPostProcessing::setDevice(std::shared_ptr<dai::node::StereoDepth> stereo) {
