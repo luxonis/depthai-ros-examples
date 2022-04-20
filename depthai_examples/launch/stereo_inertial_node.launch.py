@@ -27,16 +27,24 @@ def generate_launch_description():
     cam_pitch    = LaunchConfiguration('cam_pitch',     default = '0.0')
     cam_yaw      = LaunchConfiguration('cam_yaw',       default = '0.0')
 
-    mode         = LaunchConfiguration('mode', default = 'depth')
-    lrcheck      = LaunchConfiguration('lrcheck', default = True)
-    extended     = LaunchConfiguration('extended', default = False)
-    subpixel     = LaunchConfiguration('subpixel', default = True)
+    imuMode        = LaunchConfiguration('imuMode', default = '1')
+    mode           = LaunchConfiguration('mode', default = 'depth')
+    lrcheck        = LaunchConfiguration('lrcheck', default = True)
+    extended       = LaunchConfiguration('extended', default = False)
+    subpixel       = LaunchConfiguration('subpixel', default = True)
+    monoResolution = LaunchConfiguration('monoResolution', default = '720p')
 
     rectify        = LaunchConfiguration('rectify', default = True)
+    enableDotProjector = LaunchConfiguration('enableDotProjector', default = False)
+    enableFloodLight = LaunchConfiguration('enableFloodLight', default = False)
     depth_aligned  = LaunchConfiguration('depth_aligned', default = False)
     stereo_fps     = LaunchConfiguration('stereo_fps', default = 30)
     confidence     = LaunchConfiguration('confidence', default = 200)
     LRchecktresh   = LaunchConfiguration('LRchecktresh', default = 5)
+    angularVelCovariance  = LaunchConfiguration('linearAccelCovariance', default = 0.0)
+    linearAccelCovariance = LaunchConfiguration('linearAccelCovariance', default = 0.0)
+    dotProjectormA  = LaunchConfiguration('dotProjectormA', default = 200.0)
+    floodLightmA    = LaunchConfiguration('floodLightmA', default = 200.0)
 
     declare_camera_model_cmd = DeclareLaunchArgument(
         'camera_model',
@@ -93,6 +101,11 @@ def generate_launch_description():
         default_value=mode,
         description='set to depth or disparity. Setting to depth will publish depth or else will publish disparity.')
 
+    declare_imu_mode_cmd = DeclareLaunchArgument(
+        'imuMode',
+        default_value=imuMode,
+        description=' set to 0 -> COPY, 1 -> LINEAR_INTERPOLATE_GYRO, 2 -> LINEAR_INTERPOLATE_ACCEL')
+
     declare_lrcheck_cmd = DeclareLaunchArgument(
         'lrcheck',
         default_value=lrcheck,
@@ -103,6 +116,11 @@ def generate_launch_description():
         default_value=extended,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
 
+    declare_monoResolution_cmd = DeclareLaunchArgument(
+        'monoResolution',
+        default_value=monoResolution,
+        description='Set the resolution of the mono/Stereo setup. Choose between 720p, 400p, 480p, 800p.')
+ 
     declare_subpixel_cmd = DeclareLaunchArgument(
         'subpixel',
         default_value=subpixel,
@@ -112,6 +130,16 @@ def generate_launch_description():
         'rectify',
         default_value=rectify,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
+    
+    declare_enableDotProjector_cmd = DeclareLaunchArgument(
+        'enableDotProjector',
+        default_value=enableDotProjector,
+        description='set this to true to enable the dot projector structure light.')
+    
+    declare_enableFloodLight_cmd = DeclareLaunchArgument(
+        'enableFloodLight',
+        default_value=enableFloodLight,
+        description='Set this to true to enable the flood light for night vision.')
     
     declare_depth_aligned_cmd = DeclareLaunchArgument(
         'depth_aligned',
@@ -132,8 +160,27 @@ def generate_launch_description():
         'confidence',
         default_value=confidence,
         description='The name of the camera. It can be different from the camera model and it will be used as node `namespace`.')
-    
-    
+
+    declare_angularVelCovariance_cmd = DeclareLaunchArgument(
+        'angularVelCovariance',
+        default_value=angularVelCovariance,
+        description='Set the angular velocity covariance of the IMU.')
+
+    declare_linearAccelCovariance_cmd = DeclareLaunchArgument(
+        'linearAccelCovariance',
+        default_value=linearAccelCovariance,
+        description='Set the Linear acceleration covariance of the IMU.')
+   
+    declare_dotProjectormA_cmd = DeclareLaunchArgument(
+        'dotProjectormA',
+        default_value=dotProjectormA,
+        description='Set the mA at which you intend to drive the dotProjector. Default is set to 200mA.')
+
+    declare_floodLightmA_cmd = DeclareLaunchArgument(
+        'floodLightmA',
+        default_value=floodLightmA,
+        description='Set the mA at which you intend to drive the FloodLight. Default is set to 200mA.')
+
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
                                     os.path.join(urdf_launch_dir, 'urdf_launch.py')),
@@ -152,16 +199,27 @@ def generate_launch_description():
     streo_node = launch_ros.actions.Node(
             package='depthai_examples', executable='stereo_inertial_node',
             output='screen',
-            parameters=[{'tf_prefix':     tf_prefix},
-                        {'mode':          mode},
-                        {'lrcheck':       lrcheck},
-                        {'extended':      extended},
-                        {'subpixel':      subpixel},
-                        {'rectify':       rectify},
-                        {'depth_aligned': depth_aligned},
-                        {'stereo_fps':    stereo_fps},
-                        {'confidence':    confidence},
-                        {'LRchecktresh':  LRchecktresh}])
+            parameters=[{'tf_prefix':             tf_prefix},
+                        {'mode':                  mode},
+                        {'imuMode':               imuMode},
+                        {'lrcheck':               lrcheck},
+                        {'extended':              extended},
+                        {'subpixel':              subpixel},
+                        {'rectify':               rectify},
+                        {'depth_aligned':         depth_aligned},
+                        {'stereo_fps':            stereo_fps},
+                        {'confidence':            confidence},
+                        {'LRchecktresh':          LRchecktresh},
+                        {'monoResolution':        monoResolution},
+                        {'imuMode':               imuMode},
+                        {'angularVelCovariance':  angularVelCovariance},
+                        {'linearAccelCovariance': linearAccelCovariance},
+                        {'enableDotProjector':    enableDotProjector},
+                        {'enableFloodLight':      enableFloodLight},
+                        {'dotProjectormA':        dotProjectormA},
+                        {'floodLightmA':          floodLightmA}
+                        ])
+
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -221,14 +279,22 @@ def generate_launch_description():
     ld.add_action(declare_yaw_cmd)
     
     ld.add_action(declare_mode_cmd)
+    ld.add_action(declare_imu_mode_cmd)
     ld.add_action(declare_lrcheck_cmd)
     ld.add_action(declare_extended_cmd)
+    ld.add_action(declare_monoResolution_cmd)
     ld.add_action(declare_subpixel_cmd)
     ld.add_action(declare_rectify_cmd)
+    ld.add_action(declare_enableDotProjector_cmd)
+    ld.add_action(declare_enableFloodLight_cmd)
     ld.add_action(declare_depth_aligned_cmd)
     ld.add_action(declare_stereo_fps_cmd)
     ld.add_action(declare_LRchecktresh_cmd)
     ld.add_action(declare_confidence_cmd)
+    ld.add_action(declare_angularVelCovariance_cmd)
+    ld.add_action(declare_linearAccelCovariance_cmd)
+    ld.add_action(declare_dotProjectormA_cmd)
+    ld.add_action(declare_floodLightmA_cmd)
 
     ld.add_action(streo_node)
     ld.add_action(urdf_launch)
