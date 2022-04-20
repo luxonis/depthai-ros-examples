@@ -87,15 +87,14 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     monoRight->setFps(stereo_fps);
 
     // StereoDepth
-    postProcessing.setDevice(stereo);
-    postProcessing.setMedianFilter();
     stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
     stereo->setRectifyEdgeFillColor(0);                              // black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);  // Known to be best
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
-    postProcessing.setFilters();
+    auto config = postProcessing.getFilters(stereo->initialConfig.get());
+    stereo->initialConfig.set(config);
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
@@ -208,6 +207,7 @@ int main(int argc, char** argv) {
         createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
 
     std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>(pipeline);
+    postProcessing.setDevice(device);
     cameraControl.setDevice(device);
     cameraControl.setExposure();
     cameraControl.setFocus();
@@ -360,6 +360,7 @@ int main(int argc, char** argv) {
         }
         ros::ServiceServer exposureService = pnh.advertiseService("setExposure", &CameraControl::setRgbExposureRequest, &cameraControl);
         ros::ServiceServer focusService = pnh.advertiseService("setFocus", &CameraControl::setFocusRequest, &cameraControl);
+        ros::ServiceServer postProcessingService = pnh.advertiseService("setPostProcessing", &DepthPostProcessing::setPostProcessingRequest, &postProcessing);
         ros::spin();
     }
 

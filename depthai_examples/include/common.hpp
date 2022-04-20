@@ -15,6 +15,7 @@
 #include "depthai_ros_msgs/SetFocus.h"
 #include "depthai_ros_msgs/SetExposure.h"
 #include "depthai_ros_msgs/SetWhiteBalance.h"
+#include "depthai_ros_msgs/SetPostProcessing.h"
 
 #include "ros/ros.h"
 
@@ -34,6 +35,8 @@ using foc_req_msg = depthai_ros_msgs::SetFocus::Request&;
 using foc_rep_msg = depthai_ros_msgs::SetFocus::Response&;
 using wb_req_msg = depthai_ros_msgs::SetWhiteBalance::Request&;
 using wb_rep_msg = depthai_ros_msgs::SetWhiteBalance::Response&;
+using pp_req_msg = depthai_ros_msgs::SetPostProcessing::Request&;
+using pp_rep_msg = depthai_ros_msgs::SetPostProcessing::Response&;
 using ros_node = ros::NodeHandle&;
 #define req_get(x) (request.x)
 #define rep_get(x) (response.x)
@@ -51,6 +54,7 @@ static void setRosParameter(std::shared_ptr<rclcpp::Node> node, const char* key,
 #include "depthai_ros_msgs/srv/set_focus.hpp"
 #include "depthai_ros_msgs/srv/set_exposure.hpp"
 #include "depthai_ros_msgs/srv/set_white_balance.hpp"
+#include "depthai_ros_msgs/srv/set_post_processing.hpp"
 #define req_type void
 using exp_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetExposure::Request>;
 using exp_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetExposure::Response>;
@@ -58,6 +62,8 @@ using foc_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetFocus::Reque
 using foc_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetFocus::Response>;
 using wb_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetWhiteBalance::Request>;
 using wb_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetWhiteBalance::Response>;
+using pp_req_msg = const std::shared_ptr<depthai_ros_msgs::srv::SetPostProcessing::Request>;
+using pp_rep_msg = std::shared_ptr<depthai_ros_msgs::srv::SetPostProcessing::Response>;
 using ros_node = std::shared_ptr<rclcpp::Node>;
 #define req_get(x) ((*request).x)
 #define rep_get(x) ((*response).x)
@@ -71,10 +77,11 @@ class DepthPostProcessing {
     public:
     DepthPostProcessing();
     DepthPostProcessing(ros_node node);
-    void setDevice(std::shared_ptr<dai::node::StereoDepth> stereo);
-    void setMedianFilter();
+    void setDevice(std::shared_ptr<dai::Device> device);
     // void setFilters();
     dai::RawStereoDepthConfig getFilters(dai::RawStereoDepthConfig config);
+    req_type setPostProcessingRequest(pp_req_msg request, pp_rep_msg response);
+    void setFilters(dai::RawStereoDepthConfig config);
 
     private:
     dai::MedianFilter getMedianFilter();
@@ -99,8 +106,8 @@ class DepthPostProcessing {
     bool _decimation_enable = false;
     std::string _decimation_mode = "NON_ZERO_MEDIAN";
     int _decimation_factor = 1;
+    std::shared_ptr<dai::Device> _device;
     dai::RawStereoDepthConfig _config;
-    std::shared_ptr<dai::node::StereoDepth> _stereo;
 };
 
 struct ExposureParameters {

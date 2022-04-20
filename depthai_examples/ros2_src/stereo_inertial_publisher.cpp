@@ -80,8 +80,6 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     monoRight->setFps(stereo_fps);
 
     // StereoDepth
-    postProcessing.setDevice(stereo);
-    postProcessing.setMedianFilter();
     stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
     stereo->setRectifyEdgeFillColor(0);                              // black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);  // Known to be best
@@ -203,6 +201,10 @@ int main(int argc, char** argv) {
         createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
 
     std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>(pipeline);
+    postProcessing.setDevice(device);
+    rclcpp::Service<depthai_ros_msgs::srv::SetPostProcessing>::SharedPtr postProcessingService =
+    node->create_service<depthai_ros_msgs::srv::SetPostProcessing>("set_post_processing", 
+    std::bind(&DepthPostProcessing::setPostProcessingRequest, &postProcessing, std::placeholders::_1, std::placeholders::_2));
     if (enableDepth && depth_aligned) {
         cameraControl.setDevice(device);
         cameraControl.setExposure();

@@ -53,13 +53,8 @@ DecimationMode DepthPostProcessing::getDecimationMode() {
     return DecimationMode::PIXEL_SKIPPING;
 }
 
-void DepthPostProcessing::setMedianFilter() {
-    if(_median_enable) _stereo->initialConfig.setMedianFilter(getMedianFilter());
-}
-
 dai::RawStereoDepthConfig DepthPostProcessing::getFilters(dai::RawStereoDepthConfig config) {
-    // auto config = _stereo->initialConfig.get();
-    // auto config = dai::StereoDepthConfig();
+    if(_median_enable) config.postProcessing.median = getMedianFilter();
     if(_speckle_enable) {
         config.postProcessing.speckleFilter.enable = _speckle_enable;
         config.postProcessing.speckleFilter.speckleRange = static_cast<std::uint32_t>(_speckle_range);
@@ -85,10 +80,43 @@ dai::RawStereoDepthConfig DepthPostProcessing::getFilters(dai::RawStereoDepthCon
         config.postProcessing.decimationFilter.decimationFactor = static_cast<std::uint32_t>(_decimation_factor);
         config.postProcessing.decimationFilter.decimationMode = getDecimationMode();
     }
+    setFilters(config);
     return config;
     // _stereo->initialConfig.set(config);
 }
 
-void DepthPostProcessing::setDevice(std::shared_ptr<dai::node::StereoDepth> stereo) {
-    _stereo = stereo;
+void DepthPostProcessing::setFilters(dai::RawStereoDepthConfig config) {
+    _config = config;
+}
+
+void DepthPostProcessing::setDevice(std::shared_ptr<dai::Device> device) {
+    _device = device;
+}
+
+req_type DepthPostProcessing::setPostProcessingRequest(pp_req_msg request, pp_rep_msg response) {
+    _median_enable = req_get(median_enable);
+    _median_mode = req_get(median_mode);
+    _speckle_enable = req_get(speckle_enable);
+    _speckle_range = req_get(speckle_range);
+    _temporal_enable = req_get(temporal_enable);
+    _temporal_alpha = req_get(temporal_alpha);
+    _temporal_delta = req_get(temporal_delta);
+    _temporal_mode = req_get(temporal_mode);
+    _spatial_enable = req_get(spatial_enable);
+    _spatial_radius = req_get(spatial_radius);
+    _spatial_alpha = req_get(spatial_alpha);
+    _spatial_iterations = req_get(spatial_iterations);
+    _threshold_enable = req_get(threshold_enable);
+    _threshold_min = req_get(threshold_min);
+    _threshold_max = req_get(threshold_max);
+    _decimation_enable = req_get(decimation_enable);
+    _decimation_factor = req_get(decimation_factor);
+    _decimation_mode = req_get(decimation_mode);
+    auto config_message = dai::StereoDepthConfig();
+    config_message.set(getFilters(_config));
+    auto stereo_config_queue = _device->getInputQueue("config_stereo");
+    stereo_config_queue->send(config_message); 
+    rep_get(success) = true;
+    bool result = true;
+    return (req_type)result;
 }
