@@ -146,8 +146,9 @@ int main(int argc, char** argv) {
     std::string tfPrefix, mode;
     std::string monoResolution = "720p";
     int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, enableDotProjector, enableFloodLight;
     double angularVelCovariance, linearAccelCovariance;
+    double dotProjectormA, floodLightmA;
 
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("mode", mode);
@@ -163,6 +164,12 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("monoResolution", monoResolution);
     badParams += !pnh.getParam("angularVelCovariance", angularVelCovariance);
     badParams += !pnh.getParam("linearAccelCovariance", linearAccelCovariance);
+
+    // Applies only to PRO model
+    badParams += !pnh.getParam("enableDotProjector", enableDotProjector);
+    badParams += !pnh.getParam("enableFloodLight", enableFloodLight);
+    badParams += !pnh.getParam("dotProjectormA", dotProjectormA);
+    badParams += !pnh.getParam("floodLightmA", floodLightmA);
 
     if(badParams > 0) {
         std::cout << " Bad parameters -> " << badParams << std::endl;
@@ -183,6 +190,14 @@ int main(int argc, char** argv) {
         createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
 
     dai::Device device(pipeline);
+
+    if (enableDotProjector){
+        device.setIrLaserDotProjectorBrightness(dotProjectormA);
+    }
+
+    if (enableFloodLight){
+        device.setIrFloodLightBrightness(floodLightmA);
+    }
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {

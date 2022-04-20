@@ -143,8 +143,9 @@ int main(int argc, char** argv) {
 
     std::string tfPrefix, mode, monoResolution;
     int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, enableDotProjector, enableFloodLight;
     float angularVelCovariance, linearAccelCovariance;
+    double dotProjectormA, floodLightmA;
 
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("mode", "depth");
@@ -152,6 +153,8 @@ int main(int argc, char** argv) {
     node->declare_parameter("extended", false);
     node->declare_parameter("subpixel", true);
     node->declare_parameter("rectify", false);
+    node->declare_parameter("enableDotProjector", false);
+    node->declare_parameter("enableFloodLight", false);
     node->declare_parameter("depth_aligned", false);
     node->declare_parameter("stereo_fps", 30);
     node->declare_parameter("confidence", 200);
@@ -160,6 +163,8 @@ int main(int argc, char** argv) {
     node->declare_parameter("imuMode", 1);
     node->declare_parameter("angularVelCovariance", 0.02);
     node->declare_parameter("linearAccelCovariance", 0.0);
+    node->declare_parameter("dotProjectormA", 200.0);
+    node->declare_parameter("floodLightmA", 200.0);
 
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("mode", mode);
@@ -167,6 +172,8 @@ int main(int argc, char** argv) {
     node->get_parameter("extended", extended);
     node->get_parameter("subpixel", subpixel);
     node->get_parameter("rectify", rectify);
+    node->get_parameter("enableDotProjector", enableDotProjector);
+    node->get_parameter("enableFloodLight", enableFloodLight);
     node->get_parameter("depth_aligned", depth_aligned);
     node->get_parameter("stereo_fps", stereo_fps);
     node->get_parameter("confidence", confidence);
@@ -175,6 +182,8 @@ int main(int argc, char** argv) {
     node->get_parameter("imuMode", imuModeParam);
     node->get_parameter("angularVelCovariance", angularVelCovariance);
     node->get_parameter("linearAccelCovariance", linearAccelCovariance);
+    node->get_parameter("dotProjectormA", dotProjectormA);
+    node->get_parameter("floodLightmA", floodLightmA);
 
     if(mode == "depth") {
         enableDepth = true;
@@ -189,6 +198,15 @@ int main(int argc, char** argv) {
         createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
 
     dai::Device device(pipeline);
+    
+    if (enableDotProjector){
+        std::cout << "DotProject---------" << dotProjectormA << std::endl;
+        device.setIrLaserDotProjectorBrightness(dotProjectormA);
+    }
+
+    if (enableFloodLight){
+        device.setIrFloodLightBrightness(floodLightmA);
+    }
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
