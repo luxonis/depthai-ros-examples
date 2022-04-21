@@ -16,7 +16,7 @@
 #include "sensor_msgs/Image.h"
 
 // Inludes common necessary includes for development using depthai library
-#include "common.hpp"
+#include "depthai_bridge/RosParameters.hpp"
 #include "depthai/depthai.hpp"
 
 const std::vector<std::string> label_map = {

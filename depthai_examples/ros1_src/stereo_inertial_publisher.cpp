@@ -19,7 +19,8 @@
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/ImuConverter.hpp>
 
-#include "common.hpp"
+#include "depthai_bridge/CameraControl.hpp"
+#include "depthai_bridge/DepthPostProcessing.hpp"
 #include "depthai/depthai.hpp"
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,

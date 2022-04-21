@@ -15,7 +15,7 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-#include "common.hpp"
+#include "depthai_bridge/RosParameters.hpp"
 #include "depthai/depthai.hpp"
 
 std::tuple<dai::Pipeline, int, int> createPipeline(

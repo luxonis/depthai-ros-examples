@@ -11,7 +11,7 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-#include "common.hpp"
+#include "depthai_bridge/RosParameters.hpp"
 #include "depthai/depthai.hpp"
 
 using ImagePublisher = dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>;

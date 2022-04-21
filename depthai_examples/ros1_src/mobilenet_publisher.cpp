@@ -12,7 +12,7 @@
 #include "sensor_msgs/Image.h"
 
 // Inludes common necessary includes for development using depthai library
-#include "common.hpp"
+#include "depthai_bridge/RosParameters.hpp"
 #include "depthai/depthai.hpp"
 
 dai::Pipeline createPipeline(bool syncNN, std::string nnPath) {
