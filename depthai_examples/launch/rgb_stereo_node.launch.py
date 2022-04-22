@@ -41,6 +41,10 @@ def generate_launch_description():
     previewWidth    = LaunchConfiguration('previewWidth',    default = 300)
     previewHeight   = LaunchConfiguration('previewHeight',   default = 300)
 
+    # IR Brightness. OAK-D-Pro only.
+    irDotBrightness   = LaunchConfiguration('irDotBrightness',     default = 0.0)
+    irFloodBrightness = LaunchConfiguration('irFloodBrightness',   default = 0.0)
+
     declare_camera_model_cmd = DeclareLaunchArgument(
         'camera_model',
         default_value=camera_model,
@@ -152,6 +156,16 @@ def generate_launch_description():
         default_value=previewHeight,
         description='Height of preview image')
 
+    declare_irDotBrightness_cmd = DeclareLaunchArgument(
+        'irDotBrightness',
+        default_value=irDotBrightness,
+        description='Brightness of IR Dot projector on OAK-D-Pro in mA.')
+
+    declare_irFloodBrightness_cmd = DeclareLaunchArgument(
+        'irFloodBrightness',
+        default_value=irFloodBrightness,
+        description='Brightness of IR Flood LED on OAK-D-Pro in mA.')
+
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
                                     os.path.join(urdf_launch_dir, 'urdf_launch.py')),
@@ -181,7 +195,9 @@ def generate_launch_description():
                         {'usePreview': usePreview},
                         {'useDepth': useDepth},
                         {'previewWidth': previewWidth},
-                        {'previewHeight': previewHeight}])
+                        {'previewHeight': previewHeight},
+                        {'irDotBrightness': irDotBrightness},
+                        {'irFloodBrightness': irFloodBrightness}])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -253,6 +269,9 @@ def generate_launch_description():
     ld.add_action(declare_useDepth_cmd)
     ld.add_action(declare_previewWidth_cmd)
     ld.add_action(declare_previewHeight_cmd)
+
+    ld.add_action(declare_irDotBrightness_cmd)
+    ld.add_action(declare_irFloodBrightness_cmd)
 
     ld.add_action(rgb_stereo_node)
     ld.add_action(urdf_launch)

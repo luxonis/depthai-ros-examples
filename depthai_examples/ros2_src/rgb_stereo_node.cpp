@@ -121,6 +121,7 @@ int main(int argc, char** argv){
     bool lrcheck, extended, subpixel;
     bool useVideo, usePreview, useDepth;
     int confidence, LRchecktresh, previewWidth, previewHeight;
+    float irDotBrightness, irFloodBrightness;
 
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("lrcheck", true);
@@ -135,6 +136,8 @@ int main(int argc, char** argv){
     node->declare_parameter("useDepth", true);
     node->declare_parameter("previewWidth", 300);
     node->declare_parameter("previewHeight", 300);
+    node->declare_parameter("irDotBrightness", 0.0f);
+    node->declare_parameter("irFloodBrightness", 0.0f);
 
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("lrcheck",  lrcheck);
@@ -149,6 +152,8 @@ int main(int argc, char** argv){
     node->get_parameter("useDepth", useDepth);
     node->get_parameter("previewWidth", previewWidth);
     node->get_parameter("previewHeight", previewHeight);
+    node->get_parameter("irDotBrightness", irDotBrightness);
+    node->get_parameter("irFloodBrightness", irFloodBrightness);
 
     int colorWidth, colorHeight;
     if(colorResolution == "1080p"){
@@ -253,7 +258,35 @@ int main(int argc, char** argv){
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
-    rclcpp::spin(node);
+
+    float currentDotBrightness = 0.0f;
+    float currentFloodBrightness = 0.0f;
+
+    while (rclcpp::ok()){
+        // Spin some to allow parameters to be changed
+        rclcpp::spin_some(node);
+
+        // Allow IR usage on OAK-D-Pro's
+        if(boardName == "OAK-D-PRO")
+        {
+            node->get_parameter("irDotBrightness", irDotBrightness);
+
+            if (currentDotBrightness != irDotBrightness){
+                currentDotBrightness = irDotBrightness;
+                device.setIrLaserDotProjectorBrightness(currentDotBrightness);
+                std::cout << "Updated IR Dot Projector Brightness " << currentDotBrightness << std::endl;
+            }
+
+            node->get_parameter("irFloodBrightness", irFloodBrightness);
+
+            if (currentFloodBrightness != irFloodBrightness){
+                currentFloodBrightness = irFloodBrightness;
+                device.setIrLaserDotProjectorBrightness(currentFloodBrightness);
+                std::cout << "Updated IR Flood Light Brightness " << currentFloodBrightness << std::endl;
+            }
+        }
+        
+    }
 
     return 0;
 }
