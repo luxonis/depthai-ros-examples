@@ -84,6 +84,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
     stereo->setSubpixel(subpixel);
+    stereo->useHomographyRectification(false);
     if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
