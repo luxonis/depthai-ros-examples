@@ -42,11 +42,6 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
     auto imu = pipeline.create<dai::node::IMU>();
     auto xoutImu = pipeline.create<dai::node::XLinkOut>();
-    auto controlIn = pipeline.create<dai::node::XLinkIn>();
-    auto configIn = pipeline.create<dai::node::XLinkIn>();
-
-    controlIn->setStreamName("control");
-    configIn->setStreamName("config");
 
     if(enableDepth) {
         xoutDepth->setStreamName("depth");
@@ -96,13 +91,13 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     stereo->setSubpixel(subpixel);
     auto config = postProcessing.getFilters(stereo->initialConfig.get());
     stereo->initialConfig.set(config);
-    if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
+    if(depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
     imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
     imu->enableIMUSensor(dai::IMUSensor::GYROSCOPE_RAW, 400);
     imu->setBatchReportThreshold(5);
-    imu->setMaxBatchReports(20);  // Get one message only for now.
+    imu->setMaxBatchReports(20);
 
     if(depth_aligned) {
         // RGB image
@@ -122,9 +117,9 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
         rgbControlIn->setStreamName("control_rgb");
         rgbControlIn->out.link(camRgb->inputControl);
-        auto rgbConfigIn = pipeline.create<dai::node::XLinkIn>();
-        rgbConfigIn->setStreamName("config_rgb");
-        rgbConfigIn->out.link(camRgb->inputConfig);
+        // auto rgbConfigIn = pipeline.create<dai::node::XLinkIn>();
+        // rgbConfigIn->setStreamName("config_rgb");
+        // rgbConfigIn->out.link(camRgb->inputConfig);
     } else {
         // Stereo imges
         auto xoutLeft = pipeline.create<dai::node::XLinkOut>();
@@ -147,10 +142,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     auto stereoControlIn = pipeline.create<dai::node::XLinkIn>();
     stereoControlIn->setStreamName("control_stereo");
     stereoControlIn->out.link(monoLeft->inputControl);
-    stereoControlIn->out.link(monoRight->inputControl);
-    auto stereoConfigIn = pipeline.create<dai::node::XLinkIn>();
-    stereoConfigIn->setStreamName("config_stereo");
-    stereoConfigIn->out.link(stereo->inputConfig);
+    // stereoControlIn->out.link(monoRight->inputControl);
+    // auto stereoConfigIn = pipeline.create<dai::node::XLinkIn>();
+    // stereoConfigIn->setStreamName("config_stereo");
+    // stereoConfigIn->out.link(stereo->inputConfig);
     // stereoConfigIn->out.link(monoRight->inputConfig);
 
     if(enableDepth) {
@@ -160,7 +155,6 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     }
 
     imu->out.link(xoutImu->input);
-
     return std::make_tuple(pipeline, width, height);
 }
 
@@ -191,8 +185,6 @@ int main(int argc, char** argv) {
 
     DepthPostProcessing postProcessing(pnh);
 
-    CameraControl cameraControl(pnh);
-
     bool enableDepth;
     if(mode == "depth") {
         enableDepth = true;
@@ -209,9 +201,12 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>(pipeline);
     postProcessing.setDevice(device);
-    cameraControl.setDevice(device);
-    cameraControl.setExposure();
-    cameraControl.setFocus();
+
+    dai::ros::CameraControl colorCameraControl(pnh, device, "rgb"), stereoCameraControl(pnh, device, "stereo");
+    colorCameraControl.setExposure();
+    colorCameraControl.setFocus();
+    stereoCameraControl.setExposure();
+    stereoCameraControl.setFocus();
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
@@ -286,7 +281,6 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
-            ros::spin();
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
             auto rightQueue = device->getOutputQueue("right", 30, false);
