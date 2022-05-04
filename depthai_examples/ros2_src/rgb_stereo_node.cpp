@@ -187,6 +187,30 @@ int main(int argc, char** argv){
         monoHeight = 480;
     }
 
+    // Parameter events for OAK-D-PRO 
+    std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> dot_cb_handle, flood_cb_handle;
+
+    if (boardName == "OAK-D-PRO") {
+        param_subscriber = std::make_shared<rclcpp::ParameterEventHandler>(node);
+        
+        auto cb = [node, &device](const rclcpp::Parameter & p) {
+            if (p.get_name() == std::string("dotProjectormA"))
+            {
+                RCLCPP_INFO(node->get_logger(), "Updating Dot Projector current to %f", p.as_double());
+                device.setIrLaserDotProjectorBrightness(static_cast<float>(p.as_double()));
+            }
+            else if (p.get_name() == std::string("floodLightmA"))
+            {
+                RCLCPP_INFO(node->get_logger(), "Updating Flood Light current to %f", p.as_double());
+                device.setIrFloodLightBrightness(static_cast<float>(p.as_double()));
+            }
+        };
+
+        dot_cb_handle = param_subscriber->add_parameter_callback("dotProjectormA", cb);
+        flood_cb_handle = param_subscriber->add_parameter_callback("floodLightmA", cb);
+    }
+
     std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>> depthPublish, rgbPreviewPublish, rgbPublish;
 
     dai::rosBridge::ImageConverter depthConverter(tfPrefix + "_right_camera_optical_frame", true);
@@ -259,34 +283,8 @@ int main(int argc, char** argv){
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
 
-    // IR currents
-    float currentDotmA = 0.0f;
-    float currentFloodmA = 0.0f;
-
-    while (rclcpp::ok()){
-        // Spin some to allow parameters to be changed
-        rclcpp::spin_some(node);
-
-        // Allow IR usage on OAK-D-Pro's
-        if(boardName == "OAK-D-PRO")
-        {
-            node->get_parameter("dotProjectormA", dotProjectormA);
-
-            if (currentDotmA != dotProjectormA){
-                currentDotmA = dotProjectormA;
-                device.setIrLaserDotProjectorBrightness(currentDotmA);
-                std::cout << "Updated IR Dot Projector Brightness " << currentDotmA << std::endl;
-            }
-
-            node->get_parameter("floodLightmA", floodLightmA);
-
-            if (currentFloodmA != floodLightmA){
-                currentFloodmA = floodLightmA;
-                device.setIrLaserDotProjectorBrightness(currentFloodmA);
-                std::cout << "Updated IR Flood Light Brightness " << currentFloodmA << std::endl;
-            }
-        }
-    }
+    rclcpp::spin(node);
+    rclcpp::shutdown();
 
     return 0;
 }
