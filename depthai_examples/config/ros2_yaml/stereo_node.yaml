@@ -6,8 +6,8 @@ stereo_inertial_node:
         extended: false
         subpixel: true
         rectify: false
-        depth_aligned: false
-        stereo_fps: 30
+        depthAligned: false
+        stereoFps: 30
         confidence: 200
         LRchecktresh: 5
         monoResolution: "720p"

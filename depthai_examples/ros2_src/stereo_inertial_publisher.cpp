@@ -22,13 +22,15 @@
 #include "depthai_bridge/DepthPostProcessing.hpp"
 #include "depthai/depthai.hpp"
 
+using namespace dai::ros;
+
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    bool lrcheck,
                                                    bool extended,
                                                    bool subpixel,
                                                    bool rectify,
-                                                   bool depth_aligned,
-                                                   int stereo_fps,
+                                                   bool depthAligned,
+                                                   int stereoFps,
                                                    int confidence,
                                                    int LRchecktresh,
                                                    std::string resolution,
@@ -76,10 +78,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     // MonoCamera
     monoLeft->setResolution(monoResolution);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
-    monoLeft->setFps(stereo_fps);
+    monoLeft->setFps(stereoFps);
     monoRight->setResolution(monoResolution);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
-    monoRight->setFps(stereo_fps);
+    monoRight->setFps(stereoFps);
 
     // StereoDepth
     stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
@@ -91,7 +93,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     stereo->setRuntimeModeSwitch(true);
     auto config = postProcessing.getFilters(stereo->initialConfig.get());
     stereo->initialConfig.set(config);
-    if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
+    if(depthAligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
     imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
@@ -99,7 +101,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     imu->setBatchReportThreshold(5);
     imu->setMaxBatchReports(20);  // Get one message only for now.
 
-    if(depth_aligned) {
+    if(depthAligned) {
         // RGB image
         auto camRgb = pipeline.create<dai::node::ColorCamera>();
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
@@ -137,13 +139,14 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             stereo->syncedRight.link(xoutRight->input);
         }
     }
-    stereo->outConfig.link(xoutStereoCfg->input);
-    // Link plugins CAM -> STEREO -> XLINK
 
+    // Link plugins CAM -> STEREO -> XLINK
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
     auto stereoControlIn = pipeline.create<dai::node::XLinkIn>();
-    // stereoControlIn->setStreamName("control_stereo");
+    stereoControlIn->setStreamName("stereoDepthConfig");
+    stereoControlIn->out.link(stereo->inputConfig);
+
     // stereoControlIn->out.link(monoLeft->inputControl);
     // stereoControlIn->out.link(monoRight->inputControl);
     // auto stereoConfigIn = pipeline.create<dai::node::XLinkIn>();
@@ -158,7 +161,6 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     }
 
     imu->out.link(xoutImu->input);
-
     return std::make_tuple(pipeline, width, height);
 }
 
@@ -167,8 +169,8 @@ int main(int argc, char** argv) {
     auto node = rclcpp::Node::make_shared("stereo_inertial_node");
 
     std::string tfPrefix = "oak", mode = "depth", monoResolution = "720p";
-    int badParams = 0, stereo_fps = 30, confidence = 200, LRchecktresh = 5, imuModeParam = 1;
-    bool lrcheck = true, extended = false, subpixel = true, enableDepth, rectify = false, depth_aligned = true;
+    int badParams = 0, stereoFps = 30, confidence = 200, LRchecktresh = 5, imuModeParam = 1;
+    bool lrcheck = true, extended = false, subpixel = true, enableDepth, rectify = false, depthAligned = true;
     float angularVelCovariance = 0.02, linearAccelCovariance = 0.0;
 
     DepthPostProcessing postProcessing(node);
@@ -180,8 +182,8 @@ int main(int argc, char** argv) {
     node->get_parameter("extended", extended);
     node->get_parameter("subpixel", subpixel);
     node->get_parameter("rectify", rectify);
-    node->get_parameter("depth_aligned", depth_aligned);
-    node->get_parameter("stereo_fps", stereo_fps);
+    node->get_parameter("depth_aligned", depthAligned);
+    node->get_parameter("stereo_fps", stereoFps);
     node->get_parameter("confidence", confidence);
     node->get_parameter("LRchecktresh", LRchecktresh);
     node->get_parameter("monoResolution", monoResolution);
@@ -207,12 +209,7 @@ int main(int argc, char** argv) {
     rclcpp::Service<depthai_ros_msgs::srv::SetPostProcessing>::SharedPtr postProcessingService =
     node->create_service<depthai_ros_msgs::srv::SetPostProcessing>("set_post_processing", 
     std::bind(&DepthPostProcessing::setPostProcessingRequest, &postProcessing, std::placeholders::_1, std::placeholders::_2));
-    if (enableDepth && depth_aligned) {
-        cameraControl.setDevice(device);
-        cameraControl.setExposure();
-        cameraControl.setFocus();
-    }
-
+    
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
         stereoQueue = device->getOutputQueue("depth", 30, false);
@@ -284,12 +281,6 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
-            rclcpp::Service<depthai_ros_msgs::srv::SetExposure>::SharedPtr exposureService =
-                node->create_service<depthai_ros_msgs::srv::SetExposure>("set_rgb_exposure", 
-                std::bind(&CameraControl::setRgbExposureRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
-            rclcpp::Service<depthai_ros_msgs::srv::SetFocus>::SharedPtr focusService =
-                node->create_service<depthai_ros_msgs::srv::SetFocus>("set_camera_focus",
-                std::bind(&CameraControl::setFocusRequest, &cameraControl, std::placeholders::_1, std::placeholders::_2));
             rclcpp::spin(node);
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
@@ -312,6 +303,7 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
+            rclcpp::spin(node);
         }
     } else {
         std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
@@ -362,6 +354,7 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
+            ros::spin();
         }
     }
     return 0;

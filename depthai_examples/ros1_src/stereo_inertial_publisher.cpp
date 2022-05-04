@@ -186,7 +186,6 @@ int main(int argc, char** argv) {
     dai::ros::getParamWithWarning(pnh, "rectify", rectify);
     dai::ros::getParamWithWarning(pnh, "depthAligned", depthAligned);
 
-        std:: cout << "depthAligned -" << depthAligned << std::endl;
 
     bool enableDepth;
     if(mode == "depth") {
@@ -228,7 +227,6 @@ int main(int argc, char** argv) {
         monoHeight = 480;
     }
 
-    std:: cout << depthAligned << std::endl;
     dai::rosBridge::ImageConverter converter(tfPrefix + "_left_camera_optical_frame", true);
     dai::rosBridge::ImageConverter rightconverter(tfPrefix + "_right_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, monoWidth, monoHeight);

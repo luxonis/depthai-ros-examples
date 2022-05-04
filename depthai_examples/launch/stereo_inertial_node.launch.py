@@ -171,7 +171,7 @@ def generate_launch_description():
     streo_node = launch_ros.actions.Node(
             package='depthai_examples', executable='stereo_inertial_node',
             output='screen',
-#            parameters=[config])
+           parameters=[config])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
