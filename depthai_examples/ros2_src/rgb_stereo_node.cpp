@@ -121,6 +121,7 @@ int main(int argc, char** argv){
     bool lrcheck, extended, subpixel;
     bool useVideo, usePreview, useDepth;
     int confidence, LRchecktresh, previewWidth, previewHeight;
+    float dotProjectormA, floodLightmA;
 
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("lrcheck", true);
@@ -135,6 +136,8 @@ int main(int argc, char** argv){
     node->declare_parameter("useDepth", true);
     node->declare_parameter("previewWidth", 300);
     node->declare_parameter("previewHeight", 300);
+    node->declare_parameter("dotProjectormA", 0.0f);
+    node->declare_parameter("floodLightmA", 0.0f);
 
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("lrcheck",  lrcheck);
@@ -149,6 +152,8 @@ int main(int argc, char** argv){
     node->get_parameter("useDepth", useDepth);
     node->get_parameter("previewWidth", previewWidth);
     node->get_parameter("previewHeight", previewHeight);
+    node->get_parameter("dotProjectormA", dotProjectormA);
+    node->get_parameter("floodLightmA", floodLightmA);
 
     int colorWidth, colorHeight;
     if(colorResolution == "1080p"){
@@ -180,6 +185,30 @@ int main(int argc, char** argv){
     if (monoHeight > 480 && boardName == "OAK-D-LITE") {
         monoWidth = 640;
         monoHeight = 480;
+    }
+
+    // Parameter events for OAK-D-PRO 
+    std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> dot_cb_handle, flood_cb_handle;
+
+    if (boardName == "OAK-D-PRO") {
+        param_subscriber = std::make_shared<rclcpp::ParameterEventHandler>(node);
+        
+        auto cb = [node, &device](const rclcpp::Parameter & p) {
+            if (p.get_name() == std::string("dotProjectormA"))
+            {
+                RCLCPP_INFO(node->get_logger(), "Updating Dot Projector current to %f", p.as_double());
+                device.setIrLaserDotProjectorBrightness(static_cast<float>(p.as_double()));
+            }
+            else if (p.get_name() == std::string("floodLightmA"))
+            {
+                RCLCPP_INFO(node->get_logger(), "Updating Flood Light current to %f", p.as_double());
+                device.setIrFloodLightBrightness(static_cast<float>(p.as_double()));
+            }
+        };
+
+        dot_cb_handle = param_subscriber->add_parameter_callback("dotProjectormA", cb);
+        flood_cb_handle = param_subscriber->add_parameter_callback("floodLightmA", cb);
     }
 
     std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>> depthPublish, rgbPreviewPublish, rgbPublish;
@@ -253,7 +282,9 @@ int main(int argc, char** argv){
 
     // We can add the rectified frames also similar to these publishers. 
     // Left them out so that users can play with it by adding and removing
+
     rclcpp::spin(node);
+    rclcpp::shutdown();
 
     return 0;
 }

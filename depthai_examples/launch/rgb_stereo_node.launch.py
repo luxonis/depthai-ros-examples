@@ -41,6 +41,10 @@ def generate_launch_description():
     previewWidth    = LaunchConfiguration('previewWidth',    default = 300)
     previewHeight   = LaunchConfiguration('previewHeight',   default = 300)
 
+    # IR Brightness. OAK-D-Pro only.
+    dotProjectormA   = LaunchConfiguration('dotProjectormA',     default = 0.0)
+    floodLightmA     = LaunchConfiguration('floodLightmA',       default = 0.0)
+
     declare_camera_model_cmd = DeclareLaunchArgument(
         'camera_model',
         default_value=camera_model,
@@ -152,6 +156,16 @@ def generate_launch_description():
         default_value=previewHeight,
         description='Height of preview image')
 
+    declare_dotProjectormA_cmd = DeclareLaunchArgument(
+        'dotProjectormA',
+        default_value=dotProjectormA,
+        description='Brightness of IR Dot projector on OAK-D-Pro in mA.')
+
+    declare_floodLightmA_cmd = DeclareLaunchArgument(
+        'floodLightmA',
+        default_value=floodLightmA,
+        description='Brightness of IR Flood LED on OAK-D-Pro in mA.')
+
     urdf_launch = IncludeLaunchDescription(
                             launch_description_sources.PythonLaunchDescriptionSource(
                                     os.path.join(urdf_launch_dir, 'urdf_launch.py')),
@@ -181,7 +195,9 @@ def generate_launch_description():
                         {'usePreview': usePreview},
                         {'useDepth': useDepth},
                         {'previewWidth': previewWidth},
-                        {'previewHeight': previewHeight}])
+                        {'previewHeight': previewHeight},
+                        {'dotProjectormA': dotProjectormA},
+                        {'floodLightmA': floodLightmA}])
 
     metric_converter_node = launch_ros.actions.ComposableNodeContainer(
             name='container',
@@ -253,6 +269,9 @@ def generate_launch_description():
     ld.add_action(declare_useDepth_cmd)
     ld.add_action(declare_previewWidth_cmd)
     ld.add_action(declare_previewHeight_cmd)
+
+    ld.add_action(declare_dotProjectormA_cmd)
+    ld.add_action(declare_floodLightmA_cmd)
 
     ld.add_action(rgb_stereo_node)
     ld.add_action(urdf_launch)
