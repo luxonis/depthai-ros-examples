@@ -115,12 +115,12 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         }  // For now, RGB needs fixed focus to properly align with depth.
         // This value was used during calibration
         camRgb->isp.link(xoutRgb->input);
-        auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
-        rgbControlIn->setStreamName("control_rgb");
-        rgbControlIn->out.link(camRgb->inputControl);
-        auto rgbConfigIn = pipeline.create<dai::node::XLinkIn>();
-        rgbConfigIn->setStreamName("config_rgb");
-        rgbConfigIn->out.link(camRgb->inputConfig);
+        // auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
+        // rgbControlIn->setStreamName("control_rgb");
+        // rgbControlIn->out.link(camRgb->inputControl);
+        // auto rgbConfigIn = pipeline.create<dai::node::XLinkIn>();
+        // rgbConfigIn->setStreamName("config_rgb");
+        // rgbConfigIn->out.link(camRgb->inputConfig);
 
     } else {
         // Stereo imges
@@ -143,12 +143,12 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
     auto stereoControlIn = pipeline.create<dai::node::XLinkIn>();
-    stereoControlIn->setStreamName("control_stereo");
-    stereoControlIn->out.link(monoLeft->inputControl);
-    stereoControlIn->out.link(monoRight->inputControl);
-    auto stereoConfigIn = pipeline.create<dai::node::XLinkIn>();
-    stereoConfigIn->setStreamName("config_stereo");
-    stereoConfigIn->out.link(stereo->inputConfig);
+    // stereoControlIn->setStreamName("control_stereo");
+    // stereoControlIn->out.link(monoLeft->inputControl);
+    // stereoControlIn->out.link(monoRight->inputControl);
+    // auto stereoConfigIn = pipeline.create<dai::node::XLinkIn>();
+    // stereoConfigIn->setStreamName("config_stereo");
+    // stereoConfigIn->out.link(stereo->inputConfig);
     // stereoConfigIn->out.link(monoRight->inputConfig);
 
     if(enableDepth) {

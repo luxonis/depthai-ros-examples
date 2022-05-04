@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- <args for urdf/> -->
-    <arg name="camera_model"         default="OAK-D"       /> <!-- 'zed' or 'zedm' -->
+    <arg name="camera_model"         default="OAK-D"       />
     <arg name="tf_prefix"            default="oak"         />
     <arg name="mode"                 default="depth"       />
     <arg name="base_frame"           default="oak-d_frame" />
@@ -19,9 +19,9 @@
     <arg name="extended"              default="false"      /> 
     <arg name="subpixel"              default="true"       />
     <arg name="rectify"               default="true"       />
-    <arg name="depth_aligned"         default="true"      />
+    <arg name="depthAligned"          default="true"      />
      <!-- see https://docs.luxonis.com/projects/api/en/latest/components/nodes/stereo_depth/#currently-configurable-blocks for possible combination of optionf for higher fps-->
-    <arg name="stereo_fps"            default="15"         />
+    <arg name="stereoFps"             default="15"         />
     <arg name="confidence"            default="200"        />
     <arg name="LRchecktresh"          default="5"          />
     <arg name="monoResolution"        default="720p"       /> 
@@ -32,7 +32,7 @@
         <arg name="base_frame"      value="$(arg  base_frame)"  />
         <arg name="parent_frame"    value="$(arg  parent_frame)"/>
         <arg name="camera_model"    value="$(arg  camera_model)"/>
-        <arg name="tf_prefix"       value="$(arg  tf_prefix)" />
+        <arg name="tf_prefix"       value="$(arg  tf_prefix)"   />
         <arg name="cam_pos_x"       value="$(arg  cam_pos_x)"   />
         <arg name="cam_pos_y"       value="$(arg  cam_pos_y)"   />
         <arg name="cam_pos_z"       value="$(arg  cam_pos_z)"   />
@@ -50,13 +50,39 @@
         <param name="extended"              value="$(arg extended)"/>
         <param name="subpixel"              value="$(arg subpixel)"/>
         <param name="rectify"               value="$(arg rectify)" />
-        <param name="depth_aligned"         value="$(arg depth_aligned)" />
-        <param name="stereo_fps"            value="$(arg stereo_fps)" />
+        <param name="depthAligned"          value="$(arg depthAligned)" />
+        <param name="stereoFps"             value="$(arg stereoFps)" />
         <param name="confidence"            value="$(arg confidence)" />
         <param name="LRchecktresh"          value="$(arg LRchecktresh)" />
         <param name="monoResolution"        value="$(arg monoResolution)" />
         <param name="angularVelCovariance"  value="$(arg angularVelCovariance)" />
         <param name="linearAccelCovariance" value="$(arg linearAccelCovariance)" />
+        
+        <param name="stereo/median_enable"                  value="true"/>
+        <param name="stereo/speckle_enable"                 value="true"/>
+        <param name="stereo/decimation_enable"              value="false"/>
+        <param name="stereo/threshold_enable"               value="false"/>
+        <param name="stereo/spatial_enable"                 value="false"/>
+
+        <param name="stereo/median_mode"                    value="KERNEL_5x5"/>
+
+        <param name="stereo/speckle_range"                  value="50"/>
+
+        <param name="stereo/temporal_enable"                value="false"/>
+        <param name="stereo/temporal_mode"                  value="VALID_2_IN_LAST_4"/>
+        <param name="stereo/temporal_alpha"                 value="0.4"/>
+        <param name="stereo/temporal_delta"                 value="20"/>
+
+        <param name="stereo/spatial_radius"                 value="2"/>
+        <param name="stereo/spatial_alpha"                  value="0.5"/>
+        <param name="stereo/spatial_delta"                  value="0"/>
+        <param name="stereo/spatial_iterations"             value="1"/>
+
+        <param name="stereo/threshold_min"                  value="200"/>
+        <param name="stereo/threshold_max"                  value="30000"/>
+        <param name="stereo/decimation_mode"                value="1"/>
+        <param name="stereo/decimation_factor"              value="1"/>
+        
     </node>            
 
     <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>
@@ -68,7 +94,7 @@
     </node>
 
 
-    <node if="$(eval arg('depth_aligned') == true)" pkg="nodelet" type="nodelet" name="depth_image_to_rgb_pointcloud"
+    <node if="$(eval arg('depthAligned') == true)" pkg="nodelet" type="nodelet" name="depth_image_to_rgb_pointcloud"
         args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager">
         <remap from="rgb/camera_info" to="/stereo_inertial_publisher/color/camera_info"/>
         <remap from="rgb/image_rect_color" to="/stereo_inertial_publisher/color/image"/>
@@ -76,7 +102,7 @@
         <remap from="depth_registered/points" to="/stereo_inertial_publisher/stereo/points"/>
     </node>
 
-    <node if="$(eval arg('depth_aligned') == false)" pkg="nodelet" type="nodelet" name="depth_image_to_pointcloud"
+    <node if="$(eval arg('depthAligned') == false)" pkg="nodelet" type="nodelet" name="depth_image_to_pointcloud"
         args="load depth_image_proc/point_cloud_xyz nodelet_manager">
         <remap from="camera_info" to="/stereo_inertial_publisher/stereo/camera_info"/>
         <remap from="image_rect" to="/stereo_inertial_publisher/stereo/image"/>    
@@ -84,8 +110,8 @@
     </node>
 
 
-  <node if="$(eval arg('depth_aligned') == true)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialDepthAlign.rviz" />
-  <node if="$(eval arg('depth_aligned') == false)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialROS1.rviz" />
+  <node if="$(eval arg('depthAligned') == true)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialDepthAlign.rviz" />
+  <node if="$(eval arg('depthAligned') == false)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialROS1.rviz" />
 
 </launch>
 

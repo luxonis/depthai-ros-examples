@@ -117,9 +117,9 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             camRgb->setIspScale(2, 3);
         }
         camRgb->isp.link(xoutRgb->input);
-        auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
-        rgbControlIn->setStreamName("control_rgb");
-        rgbControlIn->out.link(camRgb->inputControl);
+        // auto rgbControlIn = pipeline.create<dai::node::XLinkIn>();
+        // rgbControlIn->setStreamName("control_rgb");
+        // rgbControlIn->out.link(camRgb->inputControl);
         // auto rgbConfigIn = pipeline.create<dai::node::XLinkIn>();
         // rgbConfigIn->setStreamName("config_rgb");
         // rgbConfigIn->out.link(camRgb->inputConfig);
@@ -143,8 +143,8 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
     auto stereoControlIn = pipeline.create<dai::node::XLinkIn>();
-    stereoControlIn->setStreamName("control_stereo");
-    stereoControlIn->out.link(monoLeft->inputControl);
+    stereoControlIn->setStreamName("stereoDepthConfig");
+    stereoControlIn->out.link(stereo->inputConfig);
     // stereoControlIn->out.link(monoRight->inputControl);
     // auto stereoConfigIn = pipeline.create<dai::node::XLinkIn>();
     // stereoConfigIn->setStreamName("config_stereo");
@@ -186,6 +186,7 @@ int main(int argc, char** argv) {
     dai::ros::getParamWithWarning(pnh, "rectify", rectify);
     dai::ros::getParamWithWarning(pnh, "depthAligned", depthAligned);
 
+        std:: cout << "depthAligned -" << depthAligned << std::endl;
 
     bool enableDepth;
     if(mode == "depth") {
@@ -227,6 +228,7 @@ int main(int argc, char** argv) {
         monoHeight = 480;
     }
 
+    std:: cout << depthAligned << std::endl;
     dai::rosBridge::ImageConverter converter(tfPrefix + "_left_camera_optical_frame", true);
     dai::rosBridge::ImageConverter rightconverter(tfPrefix + "_right_camera_optical_frame", true);
     auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, monoWidth, monoHeight);
@@ -255,7 +257,6 @@ int main(int argc, char** argv) {
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
 
     if(enableDepth) {
-        std::cout << "In depth";
         auto depthCameraInfo =
             depthAligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight) : rightCameraInfo;
         auto depthconverter = depthAligned ? rgbConverter : rightconverter;
@@ -284,6 +285,8 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
+            ros::ServiceServer postProcessingService = pnh.advertiseService("setPostProcessing", &DepthPostProcessing::setDepthPostProcessingRequest, &postProcessing);
+            ros::spin();
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
             auto rightQueue = device->getOutputQueue("right", 30, false);
@@ -305,6 +308,8 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
+            ros::ServiceServer postProcessingService = pnh.advertiseService("setPostProcessing", &DepthPostProcessing::setDepthPostProcessingRequest, &postProcessing);
+            ros::spin();
         }
     } else {
         std::string tfSuffix = depthAligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
@@ -333,6 +338,7 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
+            ros::ServiceServer postProcessingService = pnh.advertiseService("setPostProcessing", &DepthPostProcessing::setDepthPostProcessingRequest, &postProcessing);
             ros::spin();
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);
@@ -355,12 +361,13 @@ int main(int argc, char** argv) {
                 "right");
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
+            ros::ServiceServer postProcessingService = pnh.advertiseService("setPostProcessing", &DepthPostProcessing::setDepthPostProcessingRequest, &postProcessing);
+            ros::spin();
         }
         // ros::ServiceServer exposureService = pnh.advertiseService("setExposure", &CameraControl::setRgbExposureRequest, &cameraControl);
         // ros::ServiceServer focusService = pnh.advertiseService("setFocus", &CameraControl::setFocusRequest, &cameraControl);
-        ros::ServiceServer postProcessingService = pnh.advertiseService("setPostProcessing", &DepthPostProcessing::setDepthPostProcessingRequest, &postProcessing);
-        ros::spin();
     }
+    
 
     return 0;
 }
