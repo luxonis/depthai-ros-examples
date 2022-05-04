@@ -16,7 +16,7 @@
 #include "sensor_msgs/Image.h"
 
 // Inludes common necessary includes for development using depthai library
-#include "depthai_bridge/RosParameters.hpp"
+#include "depthai_bridge/depthaiUtility.hpp"
 #include "depthai/depthai.hpp"
 
 const std::vector<std::string> label_map = {
@@ -124,13 +124,13 @@ int main(int argc, char** argv) {
     int LRchecktresh = 5;
     std::string monoResolution = "720p";
 
-    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
-    getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
-    getParamWithWarning(pnh, "sync_nn", syncNN);
-    getParamWithWarning(pnh, "subpixel", subpixel);
-    getParamWithWarning(pnh, "confidence", confidence);
-    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
-    getParamWithWarning(pnh, "monoResolution", monoResolution);
+    dai::ros::getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    dai::ros::getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
+    dai::ros::getParamWithWarning(pnh, "sync_nn", syncNN);
+    dai::ros::getParamWithWarning(pnh, "subpixel", subpixel);
+    dai::ros::getParamWithWarning(pnh, "confidence", confidence);
+    dai::ros::getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
+    dai::ros::getParamWithWarning(pnh, "monoResolution", monoResolution);
 
     if(pnh.hasParam("nn_path")) {
         pnh.getParam("nn_path", nnPath);

@@ -12,7 +12,7 @@
 #include "sensor_msgs/Image.h"
 
 // Inludes common necessary includes for development using depthai library
-#include "depthai_bridge/RosParameters.hpp"
+#include "depthai_bridge/depthaiUtility.hpp"
 #include "depthai/depthai.hpp"
 
 dai::Pipeline createPipeline(bool syncNN, std::string nnPath) {
@@ -55,9 +55,9 @@ int main(int argc, char** argv) {
     std::string nnPath(BLOB_PATH);
     bool syncNN = true;
 
-    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
-    getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
-    getParamWithWarning(pnh, "sync_nn", syncNN);
+    dai::ros::getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    dai::ros::getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
+    dai::ros::getParamWithWarning(pnh, "sync_nn", syncNN);
 
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
     if(pnh.hasParam("nn_path")) {

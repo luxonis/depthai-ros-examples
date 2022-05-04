@@ -19,17 +19,20 @@
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/ImuConverter.hpp>
 
-#include "depthai_bridge/CameraControl.hpp"
+// #include "depthai_bridge/CameraControl.hpp"
 #include "depthai_bridge/DepthPostProcessing.hpp"
+#include "depthai_bridge/depthaiUtility.hpp"
 #include "depthai/depthai.hpp"
+
+using namespace dai::ros;
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    bool lrcheck,
                                                    bool extended,
                                                    bool subpixel,
                                                    bool rectify,
-                                                   bool depth_aligned,
-                                                   int stereo_fps,
+                                                   bool depthAligned,
+                                                   int stereoFps,
                                                    int confidence,
                                                    int LRchecktresh,
                                                    std::string resolution,
@@ -77,10 +80,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     // MonoCamera
     monoLeft->setResolution(monoResolution);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
-    monoLeft->setFps(stereo_fps);
+    monoLeft->setFps(stereoFps);
     monoRight->setResolution(monoResolution);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
-    monoRight->setFps(stereo_fps);
+    monoRight->setFps(stereoFps);
 
     // StereoDepth
     stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
@@ -91,7 +94,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     stereo->setSubpixel(subpixel);
     auto config = postProcessing.getFilters(stereo->initialConfig.get());
     stereo->initialConfig.set(config);
-    if(depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
+    if(depthAligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
     imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
@@ -99,7 +102,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     imu->setBatchReportThreshold(5);
     imu->setMaxBatchReports(20);
 
-    if(depth_aligned) {
+    if(depthAligned) {
         // RGB image
         auto camRgb = pipeline.create<dai::node::ColorCamera>();
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
@@ -164,26 +167,25 @@ int main(int argc, char** argv) {
 
     std::string tfPrefix = "oak", mode = "depth";
     std::string monoResolution = "720p";
-    int stereo_fps = 15, confidence = 200, LRchecktresh = 5, imuModeParam = 1;
-    bool lrcheck = true, extended = false, subpixel = true, rectify = true, depth_aligned = true;
+    int stereoFps = 15, confidence = 200, LRchecktresh = 5, imuModeParam = 1;
+    bool lrcheck = true, extended = false, subpixel = true, rectify = true, depthAligned = true;
     float angularVelCovariance = 0.02, linearAccelCovariance = 0.0;
 
-    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
-    getParamWithWarning(pnh, "mode", mode);
-    getParamWithWarning(pnh, "monoResolution", monoResolution);
-    getParamWithWarning(pnh, "imuMode", imuModeParam);
-    getParamWithWarning(pnh, "angularVelCovariance", angularVelCovariance);
-    getParamWithWarning(pnh, "linearAccelCovariance", linearAccelCovariance);
-    getParamWithWarning(pnh, "stereo_fps", stereo_fps);
-    getParamWithWarning(pnh, "confidence", confidence);
-    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
-    getParamWithWarning(pnh, "lrcheck", lrcheck);
-    getParamWithWarning(pnh, "extended", extended);
-    getParamWithWarning(pnh, "subpixel", subpixel);
-    getParamWithWarning(pnh, "rectify", rectify);
-    getParamWithWarning(pnh, "depth_aligned", depth_aligned);
+    dai::ros::getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    dai::ros::getParamWithWarning(pnh, "mode", mode);
+    dai::ros::getParamWithWarning(pnh, "monoResolution", monoResolution);
+    dai::ros::getParamWithWarning(pnh, "imuMode", imuModeParam);
+    dai::ros::getParamWithWarning(pnh, "angularVelCovariance", angularVelCovariance);
+    dai::ros::getParamWithWarning(pnh, "linearAccelCovariance", linearAccelCovariance);
+    dai::ros::getParamWithWarning(pnh, "stereoFps", stereoFps);
+    dai::ros::getParamWithWarning(pnh, "confidence", confidence);
+    dai::ros::getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
+    dai::ros::getParamWithWarning(pnh, "lrcheck", lrcheck);
+    dai::ros::getParamWithWarning(pnh, "extended", extended);
+    dai::ros::getParamWithWarning(pnh, "subpixel", subpixel);
+    dai::ros::getParamWithWarning(pnh, "rectify", rectify);
+    dai::ros::getParamWithWarning(pnh, "depthAligned", depthAligned);
 
-    DepthPostProcessing postProcessing(pnh);
 
     bool enableDepth;
     if(mode == "depth") {
@@ -193,21 +195,22 @@ int main(int argc, char** argv) {
     }
 
     dai::ros::ImuSyncMethod imuMode = static_cast<dai::ros::ImuSyncMethod>(imuModeParam);
+    dai::ros::DepthPostProcessing postProcessing(pnh, "stereo");
 
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
     std::tie(pipeline, monoWidth, monoHeight) =
-        createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, postProcessing);
+        createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depthAligned, stereoFps, confidence, LRchecktresh, monoResolution, postProcessing);
 
     std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>(pipeline);
     postProcessing.setDevice(device);
-
+    /* 
     dai::ros::CameraControl colorCameraControl(pnh, device, "rgb"), stereoCameraControl(pnh, device, "stereo");
     colorCameraControl.setExposure();
     colorCameraControl.setFocus();
     stereoCameraControl.setExposure();
     stereoCameraControl.setFocus();
-
+    */
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
         stereoQueue = device->getOutputQueue("depth", 30, false);
@@ -254,8 +257,8 @@ int main(int argc, char** argv) {
     if(enableDepth) {
         std::cout << "In depth";
         auto depthCameraInfo =
-            depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight) : rightCameraInfo;
-        auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
+            depthAligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight) : rightCameraInfo;
+        auto depthconverter = depthAligned ? rgbConverter : rightconverter;
         dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> depthPublish(
             stereoQueue,
             pnh,
@@ -270,7 +273,7 @@ int main(int argc, char** argv) {
             "stereo");
         depthPublish.addPublisherCallback();
 
-        if(depth_aligned) {
+        if(depthAligned) {
             auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
@@ -304,11 +307,11 @@ int main(int argc, char** argv) {
             leftPublish.addPublisherCallback();
         }
     } else {
-        std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
+        std::string tfSuffix = depthAligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
         dai::rosBridge::DisparityConverter dispConverter(tfPrefix + tfSuffix, 880, 7.5, 20, 2000);  // TODO(sachin): undo hardcoding of baseline
         auto disparityCameraInfo =
-            depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
-        auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
+            depthAligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 1280, 720) : rightCameraInfo;
+        auto depthconverter = depthAligned ? rgbConverter : rightconverter;
         dai::rosBridge::BridgePublisher<stereo_msgs::DisparityImage, dai::ImgFrame> dispPublish(
             stereoQueue,
             pnh,
@@ -318,7 +321,7 @@ int main(int argc, char** argv) {
             disparityCameraInfo,
             "stereo");
         dispPublish.addPublisherCallback();
-        if(depth_aligned) {
+        if(depthAligned) {
             auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
@@ -353,9 +356,9 @@ int main(int argc, char** argv) {
             rightPublish.addPublisherCallback();
             leftPublish.addPublisherCallback();
         }
-        ros::ServiceServer exposureService = pnh.advertiseService("setExposure", &CameraControl::setRgbExposureRequest, &cameraControl);
-        ros::ServiceServer focusService = pnh.advertiseService("setFocus", &CameraControl::setFocusRequest, &cameraControl);
-        ros::ServiceServer postProcessingService = pnh.advertiseService("setPostProcessing", &DepthPostProcessing::setPostProcessingRequest, &postProcessing);
+        // ros::ServiceServer exposureService = pnh.advertiseService("setExposure", &CameraControl::setRgbExposureRequest, &cameraControl);
+        // ros::ServiceServer focusService = pnh.advertiseService("setFocus", &CameraControl::setFocusRequest, &cameraControl);
+        ros::ServiceServer postProcessingService = pnh.advertiseService("setPostProcessing", &DepthPostProcessing::setDepthPostProcessingRequest, &postProcessing);
         ros::spin();
     }
 

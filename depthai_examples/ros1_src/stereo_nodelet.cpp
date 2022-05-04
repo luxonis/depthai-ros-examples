@@ -12,7 +12,7 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-#include "depthai_bridge/RosParameters.hpp"
+#include "depthai_bridge/depthaiUtility.hpp"
 #include "depthai/depthai.hpp"
 
 namespace depthai_examples {
@@ -33,13 +33,13 @@ class StereoNodelet : public nodelet::Nodelet {
         int confidence = 200;
         int LRchecktresh = 5;
 
-        getParamWithWarning(pnh, "tf_prefix", tfPrefix);
-        getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
-        getParamWithWarning(pnh, "monoResolution", monoResolution);
-        getParamWithWarning(pnh, "lrcheck", lrcheck);
-        getParamWithWarning(pnh, "subpixel", subpixel);
-        getParamWithWarning(pnh, "confidence", confidence);
-        getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
+        dai::ros::getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+        dai::ros::getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
+        dai::ros::getParamWithWarning(pnh, "monoResolution", monoResolution);
+        dai::ros::getParamWithWarning(pnh, "lrcheck", lrcheck);
+        dai::ros::getParamWithWarning(pnh, "subpixel", subpixel);
+        dai::ros::getParamWithWarning(pnh, "confidence", confidence);
+        dai::ros::getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
 
         bool enableDepth;
         if(mode == "depth") {

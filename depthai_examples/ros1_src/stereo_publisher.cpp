@@ -15,7 +15,7 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-#include "depthai_bridge/RosParameters.hpp"
+#include "depthai_bridge/depthaiUtility.hpp"
 #include "depthai/depthai.hpp"
 
 std::tuple<dai::Pipeline, int, int> createPipeline(
@@ -104,15 +104,15 @@ int main(int argc, char** argv) {
     std::string monoResolution = "720p";
     dai::Pipeline pipeline;
 
-    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
-    getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
-    getParamWithWarning(pnh, "lrcheck", lrcheck);
-    getParamWithWarning(pnh, "extended", extended);
-    getParamWithWarning(pnh, "subpixel", subpixel);
-    getParamWithWarning(pnh, "confidence", confidence);
-    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
-    getParamWithWarning(pnh, "mode", mode);
-    getParamWithWarning(pnh, "monoResolution", monoResolution);
+    dai::ros::getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    dai::ros::getParamWithWarning(pnh, "camera_param_uri", cameraParamUri);
+    dai::ros::getParamWithWarning(pnh, "lrcheck", lrcheck);
+    dai::ros::getParamWithWarning(pnh, "extended", extended);
+    dai::ros::getParamWithWarning(pnh, "subpixel", subpixel);
+    dai::ros::getParamWithWarning(pnh, "confidence", confidence);
+    dai::ros::getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
+    dai::ros::getParamWithWarning(pnh, "mode", mode);
+    dai::ros::getParamWithWarning(pnh, "monoResolution", monoResolution);
 
     bool enableDepth;
     if(mode == "depth") {

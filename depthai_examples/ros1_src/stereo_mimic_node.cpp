@@ -11,7 +11,7 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-#include "depthai_bridge/RosParameters.hpp"
+#include "depthai_bridge/depthaiUtility.hpp"
 #include "depthai/depthai.hpp"
 
 using ImagePublisher = dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>;
@@ -23,8 +23,8 @@ class StereoMimicNode {
         std::string tfPrefix = "oak";
         std::string camera_param_uri = "package://depthai_examples/params/camera";
 
-        getParamWithWarning(pnh, "tf_prefix", tfPrefix);
-        getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
+        dai::ros::getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+        dai::ros::getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
 
         _stereoPipeline = std::make_unique<StereoHost>();
         _stereoPipeline->initDepthaiDev();

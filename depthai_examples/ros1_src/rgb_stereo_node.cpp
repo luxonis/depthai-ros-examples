@@ -14,7 +14,7 @@
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 
-#include "depthai_bridge/RosParameters.hpp"
+#include "depthai_bridge/depthaiUtility.hpp"
 #include "depthai/depthai.hpp"
 
 dai::Pipeline createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution) {
@@ -88,13 +88,13 @@ int main(int argc, char** argv) {
     int confidence = 200;
     int LRchecktresh = 5;
 
-    getParamWithWarning(pnh, "tf_prefix", tfPrefix);
-    getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
-    getParamWithWarning(pnh, "lrcheck", lrcheck);
-    getParamWithWarning(pnh, "extended", extended);
-    getParamWithWarning(pnh, "subpixel", subpixel);
-    getParamWithWarning(pnh, "confidence", confidence);
-    getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
+    dai::ros::getParamWithWarning(pnh, "tf_prefix", tfPrefix);
+    dai::ros::getParamWithWarning(pnh, "camera_param_uri", camera_param_uri);
+    dai::ros::getParamWithWarning(pnh, "lrcheck", lrcheck);
+    dai::ros::getParamWithWarning(pnh, "extended", extended);
+    dai::ros::getParamWithWarning(pnh, "subpixel", subpixel);
+    dai::ros::getParamWithWarning(pnh, "confidence", confidence);
+    dai::ros::getParamWithWarning(pnh, "LRchecktresh", LRchecktresh);
 
     dai::Pipeline pipeline = createPipeline(lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution);
     dai::Device device(pipeline);
