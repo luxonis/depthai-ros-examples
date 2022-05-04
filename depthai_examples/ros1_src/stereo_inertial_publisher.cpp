@@ -143,12 +143,16 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "stereo_inertial_node");
     ros::NodeHandle pnh("~");
 
-    std::string tfPrefix, mode;
+    std::string tfPrefix, mode, mxId;
     std::string monoResolution = "720p";
     int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, enableDotProjector, enableFloodLight;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, enableDotProjector, enableFloodLight, usb2Mode, poeMode;
     double angularVelCovariance, linearAccelCovariance;
     double dotProjectormA, floodLightmA;
+
+    badParams += !pnh.getParam("mxId", mxId);
+    badParams += !pnh.getParam("usb2Mode", usb2Mode);
+    badParams += !pnh.getParam("poeMode", poeMode);
 
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("mode", mode);
@@ -186,28 +190,54 @@ int main(int argc, char** argv) {
 
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
+    bool isDeviceFound = false;
     std::tie(pipeline, monoWidth, monoHeight) =
         createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
 
-    dai::Device device(pipeline);
+    std::shared_ptr<dai::Device> device;
+    std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices();
 
-    if (enableDotProjector){
-        device.setIrLaserDotProjectorBrightness(dotProjectormA);
+    for(auto deviceInfo : availableDevices) {
+        std::cout << "Mx ID in the list " << deviceInfo.getMxId() << std::endl;
+        if(deviceInfo.getMxId() == mxId) {
+            if(deviceInfo.state == X_LINK_UNBOOTED || deviceInfo.state == X_LINK_BOOTLOADER) {
+                isDeviceFound = true;
+                if(poeMode) {
+                    device = std::make_shared<dai::Device>(pipeline, deviceInfo);
+                } else {
+                    device = std::make_shared<dai::Device>(pipeline, deviceInfo, usb2Mode);
+                }
+                break;
+            } else if(deviceInfo.state == X_LINK_BOOTED) {
+                throw std::runtime_error("ros::NodeHandle() from Node \"" + pnh.getNamespace() + "\" DepthAI Device with MxId  \"" + mxId
+                                         + "\" is already booted on different process.  \"");
+            }
+        } else if(mxId.empty()) {
+            isDeviceFound = true;
+            device = std::make_shared<dai::Device>(pipeline);
+        }
+    }
+    if(!isDeviceFound) {
+        throw std::runtime_error("ros::NodeHandle() from Node \"" + pnh.getNamespace() + "\" DepthAI Device with MxId  \"" + mxId + "\" not found.  \"");
     }
 
-    if (enableFloodLight){
-        device.setIrFloodLightBrightness(floodLightmA);
+    if(enableDotProjector) {
+        device->setIrLaserDotProjectorBrightness(dotProjectormA);
+    }
+
+    if(enableFloodLight) {
+        device->setIrFloodLightBrightness(floodLightmA);
     }
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
-        stereoQueue = device.getOutputQueue("depth", 30, false);
+        stereoQueue = device->getOutputQueue("depth", 30, false);
     } else {
-        stereoQueue = device.getOutputQueue("disparity", 30, false);
+        stereoQueue = device->getOutputQueue("disparity", 30, false);
     }
-    auto imuQueue = device.getOutputQueue("imu", 30, false);
+    auto imuQueue = device->getOutputQueue("imu", 30, false);
 
-    auto calibrationHandler = device.readCalibration();
+    auto calibrationHandler = device->readCalibration();
 
     auto boardName = calibrationHandler.getEepromData().boardName;
     if(monoHeight > 480 && boardName == "OAK-D-LITE") {
@@ -262,7 +292,7 @@ int main(int argc, char** argv) {
         depthPublish.addPublisherCallback();
 
         if(depth_aligned) {
-            auto imgQueue = device.getOutputQueue("rgb", 30, false);
+            auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
                 pnh,
@@ -274,8 +304,8 @@ int main(int argc, char** argv) {
             rgbPublish.addPublisherCallback();
             ros::spin();
         } else {
-            auto leftQueue = device.getOutputQueue("left", 30, false);
-            auto rightQueue = device.getOutputQueue("right", 30, false);
+            auto leftQueue = device->getOutputQueue("left", 30, false);
+            auto rightQueue = device->getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 pnh,
@@ -312,7 +342,7 @@ int main(int argc, char** argv) {
             "stereo");
         dispPublish.addPublisherCallback();
         if(depth_aligned) {
-            auto imgQueue = device.getOutputQueue("rgb", 30, false);
+            auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
@@ -325,8 +355,8 @@ int main(int argc, char** argv) {
             rgbPublish.addPublisherCallback();
             ros::spin();
         } else {
-            auto leftQueue = device.getOutputQueue("left", 30, false);
-            auto rightQueue = device.getOutputQueue("right", 30, false);
+            auto leftQueue = device->getOutputQueue("left", 30, false);
+            auto rightQueue = device->getOutputQueue("right", 30, false);
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> leftPublish(
                 leftQueue,
                 pnh,

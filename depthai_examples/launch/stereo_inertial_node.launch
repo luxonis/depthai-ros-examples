@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <launch>
     <!-- <args for urdf/> -->
+    <arg name="mxId"                 default=""/>
+    <arg name="usb2Mode"             default="false"/>
+    <arg name="poeMode"              default="false"/>
+
     <arg name="camera_model"         default="OAK-D"       /> <!-- 'zed' or 'zedm' -->
     <arg name="tf_prefix"            default="oak"         />
     <arg name="mode"                 default="depth"       />
@@ -50,6 +54,10 @@
 
     <!-- launch-prefix="xterm -e gdb (add [- - args] without space) -->
     <node name="stereo_inertial_publisher" pkg="depthai_examples" type="stereo_inertial_node" output="screen" required="true">
+        <param name="mxId"                  value="$(arg mxId)"/>
+        <param name="usb2Mode"              value="$(arg usb2Mode)"/>
+        <param name="poeMode"               value="$(arg poeMode)"/>
+
         <param name="tf_prefix"             value="$(arg tf_prefix)"/>
         <param name="mode"                  value="$(arg mode)"/>
         <param name="imuMode"               value="$(arg imuMode)"/>
@@ -81,6 +89,8 @@
 
     <node if="$(eval arg('depth_aligned') == true)" pkg="nodelet" type="nodelet" name="depth_image_to_rgb_pointcloud"
         args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager">
+        <param name="queue_size"          value="10"/>
+
         <remap from="rgb/camera_info" to="/stereo_inertial_publisher/color/camera_info"/>
         <remap from="rgb/image_rect_color" to="/stereo_inertial_publisher/color/image"/>
         <remap from="depth_registered/image_rect" to="/stereo_inertial_publisher/stereo/image"/>    
@@ -89,6 +99,7 @@
 
     <node if="$(eval arg('depth_aligned') == false)" pkg="nodelet" type="nodelet" name="depth_image_to_pointcloud"
         args="load depth_image_proc/point_cloud_xyz nodelet_manager">
+        <param name="queue_size"          value="10"/>
         <remap from="camera_info" to="/stereo_inertial_publisher/stereo/camera_info"/>
         <remap from="image_rect" to="/stereo_inertial_publisher/stereo/image"/>    
         <remap from="points" to="/stereo_inertial_publisher/stereo/points"/>
