@@ -16,6 +16,7 @@
 #include <depthai_bridge/DisparityConverter.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/ImuConverter.hpp>
+#include <depthai_bridge/ImgDetectionConverter.hpp>
 
 #include "depthai/depthai.hpp"
 
@@ -28,7 +29,9 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    int stereo_fps,
                                                    int confidence,
                                                    int LRchecktresh,
-                                                   std::string resolution) {
+                                                   std::string resolution,
+                                                   bool syncNN,
+                                                   std::string nnPath) {
     dai::Pipeline pipeline;
 
     auto monoLeft = pipeline.create<dai::node::MonoCamera>();
@@ -96,9 +99,15 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         // RGB image
         auto camRgb = pipeline.create<dai::node::ColorCamera>();
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
+        auto detectionNetwork = pipeline.create<dai::node::MobileNetDetectionNetwork>();
+        auto nnOut = pipeline.create<dai::node::XLinkOut>();
+
         xoutRgb->setStreamName("rgb");
+        nnOut->setStreamName("detections");
+        // camRgb->setPreviewSize(300, 300);
         camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
         camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+        camRgb->setInterleaved(false);
         // the ColorCamera is downscaled from 1080p to 720p.
         // Otherwise, the aligned depth is automatically upscaled to 1080p
         if(height < 720) {
@@ -107,6 +116,16 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             camRgb->setIspScale(2, 3);
         }
         camRgb->isp.link(xoutRgb->input);
+
+        // testing MobileNet DetectionNetwork
+        detectionNetwork->setConfidenceThreshold(0.5f);
+        detectionNetwork->setBlobPath(nnPath);
+        camRgb->preview.link(detectionNetwork->input);
+        if(syncNN) detectionNetwork->passthrough.link(xoutRgb->input);
+        else camRgb->preview.link(xoutRgb->input);
+
+        detectionNetwork->out.link(nnOut->input);
+
     } else {
         // Stereo imges
         auto xoutLeft = pipeline.create<dai::node::XLinkOut>();
@@ -145,8 +164,10 @@ int main(int argc, char** argv) {
 
     std::string tfPrefix, mode;
     std::string monoResolution = "720p";
+    // std::string cameraParamUri;
+    std::string nnPath(BLOB_PATH);
     int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, syncNN;
     double angularVelCovariance, linearAccelCovariance;
 
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
@@ -163,10 +184,17 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("monoResolution", monoResolution);
     badParams += !pnh.getParam("angularVelCovariance", angularVelCovariance);
     badParams += !pnh.getParam("linearAccelCovariance", linearAccelCovariance);
+    // badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
+    badParams += !pnh.getParam("sync_nn", syncNN);
 
     if(badParams > 0) {
         std::cout << " Bad parameters -> " << badParams << std::endl;
         throw std::runtime_error("Couldn't find %d of the parameters");
+    }
+
+    if (pnh.hasParam("nn_path"))
+    {
+      pnh.getParam("nn_path", nnPath);
     }
 
     if(mode == "depth") {
@@ -180,7 +208,7 @@ int main(int argc, char** argv) {
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
     std::tie(pipeline, monoWidth, monoHeight) =
-        createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
+        createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, syncNN, nnPath);
 
     dai::Device device(pipeline);
 
@@ -256,6 +284,18 @@ int main(int argc, char** argv) {
                 30,
                 rgbCameraInfo,
                 "color");
+                std::shared_ptr<dai::DataOutputQueue> nNetDataQueue = device.getOutputQueue("detections", 30, false);
+
+                dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_detection_optical_frame", colorWidth, colorHeight, false);
+                dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueue,
+                                                                                                         pnh, 
+                                                                                                         std::string("color/mobilenet_detections"),
+                                                                                                         std::bind(&dai::rosBridge::ImgDetectionConverter::toRosMsg, 
+                                                                                                         &detConverter,
+                                                                                                         std::placeholders::_1, 
+                                                                                                         std::placeholders::_2), 
+                                                                                                         30);
+            detectionPublish.addPublisherCallback();
             rgbPublish.addPublisherCallback();
             ros::spin();
         } else {

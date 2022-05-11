@@ -15,6 +15,9 @@
     <arg name="cam_pitch"             default="0.0"        /> <!-- Orientation respect to base frame (i.e. "base_link) -->
     <arg name="cam_yaw"               default="0.0"        /> <!-- Orientation respect to base frame (i.e. "base_link) -->
 
+    <arg name="sync_nn"             default="true"         />
+    <!-- <arg name="camera_param_uri"    default="package://depthai_examples/params/camera" /> -->
+
     <arg name="lrcheck"               default="true"       /> 
     <arg name="extended"              default="false"      /> 
     <arg name="subpixel"              default="true"       />
@@ -57,6 +60,8 @@
         <param name="monoResolution"        value="$(arg monoResolution)" />
         <param name="angularVelCovariance"  value="$(arg angularVelCovariance)" />
         <param name="linearAccelCovariance" value="$(arg linearAccelCovariance)" />
+        <!-- <param name="camera_param_uri"  value="$(arg camera_param_uri)"/> -->
+        <param name="sync_nn"           value="$(arg sync_nn)"/>
     </node>            
 
     <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>

@@ -200,6 +200,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
 
 
   target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
+  target_compile_definitions(stereo_inertial_node PRIVATE BLOB_PATH="${mobilenet_blob}")
   target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
 
 
