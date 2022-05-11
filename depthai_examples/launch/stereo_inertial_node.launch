@@ -83,6 +83,7 @@
 
     <node if="$(eval arg('depth_aligned') == false)" pkg="nodelet" type="nodelet" name="depth_image_to_pointcloud"
         args="load depth_image_proc/point_cloud_xyz nodelet_manager">
+        <param name="queue_size"          value="10"/>
         <remap from="camera_info" to="/stereo_inertial_publisher/stereo/camera_info"/>
         <remap from="image_rect" to="/stereo_inertial_publisher/stereo/image"/>    
         <remap from="points" to="/stereo_inertial_publisher/stereo/points"/>
