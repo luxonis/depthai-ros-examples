@@ -288,7 +288,7 @@ int main(int argc, char** argv) {
                 "color");
                 std::shared_ptr<dai::DataOutputQueue> nNetDataQueue = device.getOutputQueue("detections", 30, false);
 
-                dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_detection_optical_frame", colorWidth, colorHeight, false);
+                dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", colorWidth, colorHeight, false);
                 dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections> detectionPublish(nNetDataQueue,
                                                                                                          pnh, 
                                                                                                          std::string("color/mobilenet_detections"),
@@ -297,8 +297,22 @@ int main(int argc, char** argv) {
                                                                                                          std::placeholders::_1, 
                                                                                                          std::placeholders::_2), 
                                                                                                          30);
+            std::shared_ptr<dai::DataOutputQueue> previewQueue = device.getOutputQueue("preview", 30, false);
+            dai::rosBridge::ImageConverter previewConverter(tfPrefix + "_rgb_camera_optical_frame", false);
+            dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> previewPublish(previewQueue,
+                                                                                    pnh, 
+                                                                                    std::string("color/preview_image"),
+                                                                                    std::bind(&dai::rosBridge::ImageConverter::toRosMsg, 
+                                                                                    &rgbConverter, // since the converter has the same frame name
+                                                                                                    // and image type is also same we can reuse it
+                                                                                    std::placeholders::_1, 
+                                                                                    std::placeholders::_2) , 
+                                                                                    30,
+                                                                                    rgbCameraInfo,
+                                                                                    "color");
             detectionPublish.addPublisherCallback();
             rgbPublish.addPublisherCallback();
+            previewPublish.addPublisherCallback();
             ros::spin();
         } else {
             auto leftQueue = device.getOutputQueue("left", 30, false);
