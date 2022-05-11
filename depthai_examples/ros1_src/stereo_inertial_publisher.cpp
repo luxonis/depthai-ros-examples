@@ -99,12 +99,14 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         // RGB image
         auto camRgb = pipeline.create<dai::node::ColorCamera>();
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
+        auto xoutPreview = pipeline.create<dai::node::XLinkOut>();
         auto detectionNetwork = pipeline.create<dai::node::MobileNetDetectionNetwork>();
         auto nnOut = pipeline.create<dai::node::XLinkOut>();
 
         xoutRgb->setStreamName("rgb");
+        xoutPreview->setStreamName("preview");
         nnOut->setStreamName("detections");
-        // camRgb->setPreviewSize(300, 300);
+        camRgb->setPreviewSize(300, 300);
         camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
         camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
         camRgb->setInterleaved(false);
@@ -121,8 +123,8 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         detectionNetwork->setConfidenceThreshold(0.5f);
         detectionNetwork->setBlobPath(nnPath);
         camRgb->preview.link(detectionNetwork->input);
-        if(syncNN) detectionNetwork->passthrough.link(xoutRgb->input);
-        else camRgb->preview.link(xoutRgb->input);
+        if(syncNN) detectionNetwork->passthrough.link(xoutPreview->input);
+        else camRgb->preview.link(xoutPreview->input);
 
         detectionNetwork->out.link(nnOut->input);
 
