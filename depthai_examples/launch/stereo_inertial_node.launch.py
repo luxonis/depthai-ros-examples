@@ -15,7 +15,7 @@ def generate_launch_description():
     urdf_launch_dir = os.path.join(get_package_share_directory('depthai_bridge'), 'launch')
     
 
-    mxId         = LaunchConfiguration('mxId',      default = '')
+    mxId         = LaunchConfiguration('mxId',      default = 'x')
     usb2Mode     = LaunchConfiguration('usb2Mode',  default = False)
     poeMode      = LaunchConfiguration('poeMode',   default = False)
 

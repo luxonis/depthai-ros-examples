@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
                 throw std::runtime_error( "\" DepthAI Device with MxId  \"" + mxId
                                          + "\" is already booted on different process.  \"");
             }
-        } else if(mxId.empty()) {
+        } else if(mxId == "x") {
             isDeviceFound = true;
             device = std::make_shared<dai::Device>(pipeline);
         }
