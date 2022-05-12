@@ -68,9 +68,6 @@ if ( ament_cmake_FOUND )
     ${ament_INCLUDE_DIRS}
   )
 
-  if($ENV{ROS_DISTRO} STREQUAL "galactic")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE IS_GALACTIC)
-  endif()
 
   macro(dai_add_node_ros2 node_name node_src)
     add_executable("${node_name}" "${node_src}")
@@ -105,6 +102,9 @@ if ( ament_cmake_FOUND )
   target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
   target_compile_definitions(stereo_inertial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
   
+  if($ENV{ROS_DISTRO} STREQUAL "galactic")
+    target_compile_definitions(rgb_stereo_node PRIVATE IS_GALACTIC)
+  endif()
   # ament_export_include_directories(include)
   # ament_export_libraries(${PROJECT_NAME})
   # ament_export_dependencies(${dependencies}

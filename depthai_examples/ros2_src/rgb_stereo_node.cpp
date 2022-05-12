@@ -196,7 +196,6 @@ int main(int argc, char** argv){
     // Parameter events for OAK-D-PRO 
     std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> dot_cb_handle, flood_cb_handle;
-
     auto cb = [node, &device](const rclcpp::Parameter & p) {
         if (p.get_name() == std::string("dotProjectormA"))
         {
