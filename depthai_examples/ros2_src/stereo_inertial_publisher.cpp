@@ -18,6 +18,8 @@
 
 #include "depthai/depthai.hpp"
 
+std::vector<std::string> usbStrings = { "UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
+
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    bool lrcheck,
                                                    bool extended,
@@ -214,7 +216,7 @@ int main(int argc, char** argv) {
         createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
 
     std::shared_ptr<dai::Device> device;
-    std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices()
+    std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices();
 
     std::cout << "Listing available devices..." << std::endl;
     for(auto deviceInfo : availableDevices) {
@@ -229,7 +231,7 @@ int main(int argc, char** argv) {
                 }
                 break;
             } else if(deviceInfo.state == X_LINK_BOOTED) {
-                throw std::runtime_error("ros::NodeHandle() from Node \"" + pnh.getNamespace() + "\" DepthAI Device with MxId  \"" + mxId
+                throw std::runtime_error( "\" DepthAI Device with MxId  \"" + mxId
                                          + "\" is already booted on different process.  \"");
             }
         } else if(mxId.empty()) {

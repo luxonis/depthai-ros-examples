@@ -155,8 +155,11 @@ int main(int argc, char** argv){
     node->get_parameter("dotProjectormA", dotProjectormA);
     node->get_parameter("floodLightmA", floodLightmA);
 
+    int colorWidth, colorHeight;
+    if(colorResolution == "1080p"){
         colorWidth = 1920;
         colorHeight = 1080;
+    }else if (colorResolution == "4K"){
         colorWidth = 3840;
         colorHeight = 2160;
     }else{
