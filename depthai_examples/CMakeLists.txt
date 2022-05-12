@@ -99,6 +99,7 @@ if ( ament_cmake_FOUND )
     
   target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
   target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
+  target_compile_definitions(stereo_inertial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
   
   # ament_export_include_directories(include)
   # ament_export_libraries(${PROJECT_NAME})
@@ -198,10 +199,9 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   dai_add_node(stereo_node ros1_src/stereo_publisher.cpp)
   dai_add_node(yolov4_spatial_node ros1_src/yolov4_spatial_publisher.cpp)
 
-
   target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
   target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
-
+  target_compile_definitions(stereo_inertial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
 
   ## Install these nodes
   install(TARGETS

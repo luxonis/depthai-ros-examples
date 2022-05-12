@@ -6,22 +6,25 @@
 #include <iostream>
 #include <tuple>
 
-#include "ros/ros.h"
-#include "sensor_msgs/Image.h"
-#include "sensor_msgs/Imu.h"
-#include "stereo_msgs/DisparityImage.h"
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/Imu.h>
+#include <stereo_msgs/DisparityImage.h>
+#include <depthai_ros_msgs/SpatialDetectionArray.h>
 
 // Inludes common necessary includes for development using depthai library
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/DisparityConverter.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/ImuConverter.hpp>
+#include <depthai_bridge/SpatialDetectionConverter.hpp>
 
 #include "depthai/depthai.hpp"
 
 std::vector<std::string> usbStrings = { "UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
+                                                   bool enableSpatialDetection,
                                                    bool lrcheck,
                                                    bool extended,
                                                    bool subpixel,
@@ -30,7 +33,9 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    int stereo_fps,
                                                    int confidence,
                                                    int LRchecktresh,
-                                                   std::string resolution) {
+                                                   std::string resolution,
+                                                   bool syncNN,
+                                                   std::string nnPath) {
     dai::Pipeline pipeline;
 
     auto monoLeft = pipeline.create<dai::node::MonoCamera>();
@@ -94,21 +99,55 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     imu->setBatchReportThreshold(5);
     imu->setMaxBatchReports(20);  // Get one message only for now.
 
-    if(enableDepth && depth_aligned) {
+    if(depth_aligned) {
         // RGB image
         auto camRgb = pipeline.create<dai::node::ColorCamera>();
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
         xoutRgb->setStreamName("rgb");
         camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
         camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
-        // the ColorCamera is downscaled from 1080p to 720p.
-        // Otherwise, the aligned depth is automatically upscaled to 1080p
         if(height < 720) {
             camRgb->setIspScale(1, 3);
         } else {
             camRgb->setIspScale(2, 3);
         }
         camRgb->isp.link(xoutRgb->input);
+
+        if(enableSpatialDetection){
+            camRgb->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
+            camRgb->setInterleaved(false);
+            camRgb->setPreviewSize(416, 416);
+            
+            auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
+            auto xoutNN =  pipeline.create<dai::node::XLinkOut>();
+            auto xoutPreview = pipeline.create<dai::node::XLinkOut>();
+            xoutPreview->setStreamName("preview");
+            xoutNN->setStreamName("detections");
+            
+            spatialDetectionNetwork->setBlobPath(nnPath);
+            spatialDetectionNetwork->setConfidenceThreshold(0.5f);
+            spatialDetectionNetwork->input.setBlocking(false);
+            spatialDetectionNetwork->setBoundingBoxScaleFactor(0.5);
+            spatialDetectionNetwork->setDepthLowerThreshold(100);
+            spatialDetectionNetwork->setDepthUpperThreshold(10000);
+
+            // yolo specific parameters
+            spatialDetectionNetwork->setNumClasses(80);
+            spatialDetectionNetwork->setCoordinateSize(4);
+            spatialDetectionNetwork->setAnchors({10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319});
+            spatialDetectionNetwork->setAnchorMasks({{"side13", {3, 4, 5}}, {"side26", {1, 2, 3}}});
+            spatialDetectionNetwork->setIouThreshold(0.5f);
+
+            // Link plugins CAM -> NN -> XLINK
+            camRgb->preview.link(spatialDetectionNetwork->input);
+            if(syncNN)
+                spatialDetectionNetwork->passthrough.link(xoutPreview->input);
+            else
+                camRgb->preview.link(xoutPreview->input);
+            spatialDetectionNetwork->out.link(xoutNN->input);
+            stereo->depth.link(spatialDetectionNetwork->inputDepth);
+        }
+
     } else {
         // Stereo imges
         auto xoutLeft = pipeline.create<dai::node::XLinkOut>();
@@ -126,7 +165,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     }
 
     // Link plugins CAM -> STEREO -> XLINK
-
+    stereo->setRectifyEdgeFillColor(0);
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
 
@@ -147,8 +186,12 @@ int main(int argc, char** argv) {
 
     std::string tfPrefix, mode, mxId;
     std::string monoResolution = "720p";
+    std::string nnPath(BLOB_PATH);
+    std::cout << " nn path..." << nnPath << std::endl;
     int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
-    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, enableDotProjector, enableFloodLight, usb2Mode, poeMode;
+    bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
+    bool enableSpatialDetection, enableDotProjector, enableFloodLight;
+    bool usb2Mode, poeMode, syncNN;
     double angularVelCovariance, linearAccelCovariance;
     double dotProjectormA, floodLightmA;
 
@@ -172,6 +215,8 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("monoResolution", monoResolution);
     badParams += !pnh.getParam("angularVelCovariance", angularVelCovariance);
     badParams += !pnh.getParam("linearAccelCovariance", linearAccelCovariance);
+    badParams += !pnh.getParam("enableSpatialDetection", enableSpatialDetection);
+    badParams += !pnh.getParam("syncNN", syncNN);
 
     // Applies only to PRO model
     badParams += !pnh.getParam("enableDotProjector", enableDotProjector);
@@ -183,6 +228,12 @@ int main(int argc, char** argv) {
         std::cout << " Bad parameters -> " << badParams << std::endl;
         throw std::runtime_error("Couldn't find %d of the parameters");
     }
+
+    if (pnh.hasParam("nnPath"))
+    {
+      pnh.getParam("nnPath", nnPath);
+    }
+    std::cout << " nn path..." << nnPath << std::endl;
 
     if(mode == "depth") {
         enableDepth = true;
@@ -196,7 +247,7 @@ int main(int argc, char** argv) {
     int monoWidth, monoHeight;
     bool isDeviceFound = false;
     std::tie(pipeline, monoWidth, monoHeight) =
-        createPipeline(enableDepth, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution);
+        createPipeline(enableDepth, enableSpatialDetection, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, syncNN, nnPath);
 
     std::shared_ptr<dai::Device> device;
     std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices();
@@ -222,6 +273,7 @@ int main(int argc, char** argv) {
             device = std::make_shared<dai::Device>(pipeline);
         }
     }
+
     if(!isDeviceFound) {
         throw std::runtime_error("ros::NodeHandle() from Node \"" + pnh.getNamespace() + "\" DepthAI Device with MxId  \"" + mxId + "\" not found.  \"");
     }
@@ -312,6 +364,36 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
+
+            if (enableSpatialDetection){
+                auto previewQueue = device->getOutputQueue("preview", 30, false);
+                auto detectionQueue = device->getOutputQueue("detections", 30, false);
+                auto previewCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 416, 416);
+
+                dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> previewPublish(
+                    previewQueue,
+                    pnh,
+                    std::string("color/preview/image"),
+                    std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &rgbConverter, std::placeholders::_1, std::placeholders::_2),
+                    30,
+                    previewCameraInfo,
+                    "color/preview");
+                previewPublish.addPublisherCallback();
+
+                dai::rosBridge::SpatialDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 416, 416, false);
+                dai::rosBridge::BridgePublisher<depthai_ros_msgs::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(detectionQueue,
+                                                                                                                    pnh, 
+                                                                                                                    std::string("color/yolov4_Spatial_detections"),
+                                                                                                                    std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, 
+                                                                                                                    &detConverter,
+                                                                                                                    std::placeholders::_1, 
+                                                                                                                    std::placeholders::_2) , 
+                                                                                                                    30);
+                detectionPublish.addPublisherCallback();
+                ros::spin();
+
+            }
+
             ros::spin();
         } else {
             auto leftQueue = device->getOutputQueue("left", 30, false);

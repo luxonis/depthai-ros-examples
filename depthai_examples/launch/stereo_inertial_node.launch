@@ -25,6 +25,10 @@
     <arg name="rectify"               default="true" />
     <arg name="depth_aligned"         default="true" />
 
+    <arg name="enableSpatialDetection" default="true" />
+    <arg name="syncNN"                 default="true" />
+    <!-- <arg name="nnPath"                 default="" /> -->
+
      <!-- see https://docs.luxonis.com/projects/api/en/latest/components/nodes/stereo_depth/#currently-configurable-blocks for possible combination of optionf for higher fps-->
     <arg name="stereo_fps"            default="15"  />
     <arg name="confidence"            default="200" />
@@ -60,11 +64,17 @@
         <param name="tf_prefix"             value="$(arg tf_prefix)"/>
         <param name="mode"                  value="$(arg mode)"/>
         <param name="imuMode"               value="$(arg imuMode)"/>
+
         <param name="lrcheck"               value="$(arg lrcheck)"/>
         <param name="extended"              value="$(arg extended)"/>
         <param name="subpixel"              value="$(arg subpixel)"/>
         <param name="rectify"               value="$(arg rectify)" />
         <param name="depth_aligned"         value="$(arg depth_aligned)" />
+        
+        <param name="enableSpatialDetection"   value="$(arg enableSpatialDetection)" />
+        <param name="syncNN"                   value="$(arg syncNN)" />
+        <!-- <param name="nnPath"                   value="$(arg nnPath)" /> -->
+
         <param name="stereo_fps"            value="$(arg stereo_fps)" />
         <param name="confidence"            value="$(arg confidence)" />
         <param name="LRchecktresh"          value="$(arg LRchecktresh)" />
