@@ -68,6 +68,10 @@ if ( ament_cmake_FOUND )
     ${ament_INCLUDE_DIRS}
   )
 
+  if($ENV{ROS_DISTRO} STREQUAL "galactic")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE IS_GALACTIC)
+  endif()
+
   macro(dai_add_node_ros2 node_name node_src)
     add_executable("${node_name}" "${node_src}")
 
@@ -91,7 +95,7 @@ if ( ament_cmake_FOUND )
   dai_add_node_ros2(crop_control_service ros2_src/crop_control_service.cpp)
   dai_add_node_ros2(mobilenet_node ros2_src/mobilenet_publisher.cpp)
   dai_add_node_ros2(rgb_node ros2_src/rgb_publisher.cpp)
-  # dai_add_node_ros2(rgb_stereo_node ros2_src/rgb_stereo_node.cpp)
+  dai_add_node_ros2(rgb_stereo_node ros2_src/rgb_stereo_node.cpp)
   # dai_add_node_ros2(rgb_subscriber_node ros2_src/rgb_video_subscriber.cpp)
   dai_add_node_ros2(stereo_inertial_node ros2_src/stereo_inertial_publisher.cpp)
   dai_add_node_ros2(stereo_node ros2_src/stereo_publisher.cpp)
@@ -116,7 +120,7 @@ if ( ament_cmake_FOUND )
           crop_control_service
           mobilenet_node
           rgb_node
-          # rgb_stereo_node
+          rgb_stereo_node
           # rgb_subscriber_node
           # stereo_mimic_node
           stereo_inertial_node

@@ -4,16 +4,20 @@
 #include <iostream>
 #include <cstdio>
 #include <tuple>
+#include <chrono>
+#include <functional>
+
 // #include "utility.hpp"
 #include <sensor_msgs/msg/image.hpp>
 #include <camera_info_manager/camera_info_manager.hpp>
-#include <functional>
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
 
 #include <depthai_bridge/BridgePublisher.hpp>
 #include <depthai_bridge/ImageConverter.hpp>
+
+using namespace std::chrono_literals;
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh,
                                                    bool useVideo, bool usePreview, int previewWidth, int previewHeight,
@@ -187,29 +191,56 @@ int main(int argc, char** argv){
         monoHeight = 480;
     }
 
+
+#ifdef IS_GALACTIC
     // Parameter events for OAK-D-PRO 
     std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> dot_cb_handle, flood_cb_handle;
 
-    if (boardName == "OAK-D-PRO") {
+    auto cb = [node, &device](const rclcpp::Parameter & p) {
+        if (p.get_name() == std::string("dotProjectormA"))
+        {
+            RCLCPP_INFO(node->get_logger(), "Updating Dot Projector current to %f", p.as_double());
+            device.setIrLaserDotProjectorBrightness(static_cast<float>(p.as_double()));
+        }
+        else if (p.get_name() == std::string("floodLightmA"))
+        {
+            RCLCPP_INFO(node->get_logger(), "Updating Flood Light current to %f", p.as_double());
+            device.setIrFloodLightBrightness(static_cast<float>(p.as_double()));
+        }
+    };
+
+    if (boardName.find("PRO") != std::string::npos) {
         param_subscriber = std::make_shared<rclcpp::ParameterEventHandler>(node);
-        
-        auto cb = [node, &device](const rclcpp::Parameter & p) {
-            if (p.get_name() == std::string("dotProjectormA"))
-            {
-                RCLCPP_INFO(node->get_logger(), "Updating Dot Projector current to %f", p.as_double());
-                device.setIrLaserDotProjectorBrightness(static_cast<float>(p.as_double()));
-            }
-            else if (p.get_name() == std::string("floodLightmA"))
-            {
-                RCLCPP_INFO(node->get_logger(), "Updating Flood Light current to %f", p.as_double());
-                device.setIrFloodLightBrightness(static_cast<float>(p.as_double()));
-            }
-        };
 
         dot_cb_handle = param_subscriber->add_parameter_callback("dotProjectormA", cb);
         flood_cb_handle = param_subscriber->add_parameter_callback("floodLightmA", cb);
     }
+
+#else
+    rclcpp::TimerBase::SharedPtr timer;
+    auto cb = [node, &device, &dotProjectormA, &floodLightmA]() {
+        // rclcpp::Parameter p;
+        float dotProjectormATemp, floodLightmATemp;
+        node->get_parameter("dotProjectormA", dotProjectormATemp);
+        node->get_parameter("floodLightmA", floodLightmATemp);
+        if (dotProjectormATemp != dotProjectormA){
+            dotProjectormA = dotProjectormATemp;
+            RCLCPP_INFO(node->get_logger(), "Updating Dot Projector current to %f", dotProjectormA);
+            device.setIrLaserDotProjectorBrightness(static_cast<float>(dotProjectormA));
+        }
+
+        if (floodLightmATemp != floodLightmA){
+            floodLightmA = floodLightmATemp;
+            RCLCPP_INFO(node->get_logger(), "Updating Flood Light current to %f", floodLightmA);
+            device.setIrFloodLightBrightness(static_cast<float>(floodLightmA));
+        }
+    };
+
+    timer = node->create_wall_timer(500ms, cb);
+#endif 
+
+
 
     std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame>> depthPublish, rgbPreviewPublish, rgbPublish;
 
