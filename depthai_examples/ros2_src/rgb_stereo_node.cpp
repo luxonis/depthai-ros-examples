@@ -236,8 +236,9 @@ int main(int argc, char** argv){
             device.setIrFloodLightBrightness(static_cast<float>(floodLightmA));
         }
     };
-
-    timer = node->create_wall_timer(500ms, cb);
+    if (boardName.find("PRO") != std::string::npos) {
+        timer = node->create_wall_timer(500ms, cb);
+    }
 #endif 
 
 
