@@ -241,6 +241,11 @@ int main(int argc, char** argv) {
         throw std::runtime_error("\" DepthAI Device with MxId  \"" + mxId + "\" not found.  \"");
     }
 
+    if(!poeMode){
+        std::cout << "Device USB status: " << usbStrings[static_cast<int32_t>(device->getUsbSpeed())] << std::endl;
+    }
+
+
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
         stereoQueue = device->getOutputQueue("depth", 30, false);

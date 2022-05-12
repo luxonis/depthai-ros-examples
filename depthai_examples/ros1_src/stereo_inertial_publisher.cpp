@@ -19,6 +19,8 @@
 
 #include "depthai/depthai.hpp"
 
+std::vector<std::string> usbStrings = { "UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
+
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    bool lrcheck,
                                                    bool extended,
@@ -222,6 +224,10 @@ int main(int argc, char** argv) {
     }
     if(!isDeviceFound) {
         throw std::runtime_error("ros::NodeHandle() from Node \"" + pnh.getNamespace() + "\" DepthAI Device with MxId  \"" + mxId + "\" not found.  \"");
+    }
+
+    if(!poeMode){
+        std::cout << "Device USB status: " << usbStrings[static_cast<int32_t>(device->getUsbSpeed())] << std::endl;
     }
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
