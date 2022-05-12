@@ -5,39 +5,38 @@
     <arg name="usb2Mode"             default="false"/>
     <arg name="poeMode"              default="false"/>
 
-    <arg name="camera_model"         default="OAK-D"       /> <!-- 'zed' or 'zedm' -->
-    <arg name="tf_prefix"            default="oak"         />
-    <arg name="mode"                 default="depth"       />
-    <arg name="base_frame"           default="oak-d_frame" />
+    <arg name="camera_model"         default="OAK-D"            /> <!-- 'zed' or 'zedm' -->
+    <arg name="tf_prefix"            default="oak"              />
+    <arg name="mode"                 default="depth"            />
+    <arg name="base_frame"           default="oak-d_frame"      />
     <arg name="parent_frame"         default="oak-d-base-frame" /> 
-    <arg name="imuMode"              default="1" />   <!-- 0 -> COPY, 1 -> LINEAR_INTERPOLATE_GYRO, 2 -> LINEAR_INTERPOLATE_ACCEL -->
+    <arg name="imuMode"              default="1"                />   <!-- 0 -> COPY, 1 -> LINEAR_INTERPOLATE_GYRO, 2 -> LINEAR_INTERPOLATE_ACCEL -->
 
-    <arg name="cam_pos_x"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
-    <arg name="cam_pos_y"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
-    <arg name="cam_pos_z"             default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
-    <arg name="cam_roll"              default="0.0"        /> <!-- Orientation respect to base frame (i.e. "base_link) -->
-    <arg name="cam_pitch"             default="0.0"        /> <!-- Orientation respect to base frame (i.e. "base_link) -->
-    <arg name="cam_yaw"               default="0.0"        /> <!-- Orientation respect to base frame (i.e. "base_link) -->
+    <arg name="cam_pos_x"             default="0.0" /> <!-- Position respect to base frame (i.e. "base_link) -->
+    <arg name="cam_pos_y"             default="0.0" /> <!-- Position respect to base frame (i.e. "base_link) -->
+    <arg name="cam_pos_z"             default="0.0" /> <!-- Position respect to base frame (i.e. "base_link) -->
+    <arg name="cam_roll"              default="0.0" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
+    <arg name="cam_pitch"             default="0.0" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
+    <arg name="cam_yaw"               default="0.0" /> <!-- Orientation respect to base frame (i.e. "base_link) -->
 
-    <arg name="lrcheck"               default="true"       /> 
-    <arg name="extended"              default="false"      /> 
-    <arg name="subpixel"              default="true"       />
-    <arg name="rectify"               default="true"       />
-    <arg name="enableDotProjector"    default="false"      />
-    <arg name="enableFloodLight"      default="false"      />
-    <arg name="depth_aligned"         default="true"       />
+    <arg name="lrcheck"               default="true" /> 
+    <arg name="extended"              default="false"/> 
+    <arg name="subpixel"              default="true" />
+    <arg name="rectify"               default="true" />
+    <arg name="enableDotProjector"    default="false"/>
+    <arg name="enableFloodLight"      default="false"/>
+    <arg name="depth_aligned"         default="true" />
 
      <!-- see https://docs.luxonis.com/projects/api/en/latest/components/nodes/stereo_depth/#currently-configurable-blocks for possible combination of optionf for higher fps-->
-    <arg name="stereo_fps"            default="15"         />
-    <arg name="confidence"            default="200"        />
-    <arg name="LRchecktresh"          default="5"          />
-    <arg name="monoResolution"        default="720p"       /> 
-    <arg name="angularVelCovariance"  default="0"          /> 
-    <arg name="linearAccelCovariance" default="0"          /> 
+    <arg name="stereo_fps"            default="15"  />
+    <arg name="confidence"            default="200" />
+    <arg name="LRchecktresh"          default="5"   />
+    <arg name="monoResolution"        default="720p"/> 
+    <arg name="angularVelCovariance"  default="0"   /> 
+    <arg name="linearAccelCovariance" default="0"   /> 
 
-    <arg name="dotProjectormA"        default="200.0"       />
-    <arg name="floodLightmA"          default="200.0"       />
-
+    <arg name="dotProjectormA"        default="200.0" />
+    <arg name="floodLightmA"          default="200.0" />
 
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -74,8 +73,6 @@
         <param name="monoResolution"        value="$(arg monoResolution)" />
         <param name="angularVelCovariance"  value="$(arg angularVelCovariance)" />
         <param name="linearAccelCovariance" value="$(arg linearAccelCovariance)" />
-        <param name="dotProjectormA"        value="$(arg dotProjectormA)" />
-        <param name="floodLightmA"          value="$(arg floodLightmA)" />
     </node>            
 
     <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>

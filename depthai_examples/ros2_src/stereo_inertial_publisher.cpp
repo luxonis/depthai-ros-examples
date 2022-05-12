@@ -200,7 +200,6 @@ int main(int argc, char** argv) {
     dai::Device device(pipeline);
     
     if (enableDotProjector){
-        std::cout << "DotProject---------" << dotProjectormA << std::endl;
         device.setIrLaserDotProjectorBrightness(dotProjectormA);
     }
 
