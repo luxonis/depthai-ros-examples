@@ -39,8 +39,10 @@
 
     <arg name="enableDotProjector"    default="false"/>
     <arg name="enableFloodLight"      default="false"/>
-    <arg name="dotProjectormA"        default="200.0" />
-    <arg name="floodLightmA"          default="200.0" />
+    <arg name="dotProjectormA"        default="200.0"/>
+    <arg name="floodLightmA"          default="200.0"/>
+    <arg name="enableRviz"            default="true"/>
+    <arg name="enableMarkerPublish"   default="false" />
 
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -116,8 +118,15 @@
     </node>
 
 
-  <node if="$(eval arg('depth_aligned') == true)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialDepthAlign.rviz" />
-  <node if="$(eval arg('depth_aligned') == false)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialROS1.rviz" />
+    <node if="$(eval arg('enableMarkerPublish') == true)" type="markerPublisher.py" name="markerPublisher" pkg="depthai_examples">
+        <remap from="spatialDetections" to="/stereo_inertial_publisher/color/yolov4_Spatial_detections"/>
+        <remap from="spatialDetectionMarkers" to="/stereo_inertial_publisher/color/spatialDetectionMarkers"/>
+    </node>
+
+  <group if="$(eval arg('enableRviz') == true)">
+    <node if="$(eval arg('depth_aligned') == true)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialDepthAlign.rviz" />
+    <node if="$(eval arg('depth_aligned') == false)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialROS1.rviz" />
+  </group>
 
 </launch>
 

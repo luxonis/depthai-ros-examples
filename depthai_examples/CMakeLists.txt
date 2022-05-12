@@ -207,6 +207,11 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
   target_compile_definitions(stereo_inertial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
 
+  catkin_install_python(PROGRAMS
+  ros1_scripts/markerPublisher.py
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/markerPublisher
+)
+
   ## Install these nodes
   install(TARGETS
           crop_control_service
@@ -214,7 +219,6 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
           rgb_node
           rgb_stereo_node
           rgb_subscriber_node
-          # stereo_mimic_node
           stereo_inertial_node
           stereo_node
           yolov4_spatial_node
