@@ -23,8 +23,6 @@
     <arg name="extended"              default="false"/> 
     <arg name="subpixel"              default="true" />
     <arg name="rectify"               default="true" />
-    <arg name="enableDotProjector"    default="false"/>
-    <arg name="enableFloodLight"      default="false"/>
     <arg name="depth_aligned"         default="true" />
 
      <!-- see https://docs.luxonis.com/projects/api/en/latest/components/nodes/stereo_depth/#currently-configurable-blocks for possible combination of optionf for higher fps-->
@@ -35,6 +33,8 @@
     <arg name="angularVelCovariance"  default="0"   /> 
     <arg name="linearAccelCovariance" default="0"   /> 
 
+    <arg name="enableDotProjector"    default="false"/>
+    <arg name="enableFloodLight"      default="false"/>
     <arg name="dotProjectormA"        default="200.0" />
     <arg name="floodLightmA"          default="200.0" />
 
@@ -64,8 +64,6 @@
         <param name="extended"              value="$(arg extended)"/>
         <param name="subpixel"              value="$(arg subpixel)"/>
         <param name="rectify"               value="$(arg rectify)" />
-        <param name="enableDotProjector"    value="$(arg enableDotProjector)" />
-        <param name="enableFloodLight"      value="$(arg enableDotProjector)" />
         <param name="depth_aligned"         value="$(arg depth_aligned)" />
         <param name="stereo_fps"            value="$(arg stereo_fps)" />
         <param name="confidence"            value="$(arg confidence)" />
@@ -73,6 +71,11 @@
         <param name="monoResolution"        value="$(arg monoResolution)" />
         <param name="angularVelCovariance"  value="$(arg angularVelCovariance)" />
         <param name="linearAccelCovariance" value="$(arg linearAccelCovariance)" />
+
+        <param name="enableDotProjector"    value="$(arg enableDotProjector)" />
+        <param name="enableFloodLight"      value="$(arg enableFloodLight)" />
+        <param name="dotProjectormA"        value="$(arg dotProjectormA)" />
+        <param name="floodLightmA"          value="$(arg floodLightmA)" />
     </node>            
 
     <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>

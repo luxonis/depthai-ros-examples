@@ -157,10 +157,12 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("mode", mode);
     badParams += !pnh.getParam("imuMode", imuModeParam);
+
     badParams += !pnh.getParam("lrcheck", lrcheck);
     badParams += !pnh.getParam("extended", extended);
     badParams += !pnh.getParam("subpixel", subpixel);
     badParams += !pnh.getParam("rectify", rectify);
+    
     badParams += !pnh.getParam("depth_aligned", depth_aligned);
     badParams += !pnh.getParam("stereo_fps", stereo_fps);
     badParams += !pnh.getParam("confidence", confidence);
@@ -197,8 +199,9 @@ int main(int argc, char** argv) {
     std::shared_ptr<dai::Device> device;
     std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices();
 
+    std::cout << "Listing available devices..." << std::endl;
     for(auto deviceInfo : availableDevices) {
-        std::cout << "Mx ID in the list " << deviceInfo.getMxId() << std::endl;
+        std::cout << "Device Mx ID: " << deviceInfo.getMxId() << std::endl;
         if(deviceInfo.getMxId() == mxId) {
             if(deviceInfo.state == X_LINK_UNBOOTED || deviceInfo.state == X_LINK_BOOTLOADER) {
                 isDeviceFound = true;
@@ -221,14 +224,6 @@ int main(int argc, char** argv) {
         throw std::runtime_error("ros::NodeHandle() from Node \"" + pnh.getNamespace() + "\" DepthAI Device with MxId  \"" + mxId + "\" not found.  \"");
     }
 
-    if(enableDotProjector) {
-        device->setIrLaserDotProjectorBrightness(dotProjectormA);
-    }
-
-    if(enableFloodLight) {
-        device->setIrFloodLightBrightness(floodLightmA);
-    }
-
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
         stereoQueue = device->getOutputQueue("depth", 30, false);
@@ -243,6 +238,16 @@ int main(int argc, char** argv) {
     if(monoHeight > 480 && boardName == "OAK-D-LITE") {
         monoWidth = 640;
         monoHeight = 480;
+    }
+
+    if (boardName.find("PRO") != std::string::npos){
+        if(enableDotProjector) {
+            device->setIrLaserDotProjectorBrightness(dotProjectormA);
+        }
+
+        if(enableFloodLight) {
+            device->setIrFloodLightBrightness(floodLightmA);
+        }
     }
 
     dai::rosBridge::ImageConverter converter(tfPrefix + "_left_camera_optical_frame", true);
@@ -273,7 +278,6 @@ int main(int argc, char** argv) {
     auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
 
     if(enableDepth) {
-        std::cout << "In depth";
         auto depthCameraInfo =
             depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight) : rightCameraInfo;
         auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
