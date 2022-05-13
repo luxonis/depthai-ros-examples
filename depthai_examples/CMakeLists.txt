@@ -68,6 +68,7 @@ if ( ament_cmake_FOUND )
     ${ament_INCLUDE_DIRS}
   )
 
+
   macro(dai_add_node_ros2 node_name node_src)
     add_executable("${node_name}" "${node_src}")
 
@@ -99,7 +100,11 @@ if ( ament_cmake_FOUND )
     
   target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
   target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
+  target_compile_definitions(stereo_inertial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
   
+  if($ENV{ROS_DISTRO} STREQUAL "galactic")
+    target_compile_definitions(rgb_stereo_node PRIVATE IS_GALACTIC)
+  endif()
   # ament_export_include_directories(include)
   # ament_export_libraries(${PROJECT_NAME})
   # ament_export_dependencies(${dependencies}
@@ -198,10 +203,14 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   dai_add_node(stereo_node ros1_src/stereo_publisher.cpp)
   dai_add_node(yolov4_spatial_node ros1_src/yolov4_spatial_publisher.cpp)
 
-
   target_compile_definitions(mobilenet_node PRIVATE BLOB_PATH="${mobilenet_blob}")
   target_compile_definitions(yolov4_spatial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
+  target_compile_definitions(stereo_inertial_node PRIVATE BLOB_PATH="${tiny_yolo_v4_blob}")
 
+  catkin_install_python(PROGRAMS
+  ros1_scripts/markerPublisher.py
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/markerPublisher
+)
 
   ## Install these nodes
   install(TARGETS
@@ -210,7 +219,6 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
           rgb_node
           rgb_stereo_node
           rgb_subscriber_node
-          # stereo_mimic_node
           stereo_inertial_node
           stereo_node
           yolov4_spatial_node

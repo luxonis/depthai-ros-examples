@@ -23,9 +23,11 @@
     <arg name="extended"              default="false"/> 
     <arg name="subpixel"              default="true" />
     <arg name="rectify"               default="true" />
-    <arg name="enableDotProjector"    default="false"/>
-    <arg name="enableFloodLight"      default="false"/>
     <arg name="depth_aligned"         default="true" />
+
+    <arg name="enableSpatialDetection" default="true" />
+    <arg name="syncNN"                 default="true" />
+    <!-- <arg name="nnPath"                 default="" /> -->
 
      <!-- see https://docs.luxonis.com/projects/api/en/latest/components/nodes/stereo_depth/#currently-configurable-blocks for possible combination of optionf for higher fps-->
     <arg name="stereo_fps"            default="15"  />
@@ -35,8 +37,12 @@
     <arg name="angularVelCovariance"  default="0"   /> 
     <arg name="linearAccelCovariance" default="0"   /> 
 
-    <arg name="dotProjectormA"        default="200.0" />
-    <arg name="floodLightmA"          default="200.0" />
+    <arg name="enableDotProjector"    default="false"/>
+    <arg name="enableFloodLight"      default="false"/>
+    <arg name="dotProjectormA"        default="200.0"/>
+    <arg name="floodLightmA"          default="200.0"/>
+    <arg name="enableRviz"            default="true"/>
+    <arg name="enableMarkerPublish"   default="false" />
 
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
@@ -60,19 +66,28 @@
         <param name="tf_prefix"             value="$(arg tf_prefix)"/>
         <param name="mode"                  value="$(arg mode)"/>
         <param name="imuMode"               value="$(arg imuMode)"/>
+
         <param name="lrcheck"               value="$(arg lrcheck)"/>
         <param name="extended"              value="$(arg extended)"/>
         <param name="subpixel"              value="$(arg subpixel)"/>
         <param name="rectify"               value="$(arg rectify)" />
-        <param name="enableDotProjector"    value="$(arg enableDotProjector)" />
-        <param name="enableFloodLight"      value="$(arg enableDotProjector)" />
         <param name="depth_aligned"         value="$(arg depth_aligned)" />
+        
+        <param name="enableSpatialDetection"   value="$(arg enableSpatialDetection)" />
+        <param name="syncNN"                   value="$(arg syncNN)" />
+        <!-- <param name="nnPath"                   value="$(arg nnPath)" /> -->
+
         <param name="stereo_fps"            value="$(arg stereo_fps)" />
         <param name="confidence"            value="$(arg confidence)" />
         <param name="LRchecktresh"          value="$(arg LRchecktresh)" />
         <param name="monoResolution"        value="$(arg monoResolution)" />
         <param name="angularVelCovariance"  value="$(arg angularVelCovariance)" />
         <param name="linearAccelCovariance" value="$(arg linearAccelCovariance)" />
+
+        <param name="enableDotProjector"    value="$(arg enableDotProjector)" />
+        <param name="enableFloodLight"      value="$(arg enableFloodLight)" />
+        <param name="dotProjectormA"        value="$(arg dotProjectormA)" />
+        <param name="floodLightmA"          value="$(arg floodLightmA)" />
     </node>            
 
     <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>
@@ -103,8 +118,15 @@
     </node>
 
 
-  <node if="$(eval arg('depth_aligned') == true)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialDepthAlign.rviz" />
-  <node if="$(eval arg('depth_aligned') == false)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialROS1.rviz" />
+    <node if="$(eval arg('enableMarkerPublish') == true)" type="markerPublisher.py" name="markerPublisher" pkg="depthai_examples">
+        <remap from="spatialDetections" to="/stereo_inertial_publisher/color/yolov4_Spatial_detections"/>
+        <remap from="spatialDetectionMarkers" to="/stereo_inertial_publisher/color/spatialDetectionMarkers"/>
+    </node>
+
+  <group if="$(eval arg('enableRviz') == true)">
+    <node if="$(eval arg('depth_aligned') == true)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialDepthAlign.rviz" />
+    <node if="$(eval arg('depth_aligned') == false)" type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoInertialROS1.rviz" />
+  </group>
 
 </launch>
 
