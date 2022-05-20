@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
       pnh.getParam("nnName", nnName);
     }
 
-    if(!resourceBaseFolder.empty())
+    if(resourceBaseFolder.empty())
     {   
         throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
     }

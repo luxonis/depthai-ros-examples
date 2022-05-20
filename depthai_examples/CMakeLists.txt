@@ -114,6 +114,7 @@ if ( ament_cmake_FOUND )
 
   install(DIRECTORY params DESTINATION share/${PROJECT_NAME})
   install(DIRECTORY rviz DESTINATION share/${PROJECT_NAME})
+  install(DIRECTORY resources DESTINATION share/${PROJECT_NAME})
   install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch
   FILES_MATCHING PATTERN "*.py")
 
@@ -128,7 +129,6 @@ if ( ament_cmake_FOUND )
           DESTINATION lib/${PROJECT_NAME})
           
   ament_package()
-
 
 elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
 
@@ -223,10 +223,12 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
           RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
 
+  install(DIRECTORY params DESTINATION share/${PROJECT_NAME})
+  install(DIRECTORY rviz DESTINATION share/${PROJECT_NAME})
+  install(DIRECTORY resources DESTINATION share/${PROJECT_NAME})
   install(DIRECTORY launch/
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 	PATTERN ".svn" EXCLUDE
   )
-
 
 endif()

@@ -66,20 +66,19 @@ int main(int argc, char** argv){
     node->get_parameter("sync_nn", syncNN);
     node->get_parameter("resourceBaseFolder", resourceBaseFolder);
 
-    if(!resourceBaseFolder.empty())
+    if(resourceBaseFolder.empty())
     {   
         throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
     }
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
     std::string nnParam;
     node->get_parameter("nnName", nnParam);
-    if(!nnParam.empty())
+    if(nnParam != "x")
     {   
         node->get_parameter("nnName", nnName);
     }
 
     nnPath = resourceBaseFolder + "/" + nnName;
-
     dai::Pipeline pipeline = createPipeline(syncNN, nnPath);
     dai::Device device(pipeline);
     

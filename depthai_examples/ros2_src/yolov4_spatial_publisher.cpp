@@ -76,6 +76,7 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
     stereo->setSubpixel(subpixel);
+    stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     spatialDetectionNetwork->setBlobPath(nnPath);
     spatialDetectionNetwork->setConfidenceThreshold(0.5f);
@@ -129,7 +130,7 @@ int main(int argc, char** argv){
     node->declare_parameter("confidence", confidence);
     node->declare_parameter("LRchecktresh", LRchecktresh);
     node->declare_parameter("monoResolution", monoResolution);
-    node->declare_parameter("resourceBaseFolder", resourceBaseFolder);
+    node->declare_parameter("resourceBaseFolder", "");
 
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("camera_param_uri", camera_param_uri);
@@ -140,14 +141,14 @@ int main(int argc, char** argv){
     node->get_parameter("monoResolution", monoResolution);
     node->get_parameter("resourceBaseFolder", resourceBaseFolder);
 
-    if(!resourceBaseFolder.empty())
+    if(resourceBaseFolder.empty())
     {   
         throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
     }
     
     std::string nnParam;
     node->get_parameter("nnName", nnParam);
-    if(!nnParam.empty())
+    if(nnParam != "x")
     {   
         node->get_parameter("nnName", nnName);
     }

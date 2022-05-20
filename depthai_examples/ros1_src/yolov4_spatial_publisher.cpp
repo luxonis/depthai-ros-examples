@@ -78,6 +78,7 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int
     stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
     stereo->setSubpixel(subpixel);
+    stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     spatialDetectionNetwork->setBlobPath(nnPath);
     spatialDetectionNetwork->setConfidenceThreshold(0.5f);
@@ -144,7 +145,7 @@ int main(int argc, char** argv){
     {
       pnh.getParam("nnName", nnName);
     }
-    if(!resourceBaseFolder.empty())
+    if(resourceBaseFolder.empty())
     {   
         throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
     }
