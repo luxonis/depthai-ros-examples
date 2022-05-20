@@ -18,7 +18,7 @@
 
 #include "depthai/depthai.hpp"
 
-std::vector<std::string> usbStrings = { "UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
+std::vector<std::string> usbStrings = {"UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    bool lrcheck,
@@ -183,12 +183,12 @@ int main(int argc, char** argv) {
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("mode", mode);
     node->get_parameter("imuMode", imuModeParam);
-    
+
     node->get_parameter("lrcheck", lrcheck);
     node->get_parameter("extended", extended);
     node->get_parameter("subpixel", subpixel);
     node->get_parameter("rectify", rectify);
-    
+
     node->get_parameter("depth_aligned", depth_aligned);
     node->get_parameter("stereo_fps", stereo_fps);
     node->get_parameter("confidence", confidence);
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
     node->get_parameter("monoResolution", monoResolution);
     node->get_parameter("angularVelCovariance", angularVelCovariance);
     node->get_parameter("linearAccelCovariance", linearAccelCovariance);
-    
+
     node->get_parameter("enableDotProjector", enableDotProjector);
     node->get_parameter("enableFloodLight", enableFloodLight);
     node->get_parameter("dotProjectormA", dotProjectormA);
@@ -232,8 +232,7 @@ int main(int argc, char** argv) {
                 }
                 break;
             } else if(deviceInfo.state == X_LINK_BOOTED) {
-                throw std::runtime_error( "\" DepthAI Device with MxId  \"" + mxId
-                                         + "\" is already booted on different process.  \"");
+                throw std::runtime_error("\" DepthAI Device with MxId  \"" + mxId + "\" is already booted on different process.  \"");
             }
         } else if(mxId == "x") {
             isDeviceFound = true;
@@ -244,10 +243,9 @@ int main(int argc, char** argv) {
         throw std::runtime_error("\" DepthAI Device with MxId  \"" + mxId + "\" not found.  \"");
     }
 
-    if(!poeMode){
+    if(!poeMode) {
         std::cout << "Device USB status: " << usbStrings[static_cast<int32_t>(device->getUsbSpeed())] << std::endl;
     }
-
 
     std::shared_ptr<dai::DataOutputQueue> stereoQueue;
     if(enableDepth) {
@@ -265,7 +263,7 @@ int main(int argc, char** argv) {
         monoHeight = 480;
     }
 
-    if (boardName.find("PRO") != std::string::npos){
+    if(boardName.find("PRO") != std::string::npos) {
         if(enableDotProjector) {
             device->setIrLaserDotProjectorBrightness(dotProjectormA);
         }
