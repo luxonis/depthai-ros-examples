@@ -1,16 +1,15 @@
 
 #include <camera_info_manager/camera_info_manager.h>
+#include <depthai_ros_msgs/SpatialDetectionArray.h>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/Imu.h>
+#include <stereo_msgs/DisparityImage.h>
 
 #include <cstdio>
 #include <functional>
 #include <iostream>
 #include <tuple>
-
-#include <ros/ros.h>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/Imu.h>
-#include <stereo_msgs/DisparityImage.h>
-#include <depthai_ros_msgs/SpatialDetectionArray.h>
 
 // Inludes common necessary includes for development using depthai library
 #include <depthai_bridge/BridgePublisher.hpp>
@@ -21,7 +20,7 @@
 
 #include "depthai/depthai.hpp"
 
-std::vector<std::string> usbStrings = { "UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
+std::vector<std::string> usbStrings = {"UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
 
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    bool enableSpatialDetection,
@@ -113,17 +112,17 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         }
         camRgb->isp.link(xoutRgb->input);
 
-        if(enableSpatialDetection){
+        if(enableSpatialDetection) {
             camRgb->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
             camRgb->setInterleaved(false);
             camRgb->setPreviewSize(416, 416);
-            
+
             auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
-            auto xoutNN =  pipeline.create<dai::node::XLinkOut>();
+            auto xoutNN = pipeline.create<dai::node::XLinkOut>();
             auto xoutPreview = pipeline.create<dai::node::XLinkOut>();
             xoutPreview->setStreamName("preview");
             xoutNN->setStreamName("detections");
-            
+
             spatialDetectionNetwork->setBlobPath(nnPath);
             spatialDetectionNetwork->setConfidenceThreshold(0.5f);
             spatialDetectionNetwork->input.setBlocking(false);
@@ -184,7 +183,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "stereo_inertial_node");
     ros::NodeHandle pnh("~");
 
-    std::string tfPrefix, mode, mxId;
+    std::string tfPrefix, mode, mxId, resourceBaseFolder, nnPath;
     std::string monoResolution = "720p";
     std::string nnPath(BLOB_PATH);
     std::cout << " nn path..." << nnPath << std::endl;
@@ -194,6 +193,7 @@ int main(int argc, char** argv) {
     bool usb2Mode, poeMode, syncNN;
     double angularVelCovariance, linearAccelCovariance;
     double dotProjectormA, floodLightmA;
+    std::string nnName(BLOB_NAME);  // Set your blob name for the model here
 
     badParams += !pnh.getParam("mxId", mxId);
     badParams += !pnh.getParam("usb2Mode", usb2Mode);
@@ -207,7 +207,7 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("extended", extended);
     badParams += !pnh.getParam("subpixel", subpixel);
     badParams += !pnh.getParam("rectify", rectify);
-    
+
     badParams += !pnh.getParam("depth_aligned", depth_aligned);
     badParams += !pnh.getParam("stereo_fps", stereo_fps);
     badParams += !pnh.getParam("confidence", confidence);
@@ -217,6 +217,7 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("linearAccelCovariance", linearAccelCovariance);
     badParams += !pnh.getParam("enableSpatialDetection", enableSpatialDetection);
     badParams += !pnh.getParam("syncNN", syncNN);
+    badParams += !pnh.getParam("resourceBaseFolder", resourceBaseFolder);
 
     // Applies only to PRO model
     badParams += !pnh.getParam("enableDotProjector", enableDotProjector);
@@ -229,11 +230,14 @@ int main(int argc, char** argv) {
         throw std::runtime_error("Couldn't find %d of the parameters");
     }
 
-    if (pnh.hasParam("nnPath"))
-    {
-      pnh.getParam("nnPath", nnPath);
+    if(pnh.hasParam("nnName")) {
+        pnh.getParam("nnName", nnName);
     }
-    std::cout << " nn path..." << nnPath << std::endl;
+
+    if(resourceBaseFolder.empty()) {
+        throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
+    }
+    nnPath = resourceBaseFolder + "/" + nnName;
 
     if(mode == "depth") {
         enableDepth = true;
@@ -246,8 +250,19 @@ int main(int argc, char** argv) {
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
     bool isDeviceFound = false;
-    std::tie(pipeline, monoWidth, monoHeight) =
-        createPipeline(enableDepth, enableSpatialDetection, lrcheck, extended, subpixel, rectify, depth_aligned, stereo_fps, confidence, LRchecktresh, monoResolution, syncNN, nnPath);
+    std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth,
+                                                               enableSpatialDetection,
+                                                               lrcheck,
+                                                               extended,
+                                                               subpixel,
+                                                               rectify,
+                                                               depth_aligned,
+                                                               stereo_fps,
+                                                               confidence,
+                                                               LRchecktresh,
+                                                               monoResolution,
+                                                               syncNN,
+                                                               nnPath);
 
     std::shared_ptr<dai::Device> device;
     std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices();
@@ -278,7 +293,7 @@ int main(int argc, char** argv) {
         throw std::runtime_error("ros::NodeHandle() from Node \"" + pnh.getNamespace() + "\" DepthAI Device with MxId  \"" + mxId + "\" not found.  \"");
     }
 
-    if(!poeMode){
+    if(!poeMode) {
         std::cout << "Device USB status: " << usbStrings[static_cast<int32_t>(device->getUsbSpeed())] << std::endl;
     }
 
@@ -298,7 +313,7 @@ int main(int argc, char** argv) {
         monoHeight = 480;
     }
 
-    if (boardName.find("PRO") != std::string::npos){
+    if(boardName.find("PRO") != std::string::npos) {
         if(enableDotProjector) {
             device->setIrLaserDotProjectorBrightness(dotProjectormA);
         }
@@ -365,7 +380,7 @@ int main(int argc, char** argv) {
                 "color");
             rgbPublish.addPublisherCallback();
 
-            if (enableSpatialDetection){
+            if(enableSpatialDetection) {
                 auto previewQueue = device->getOutputQueue("preview", 30, false);
                 auto detectionQueue = device->getOutputQueue("detections", 30, false);
                 auto previewCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, 416, 416);
@@ -381,17 +396,14 @@ int main(int argc, char** argv) {
                 previewPublish.addPublisherCallback();
 
                 dai::rosBridge::SpatialDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 416, 416, false);
-                dai::rosBridge::BridgePublisher<depthai_ros_msgs::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(detectionQueue,
-                                                                                                                    pnh, 
-                                                                                                                    std::string("color/yolov4_Spatial_detections"),
-                                                                                                                    std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, 
-                                                                                                                    &detConverter,
-                                                                                                                    std::placeholders::_1, 
-                                                                                                                    std::placeholders::_2) , 
-                                                                                                                    30);
+                dai::rosBridge::BridgePublisher<depthai_ros_msgs::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(
+                    detectionQueue,
+                    pnh,
+                    std::string("color/yolov4_Spatial_detections"),
+                    std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detConverter, std::placeholders::_1, std::placeholders::_2),
+                    30);
                 detectionPublish.addPublisherCallback();
                 ros::spin();
-
             }
 
             ros::spin();
