@@ -49,27 +49,36 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("mobilenet_node");
     
-    std::string tfPrefix;
+    std::string tfPrefix, resourceBaseFolder, nnPath;
     std::string cameraParamUri = "package://depthai_examples/params/camera";
-    std::string nnPath(BLOB_PATH);
+    std::string nnName(BLOB_NAME);
     bool syncNN;
     int bad_params = 0;
     
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("camera_param_uri", cameraParamUri);
-    node->declare_parameter("sync_nn", true);
-    node->declare_parameter<std::string>("nn_path", "");
+    node->declare_parameter("resourceBaseFolder", "");
+    node->declare_parameter("sync_nn", syncNN);
+    node->declare_parameter<std::string>("nnName", "");
+    
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("camera_param_uri", cameraParamUri);
     node->get_parameter("sync_nn", syncNN);
+    node->get_parameter("resourceBaseFolder", resourceBaseFolder);
 
+    if(!resourceBaseFolder.empty())
+    {   
+        throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
+    }
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
     std::string nnParam;
-    node->get_parameter("nn_path", nnParam);
+    node->get_parameter("nnName", nnParam);
     if(!nnParam.empty())
     {   
-        node->get_parameter("nn_path", nnPath);
+        node->get_parameter("nnName", nnName);
     }
+
+    nnPath = resourceBaseFolder + "/" + nnName;
 
     dai::Pipeline pipeline = createPipeline(syncNN, nnPath);
     dai::Device device(pipeline);

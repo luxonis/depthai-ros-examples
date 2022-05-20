@@ -50,14 +50,15 @@ int main(int argc, char** argv){
     ros::NodeHandle pnh("~");
     
     std::string tfPrefix;
-    std::string cameraParamUri;
-    std::string nnPath(BLOB_PATH);
+    std::string cameraParamUri, resourceBaseFolder, nnPath;
+    std::string nnName(BLOB_NAME);
     bool syncNN;
     int badParams = 0;
 
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
     badParams += !pnh.getParam("sync_nn", syncNN);
+    badParams += !pnh.getParam("resourceBaseFolder", resourceBaseFolder);
 
     if (badParams > 0)
     {
@@ -65,11 +66,17 @@ int main(int argc, char** argv){
     }
 
     // Uses the path from param if passed or else uses from BLOB_PATH from CMAKE
-    if (pnh.hasParam("nn_path"))
+    if (pnh.hasParam("nnName"))
     {
-      pnh.getParam("nn_path", nnPath);
+      pnh.getParam("nnName", nnName);
     }
 
+    if(!resourceBaseFolder.empty())
+    {   
+        throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
+    }
+
+    nnPath = resourceBaseFolder + "/" + nnName;
     dai::Pipeline pipeline = createPipeline(syncNN, nnPath);
     dai::Device device(pipeline);
     

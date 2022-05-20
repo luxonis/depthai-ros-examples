@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("stereo_inertial_node");
 
-    std::string tfPrefix, mode, monoResolution, mxId;
+    std::string tfPrefix, mode, monoResolution, mxId, resourceBaseFolder, nnPath;
     int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
     bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned, enableDotProjector, enableFloodLight, usb2Mode, poeMode;
     float angularVelCovariance, linearAccelCovariance;
@@ -152,6 +152,7 @@ int main(int argc, char** argv) {
     node->declare_parameter("mxId", "");
     node->declare_parameter("usb2Mode", false);
     node->declare_parameter("poeMode", false);
+    node->declare_parameter("resourceBaseFolder", "");
 
     node->declare_parameter("tf_prefix", "oak");
     node->declare_parameter("mode", "depth");

@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "stereo_inertial_node");
     ros::NodeHandle pnh("~");
 
-    std::string tfPrefix, mode, mxId;
+    std::string tfPrefix, mode, mxId, resourceBaseFolder, nnPath;
     std::string monoResolution = "720p";
     std::string nnPath(BLOB_PATH);
     std::cout << " nn path..." << nnPath << std::endl;
@@ -194,6 +194,7 @@ int main(int argc, char** argv) {
     bool usb2Mode, poeMode, syncNN;
     double angularVelCovariance, linearAccelCovariance;
     double dotProjectormA, floodLightmA;
+    std::string nnName(BLOB_NAME); // Set your blob name for the model here
 
     badParams += !pnh.getParam("mxId", mxId);
     badParams += !pnh.getParam("usb2Mode", usb2Mode);
@@ -217,6 +218,7 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("linearAccelCovariance", linearAccelCovariance);
     badParams += !pnh.getParam("enableSpatialDetection", enableSpatialDetection);
     badParams += !pnh.getParam("syncNN", syncNN);
+    badParams += !pnh.getParam("resourceBaseFolder", resourceBaseFolder);
 
     // Applies only to PRO model
     badParams += !pnh.getParam("enableDotProjector", enableDotProjector);
@@ -229,11 +231,16 @@ int main(int argc, char** argv) {
         throw std::runtime_error("Couldn't find %d of the parameters");
     }
 
-    if (pnh.hasParam("nnPath"))
+    if (pnh.hasParam("nnName"))
     {
-      pnh.getParam("nnPath", nnPath);
+      pnh.getParam("nnName", nnName);
     }
-    std::cout << " nn path..." << nnPath << std::endl;
+
+    if(!resourceBaseFolder.empty())
+    {   
+        throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
+    }
+    nnPath = resourceBaseFolder + "/" + nnName;
 
     if(mode == "depth") {
         enableDepth = true;

@@ -116,9 +116,9 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "yolov4_spatial_node");
     ros::NodeHandle pnh("~");
     
-    std::string tfPrefix;
+    std::string tfPrefix, resourceBaseFolder, nnPath;
     std::string camera_param_uri;
-    std::string nnPath(BLOB_PATH); // Set your path for the model here
+    std::string nnName(BLOB_NAME); // Set your blob name for the model here
     bool syncNN, subpixel;
 
     int badParams = 0;
@@ -133,16 +133,22 @@ int main(int argc, char** argv){
     badParams += !pnh.getParam("confidence", confidence);
     badParams += !pnh.getParam("LRchecktresh", LRchecktresh);
     badParams += !pnh.getParam("monoResolution", monoResolution);
+    badParams += !pnh.getParam("resourceBaseFolder", resourceBaseFolder);
 
     if (badParams > 0)
     {
         throw std::runtime_error("Couldn't find one of the parameters");
     }
 
-    if (pnh.hasParam("nn_path"))
+    if (pnh.hasParam("nnName"))
     {
-      pnh.getParam("nn_path", nnPath);
+      pnh.getParam("nnName", nnName);
     }
+    if(!resourceBaseFolder.empty())
+    {   
+        throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
+    }
+    nnPath = resourceBaseFolder + "/" + nnName;
 
     dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh, monoResolution);
     _dev = std::make_unique<dai::Device>(pipeline);

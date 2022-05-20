@@ -114,9 +114,9 @@ int main(int argc, char** argv){
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("yolov4_spatial_node");
     
-    std::string tfPrefix;
+    std::string tfPrefix, resourceBaseFolder, nnPath;
     std::string camera_param_uri;
-    std::string nnPath(BLOB_PATH); // Set your path for the model here
+    std::string nnName(BLOB_NAME); // Set your blob name for the model here
     bool syncNN, subpixel;
     int confidence = 200, LRchecktresh = 5;
     std::string monoResolution = "400p";
@@ -125,10 +125,11 @@ int main(int argc, char** argv){
     node->declare_parameter("camera_param_uri", camera_param_uri);
     node->declare_parameter("sync_nn", true);
     node->declare_parameter("subpixel", true);
-    node->declare_parameter("nn_path", "");
+    node->declare_parameter("nnName", "");
     node->declare_parameter("confidence", confidence);
     node->declare_parameter("LRchecktresh", LRchecktresh);
     node->declare_parameter("monoResolution", monoResolution);
+    node->declare_parameter("resourceBaseFolder", resourceBaseFolder);
 
     node->get_parameter("tf_prefix", tfPrefix);
     node->get_parameter("camera_param_uri", camera_param_uri);
@@ -137,14 +138,21 @@ int main(int argc, char** argv){
     node->get_parameter("confidence", confidence);
     node->get_parameter("LRchecktresh", LRchecktresh);
     node->get_parameter("monoResolution", monoResolution);
+    node->get_parameter("resourceBaseFolder", resourceBaseFolder);
 
+    if(!resourceBaseFolder.empty())
+    {   
+        throw std::runtime_error("Send the path to the resouce folder containing NNBlob in \'resourceBaseFolder\' ");
+    }
+    
     std::string nnParam;
-    node->get_parameter("nn_path", nnParam);
+    node->get_parameter("nnName", nnParam);
     if(!nnParam.empty())
     {   
-        node->get_parameter("nn_path", nnPath);
+        node->get_parameter("nnName", nnName);
     }
 
+    nnPath = resourceBaseFolder + "/" + nnName;
     dai::Pipeline pipeline = createPipeline(syncNN, subpixel, nnPath, confidence, LRchecktresh, monoResolution);
     dai::Device device(pipeline);
 

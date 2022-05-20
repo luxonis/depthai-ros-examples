@@ -27,6 +27,9 @@
 
     <arg name="enableSpatialDetection" default="true" />
     <arg name="syncNN"                 default="true" />
+    <arg name="nnName"              default=""         />
+    <arg name="resourceBaseFolder"  default="$(find depthai_examples)/resources" />
+
     <!-- <arg name="nnPath"                 default="" /> -->
 
      <!-- see https://docs.luxonis.com/projects/api/en/latest/components/nodes/stereo_depth/#currently-configurable-blocks for possible combination of optionf for higher fps-->
@@ -75,7 +78,8 @@
         
         <param name="enableSpatialDetection"   value="$(arg enableSpatialDetection)" />
         <param name="syncNN"                   value="$(arg syncNN)" />
-        <!-- <param name="nnPath"                   value="$(arg nnPath)" /> -->
+        <param name="nnName"                   value="$(arg nnName)"/>
+        <param name="resourceBaseFolder"       value="$(arg resourceBaseFolder)"/>
 
         <param name="stereo_fps"            value="$(arg stereo_fps)" />
         <param name="confidence"            value="$(arg confidence)" />
