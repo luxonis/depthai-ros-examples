@@ -109,7 +109,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
         xoutRgb->setStreamName("rgb");
         camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
-        camRgb->setResolution(ColorCamera);
+        camRgb->setResolution(colorResolution);
         // if(height < 720) {
         //     camRgb->setIspScale(2, 5);
         // } else {
@@ -170,6 +170,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
     // Link plugins CAM -> STEREO -> XLINK
     stereo->setRectifyEdgeFillColor(0);
+    stereo->useHomographyRectification(false);
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
 
