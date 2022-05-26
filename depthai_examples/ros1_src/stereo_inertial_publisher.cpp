@@ -53,21 +53,26 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     xoutImu->setStreamName("imu");
 
     dai::node::MonoCamera::Properties::SensorResolution monoResolution;
+    dai::node::ColorCamera::Properties::SensorResolution colorResolution;
     int width, height;
     if(resolution == "720p") {
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_720_P;
+        colorResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_720_P;
         width = 1280;
         height = 720;
     } else if(resolution == "400p") {
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P;
+        colorResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_720_P;
         width = 640;
         height = 400;
     } else if(resolution == "800p") {
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P;
+        colorResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_720_P;
         width = 1280;
         height = 800;
     } else if(resolution == "480p") {
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_480_P;
+        colorResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_720_P;
         width = 640;
         height = 480;
     } else {
@@ -104,12 +109,12 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
         xoutRgb->setStreamName("rgb");
         camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
-        camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
-        if(height < 720) {
-            camRgb->setIspScale(2, 5);
-        } else {
-            camRgb->setIspScale(2, 3);
-        }
+        camRgb->setResolution(ColorCamera);
+        // if(height < 720) {
+        //     camRgb->setIspScale(2, 5);
+        // } else {
+        //     camRgb->setIspScale(2, 3);
+        // }
         camRgb->isp.link(xoutRgb->input);
 
         if(enableSpatialDetection) {
