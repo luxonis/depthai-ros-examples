@@ -153,7 +153,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         // if(height < 720) {
             // camRgb->setIspScale(, 1);
         // } else {
-        camRgb->setIspScale(2, 3);
+        camRgb->setIspScale(1, 1);
         // }
         camRgb->isp.link(manip->inputImage);
         int meshWidth = width / 16;
