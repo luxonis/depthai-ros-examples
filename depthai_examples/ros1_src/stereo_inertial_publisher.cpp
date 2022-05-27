@@ -225,7 +225,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     } else {
         stereo->disparity.link(xoutDepth->input);
     }
-    imu->enableFirmwareUpdate(true);
+    // imu->enableFirmwareUpdate(true);
     imu->out.link(xoutImu->input);
 
     return std::make_tuple(pipeline, width, height);
