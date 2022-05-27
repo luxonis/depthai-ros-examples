@@ -216,7 +216,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
     // Link plugins CAM -> STEREO -> XLINK
     stereo->setRectifyEdgeFillColor(0);
-    // stereo->useHomographyRectification(false);
+    stereo->useHomographyRectification(false);
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
 
@@ -225,7 +225,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     } else {
         stereo->disparity.link(xoutDepth->input);
     }
-
+    imu->enableFirmwareUpdate(true);
     imu->out.link(xoutImu->input);
 
     return std::make_tuple(pipeline, width, height);
@@ -323,7 +323,6 @@ int main(int argc, char** argv) {
     std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>();
     auto calibrationHandler = device->readCalibration();
     std::vector<std::pair<float, float>> rgbMesh = getMesh(calibrationHandler, dai::CameraBoardSocket::RGB, width, height);
-    std::cout << " sdsdsdsds" << std::endl;
     std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth,
                                                                enableSpatialDetection,
                                                                lrcheck,
@@ -338,7 +337,6 @@ int main(int argc, char** argv) {
                                                                syncNN,
                                                                nnPath,
                                                                rgbMesh);
-    std::cout << " ------sdsdsdsds" << std::endl;
 
 
 /*     std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices();
