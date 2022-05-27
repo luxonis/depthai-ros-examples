@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <functional>
 #include <iostream>
+#include <opencv2/imgproc.hpp>
 #include <tuple>
 
 // Inludes common necessary includes for development using depthai library
@@ -22,6 +23,43 @@
 
 std::vector<std::string> usbStrings = {"UNKNOWN", "LOW", "FULL", "HIGH", "SUPER", "SUPER_PLUS"};
 
+std::vector<std::pair<float, float>> getMesh(dai::CalibrationHandler calibData, dai::CameraBoardSocket cameraID, int width, int height) {
+    std::vector<std::vector<float>> M1 = calibData.getCameraIntrinsics(cameraID, width, height);
+    std::vector<float> d1 = calibData.getDistortionCoefficients(cameraID);
+    cv::Mat cameraMatrix = (cv::Mat1d(3, 3) << M1[0][0], 0, M1[0][2], 0, M1[1][1], M1[1][2], 0, 0, 1);
+
+    cv::Mat mapX, mapY;
+    cv::initUndistortRectifyMap(cameraMatrix, d1, cv::Mat(), cameraMatrix, cv::Size(width, height), CV_32FC1, mapX, mapY);
+
+    int meshCellSize = 16;
+    std::vector<std::pair<float, float>> mesh;
+
+    for(int y = 0; y <= mapX.rows; ++y) {
+        if(y % meshCellSize == 0) {
+            // std::pair<float, float> points;
+
+            for(int x = 0; x < mapX.cols; ++x) {
+                if(x % meshCellSize == 0) {
+                    if(y == mapX.size().height && x == mapX.size().width) {
+                        mesh.push_back(std::make_pair(mapX.at<float>(y - 1, x - 1), mapY.at<float>(y - 1, x - 1)));
+                    } else if(y == mapX.size().height) {
+                        mesh.push_back(std::make_pair(mapX.at<float>(y - 1, x), mapY.at<float>(y - 1, x)));
+                    } else if(x == mapX.size().width) {
+                        mesh.push_back(std::make_pair(mapX.at<float>(y, x - 1), mapY.at<float>(y, x - 1)));
+                    } else {
+                        mesh.push_back(std::make_pair(mapX.at<float>(y, x), mapY.at<float>(y, x)));
+                    }
+                }
+            }
+            if((mapX.size().width % meshCellSize) % 2 != 0) {
+                mesh.push_back(std::make_pair(0.0, 0.0));
+            }
+        }
+    }
+    std::cout << "Mesh size " << mesh.size() << std::endl;
+    return mesh;
+}
+
 std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    bool enableSpatialDetection,
                                                    bool lrcheck,
@@ -34,7 +72,8 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    int LRchecktresh,
                                                    std::string resolution,
                                                    bool syncNN,
-                                                   std::string nnPath) {
+                                                   std::string nnPath,
+                                                   std::vector<std::pair<float, float>> mesh) {
     dai::Pipeline pipeline;
 
     auto monoLeft = pipeline.create<dai::node::MonoCamera>();
@@ -62,12 +101,12 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         height = 720;
     } else if(resolution == "400p") {
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_400_P;
-        colorResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_720_P;
+        colorResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_800_P;
         width = 640;
         height = 400;
     } else if(resolution == "800p") {
         monoResolution = dai::node::MonoCamera::Properties::SensorResolution::THE_800_P;
-        colorResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_720_P;
+        colorResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_800_P;
         width = 1280;
         height = 800;
     } else if(resolution == "480p") {
@@ -90,7 +129,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
     // StereoDepth
     stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
-    stereo->setRectifyEdgeFillColor(0);                              // black, to better see the cutout
+    stereo->setRectifyEdgeFillColor(0);                              //THE_720_P black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);  // Known to be best
     stereo->setLeftRightCheck(lrcheck);
     stereo->setExtendedDisparity(extended);
@@ -105,18 +144,25 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
     if(depth_aligned) {
         // RGB image
+        auto manip = pipeline.create<dai::node::ImageManip>();
         auto camRgb = pipeline.create<dai::node::ColorCamera>();
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
         xoutRgb->setStreamName("rgb");
         camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
         camRgb->setResolution(colorResolution);
         // if(height < 720) {
-        //     camRgb->setIspScale(2, 5);
+            // camRgb->setIspScale(, 1);
         // } else {
-        //     camRgb->setIspScale(2, 3);
+        camRgb->setIspScale(2, 3);
         // }
-        camRgb->isp.link(xoutRgb->input);
-
+        camRgb->isp.link(manip->inputImage);
+        int meshWidth = width / 16;
+        int meshHeight = (height / 16) + 1;
+        std::cout << "Mesh size: " << meshWidth << "x" << meshHeight << std::endl;
+        manip->setWarpMesh(mesh, meshWidth, meshHeight);
+        manip->setMaxOutputFrameSize(static_cast<int>(camRgb->getIspWidth() * camRgb->getIspHeight() * 3 / 2));
+        manip->out.link(xoutRgb->input);
+        
         if(enableSpatialDetection) {
             camRgb->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
             camRgb->setInterleaved(false);
@@ -170,7 +216,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
     // Link plugins CAM -> STEREO -> XLINK
     stereo->setRectifyEdgeFillColor(0);
-    stereo->useHomographyRectification(false);
+    // stereo->useHomographyRectification(false);
     monoLeft->out.link(stereo->left);
     monoRight->out.link(stereo->right);
 
@@ -255,6 +301,29 @@ int main(int argc, char** argv) {
     dai::Pipeline pipeline;
     int monoWidth, monoHeight;
     bool isDeviceFound = false;
+
+    int width, height;
+    if(monoResolution == "720p") {
+        width = 1280;
+        height = 720;
+    } else if(monoResolution == "400p") {
+        width = 640;
+        height = 400;
+    } else if(monoResolution == "800p") {
+        width = 1280;
+        height = 800;
+    } else if(monoResolution == "480p") {
+        width = 640;
+        height = 480;
+    } else {
+        ROS_ERROR("Invalid parameter. -> monoResolution: %s", monoResolution.c_str());
+        throw std::runtime_error("Invalid mono camera resolution.");
+    }
+
+    std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>();
+    auto calibrationHandler = device->readCalibration();
+    std::vector<std::pair<float, float>> rgbMesh = getMesh(calibrationHandler, dai::CameraBoardSocket::RGB, width, height);
+    std::cout << " sdsdsdsds" << std::endl;
     std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth,
                                                                enableSpatialDetection,
                                                                lrcheck,
@@ -267,10 +336,12 @@ int main(int argc, char** argv) {
                                                                LRchecktresh,
                                                                monoResolution,
                                                                syncNN,
-                                                               nnPath);
+                                                               nnPath,
+                                                               rgbMesh);
+    std::cout << " ------sdsdsdsds" << std::endl;
 
-    std::shared_ptr<dai::Device> device;
-    std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices();
+
+/*     std::vector<dai::DeviceInfo> availableDevices = dai::Device::getAllAvailableDevices();
 
     std::cout << "Listing available devices..." << std::endl;
     for(auto deviceInfo : availableDevices) {
@@ -297,7 +368,11 @@ int main(int argc, char** argv) {
     if(!isDeviceFound) {
         throw std::runtime_error("ros::NodeHandle() from Node \"" + pnh.getNamespace() + "\" DepthAI Device with MxId  \"" + mxId + "\" not found.  \"");
     }
-
+ */
+    std::cout << "Device Started: --------->" << std::endl;
+    device->startPipeline(pipeline);
+    std::cout << "Device Starting pipeline....: " << std::endl;
+   
     if(!poeMode) {
         std::cout << "Device USB status: " << usbStrings[static_cast<int32_t>(device->getUsbSpeed())] << std::endl;
     }
@@ -310,7 +385,6 @@ int main(int argc, char** argv) {
     }
     auto imuQueue = device->getOutputQueue("imu", 30, false);
 
-    auto calibrationHandler = device->readCalibration();
 
     auto boardName = calibrationHandler.getEepromData().boardName;
     if(monoHeight > 480 && boardName == "OAK-D-LITE") {
