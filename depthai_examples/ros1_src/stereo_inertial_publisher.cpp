@@ -37,8 +37,8 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    std::string nnPath) {
     dai::Pipeline pipeline;
 
-    auto monoLeft = pipeline.create<dai::node::MonoCamera>();
-    auto monoRight = pipeline.create<dai::node::MonoCamera>();
+    auto monoLeft = pipeline.create<dai::node::ColorCamera>();
+    auto monoRight = pipeline.create<dai::node::ColorCamera>();
     auto stereo = pipeline.create<dai::node::StereoDepth>();
     auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
     auto imu = pipeline.create<dai::node::IMU>();
@@ -76,14 +76,17 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     }
 
     // MonoCamera
-    monoLeft->setResolution(monoResolution);
+    monoLeft->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
     monoLeft->setFps(stereo_fps);
-    monoRight->setResolution(monoResolution);
+    monoRight->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
     monoRight->setFps(stereo_fps);
 
+    monoLeft->setImageOrientation(dai::CameraImageOrientation::ROTATE_180_DEG);
+    monoRight->setImageOrientation(dai::CameraImageOrientation::ROTATE_180_DEG);
     // StereoDepth
+    
     stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
     stereo->setRectifyEdgeFillColor(0);                              // black, to better see the cutout
     stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);  // Known to be best
@@ -162,11 +165,12 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             stereo->syncedRight.link(xoutRight->input);
         }
     }
-
+    monoLeft->setIspScale(2, 3);
+    monoRight->setIspScale(2, 3);
     // Link plugins CAM -> STEREO -> XLINK
     stereo->setRectifyEdgeFillColor(0);
-    monoLeft->out.link(stereo->left);
-    monoRight->out.link(stereo->right);
+    monoLeft->isp.link(stereo->left);
+    monoRight->isp.link(stereo->right);
 
     if(enableDepth) {
         stereo->depth.link(xoutDepth->input);
@@ -347,8 +351,6 @@ int main(int argc, char** argv) {
         colorHeight = 360;
     }
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
-    auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
-
     if(enableDepth) {
         auto depthCameraInfo =
             depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight) : rightCameraInfo;
@@ -369,6 +371,8 @@ int main(int argc, char** argv) {
 
         if(depth_aligned) {
             auto imgQueue = device->getOutputQueue("rgb", 30, false);
+            auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
+
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
                 pnh,
@@ -447,6 +451,8 @@ int main(int argc, char** argv) {
         if(depth_aligned) {
             auto imgQueue = device->getOutputQueue("rgb", 30, false);
             dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
+            auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, colorWidth, colorHeight);
+
             dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(
                 imgQueue,
                 pnh,
