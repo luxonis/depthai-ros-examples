@@ -32,6 +32,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    int stereo_fps,
                                                    int confidence,
                                                    int LRchecktresh,
+                                                   int detectionClassesCount,
                                                    std::string resolution,
                                                    bool syncNN,
                                                    std::string nnPath) {
@@ -131,7 +132,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             spatialDetectionNetwork->setDepthUpperThreshold(10000);
 
             // yolo specific parameters
-            spatialDetectionNetwork->setNumClasses(80);
+            spatialDetectionNetwork->setNumClasses(detectionClassesCount);
             spatialDetectionNetwork->setCoordinateSize(4);
             spatialDetectionNetwork->setAnchors({10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319});
             spatialDetectionNetwork->setAnchorMasks({{"side13", {3, 4, 5}}, {"side26", {1, 2, 3}}});
@@ -185,7 +186,7 @@ int main(int argc, char** argv) {
 
     std::string tfPrefix, mode, mxId, resourceBaseFolder, nnPath;
     std::string monoResolution = "720p";
-    int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
+    int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam, detectionClassesCount;
     bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
     bool enableSpatialDetection, enableDotProjector, enableFloodLight;
     bool usb2Mode, poeMode, syncNN;
@@ -222,7 +223,8 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("enableFloodLight", enableFloodLight);
     badParams += !pnh.getParam("dotProjectormA", dotProjectormA);
     badParams += !pnh.getParam("floodLightmA", floodLightmA);
-
+    badParams += !pnh.getParam("detectionClassesCount", detectionClassesCount);
+    
     if(badParams > 0) {
         std::cout << " Bad parameters -> " << badParams << std::endl;
         throw std::runtime_error("Couldn't find %d of the parameters");
@@ -259,6 +261,7 @@ int main(int argc, char** argv) {
                                                                stereo_fps,
                                                                confidence,
                                                                LRchecktresh,
+                                                               detectionClassesCount,
                                                                monoResolution,
                                                                syncNN,
                                                                nnPath);

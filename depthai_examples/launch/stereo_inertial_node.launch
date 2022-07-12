@@ -27,8 +27,9 @@
 
     <arg name="enableSpatialDetection" default="true" />
     <arg name="syncNN"                 default="true" />
-    <arg name="nnName"              default="x"         />
-    <arg name="resourceBaseFolder"  default="$(find depthai_examples)/resources" />
+    <arg name="detectionClassesCount"  default="80"   />
+    <arg name="nnName"                 default="x"         />
+    <arg name="resourceBaseFolder"     default="$(find depthai_examples)/resources" />
 
     <!-- <arg name="nnPath"                 default="" /> -->
 
@@ -36,9 +37,9 @@
     <arg name="stereo_fps"            default="15"  />
     <arg name="confidence"            default="200" />
     <arg name="LRchecktresh"          default="5"   />
-    <arg name="monoResolution"        default="720p"/> 
-    <arg name="angularVelCovariance"  default="0"   /> 
-    <arg name="linearAccelCovariance" default="0"   /> 
+    <arg name="monoResolution"        default="720p"/>
+    <arg name="angularVelCovariance"  default="0"   />
+    <arg name="linearAccelCovariance" default="0"   />
 
     <arg name="enableDotProjector"    default="false"/>
     <arg name="enableFloodLight"      default="false"/>
@@ -78,6 +79,7 @@
         
         <param name="enableSpatialDetection"   value="$(arg enableSpatialDetection)" />
         <param name="syncNN"                   value="$(arg syncNN)" />
+        <param name="detectionClassesCount"    value="$(arg detectionClassesCount)" />
         <param name="nnName"                   value="$(arg nnName)"/>
         <param name="resourceBaseFolder"       value="$(arg resourceBaseFolder)"/>
 
