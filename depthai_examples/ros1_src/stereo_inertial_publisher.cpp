@@ -39,7 +39,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
     auto monoLeft = pipeline.create<dai::node::ColorCamera>();
     auto monoRight = pipeline.create<dai::node::ColorCamera>();
-    auto stereo = pipeline.create<dai::node::StereoDepth>();
+    // auto stereo = pipeline.create<dai::node::StereoDepth>();
     auto xoutDepth = pipeline.create<dai::node::XLinkOut>();
     auto imu = pipeline.create<dai::node::IMU>();
     auto xoutImu = pipeline.create<dai::node::XLinkOut>();
@@ -76,10 +76,12 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     }
 
     // MonoCamera
-    monoLeft->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+    // monoLeft->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+    monoLeft->setResolution(dai::ColorCameraProperties::SensorResolution::THE_12_MP);
     monoLeft->setBoardSocket(dai::CameraBoardSocket::LEFT);
     monoLeft->setFps(stereo_fps);
-    monoRight->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+    // monoRight->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+    monoRight->setResolution(dai::ColorCameraProperties::SensorResolution::THE_12_MP);
     monoRight->setBoardSocket(dai::CameraBoardSocket::RIGHT);
     monoRight->setFps(stereo_fps);
 
@@ -87,13 +89,13 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     monoRight->setImageOrientation(dai::CameraImageOrientation::ROTATE_180_DEG);
     // StereoDepth
     
-    stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
-    stereo->setRectifyEdgeFillColor(0);                              // black, to better see the cutout
-    stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);  // Known to be best
-    stereo->setLeftRightCheck(lrcheck);
-    stereo->setExtendedDisparity(extended);
-    stereo->setSubpixel(subpixel);
-    if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
+    // stereo->initialConfig.setConfidenceThreshold(confidence);        // Known to be best
+    // stereo->setRectifyEdgeFillColor(0);                              // black, to better see the cutout
+    // stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);  // Known to be best
+    // stereo->setLeftRightCheck(lrcheck);
+    // stereo->setExtendedDisparity(extended);
+    // stereo->setSubpixel(subpixel);
+    // if(enableDepth && depth_aligned) stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
     // Imu
     imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
@@ -147,7 +149,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             else
                 camRgb->preview.link(xoutPreview->input);
             spatialDetectionNetwork->out.link(xoutNN->input);
-            stereo->depth.link(spatialDetectionNetwork->inputDepth);
+            // stereo->depth.link(spatialDetectionNetwork->inputDepth);
         }
 
     } else {
@@ -157,28 +159,31 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         // XLinkOut
         xoutLeft->setStreamName("left");
         xoutRight->setStreamName("right");
-        if(rectify) {
-            stereo->rectifiedLeft.link(xoutLeft->input);
-            stereo->rectifiedRight.link(xoutRight->input);
-        } else {
-            stereo->syncedLeft.link(xoutLeft->input);
-            stereo->syncedRight.link(xoutRight->input);
-        }
+        // if(rectify) {
+        //     stereo->rectifiedLeft.link(xoutLeft->input);
+        //     stereo->rectifiedRight.link(xoutRight->input);
+        // } else {
+        monoLeft->isp.link(xoutLeft->input);
+        monoRight->isp.link(xoutRight->input);
+        // }
     }
-    monoLeft->setIspScale(2, 3);
-    monoRight->setIspScale(2, 3);
+    monoLeft->setIspScale(1, 4);
+    monoRight->setIspScale(1, 4);
+    // monoLeft->setIspScale(2, 3);
+    // monoRight->setIspScale(2, 3);
+
     // Link plugins CAM -> STEREO -> XLINK
-    stereo->setRectifyEdgeFillColor(0);
-    monoLeft->isp.link(stereo->left);
-    monoRight->isp.link(stereo->right);
+    // stereo->setRectifyEdgeFillColor(0);
+    // monoLeft->isp.link(stereo->left);
+    // monoRight->isp.link(stereo->right);
 
-    if(enableDepth) {
-        stereo->depth.link(xoutDepth->input);
-    } else {
-        stereo->disparity.link(xoutDepth->input);
-    }
+    // if(enableDepth) {
+    //     stereo->depth.link(xoutDepth->input);
+    // } else {
+    //     stereo->disparity.link(xoutDepth->input);
+    // }
 
-    imu->out.link(xoutImu->input);
+    // imu->out.link(xoutImu->input);
 
     return std::make_tuple(pipeline, width, height);
 }
