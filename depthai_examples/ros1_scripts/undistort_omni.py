@@ -15,7 +15,7 @@ class OmniUndistort:
     def __init__(self):
        rospy.init_node("my_node")
        rospy.Subscriber("/stereo_inertial_publisher/left/image_raw", Image,  self.undistortCallbackLeft, queue_size=1)
-    #    rospy.Subscriber("/stereo_inertial_publisher/right/image_raw", Image, self.undistortCallbackRight, queue_size=1)
+       rospy.Subscriber("/stereo_inertial_publisher/right/image_raw", Image, self.undistortCallbackRight, queue_size=1)
  
        # On initialization, set up a Publisher for ImageMarkerArrays
        self.pubLeft = rospy.Publisher("left/original", Image, queue_size=1)
@@ -43,10 +43,46 @@ class OmniUndistort:
         height = 2000
         new_size = (2000, 4000)
         
-        Knew = np.array([[width/4, 0,       width/2],
-                         [0,    height/4,   height/2],
-                         [0,        0,      1]])
-        undistortedPerspective   = cv2.omnidir.undistortImage(image, k, d, xi, cv2.omnidir.RECTIFY_PERSPECTIVE, Knew, new_size = new_size)
+        Knew = np.array([[width/4,  0,          width/2],
+                         [0,        height/4,   height/2],
+                         [0,        0,          1]])
+
+       # 20 deg Y axis rotation
+
+        rot = np.array([[0.9396926,   0.0000000,  0.3420202],
+                        [0.0000000,   1.0000000,  0.0000000],
+                        [-0.3420202,  0.0000000,  0.9396926]])
+        
+       # 40 deg Y axis rotation
+
+        rot = np.array([[ 0.7660444,  0.0000000,  0.6427876],
+                        [ 0.0000000,  1.0000000,  0.0000000],
+                        [-0.6427876,  0.0000000,  0.7660444]])
+        
+       # 60 deg Y axis rotation
+
+        rot = np.array([[ 0.5000000,  0.0000000,  0.8660254],
+                        [ 0.0000000,  1.0000000,  0.0000000],
+                        [-0.8660254,  0.0000000,  0.5000000]])
+
+       # -80 deg Y axis rotation
+        rot = np.array([[0.1736482,  0.0000000, -0.9848077],
+                        [0.0000000,  1.0000000,  0.0000000],
+                        [0.9848077,  0.0000000,  0.1736482]])
+
+       # -60 deg Y axis rotation
+        rot = np.array([[0.5000000,  0.0000000, -0.8660254],
+                        [0.0000000,  1.0000000,  0.0000000],
+                        [0.8660254,  0.0000000,  0.5000000]])
+
+       # -60 deg Y axis and -20 on X axis rotation
+        rot = np.array([[0.5000000,  0.0000000, -0.8660254],
+                        [0.2961981,  0.9396926,  0.1710101],
+                        [0.8137977, -0.3420202,  0.4698463]])
+
+        undistortedPerspective = cv2.omnidir.undistortImage(image, k, d, xi, cv2.omnidir.RECTIFY_PERSPECTIVE, R = rot)
+
+        # undistortedPerspective   = cv2.omnidir.undistortImage(image, k, d, xi, cv2.omnidir.RECTIFY_PERSPECTIVE, Knew, new_size = new_size)
         
         Knew = np.array([[width/3.1415, 0,         0],
                          [0,        height/3.1415, 0],
@@ -60,20 +96,21 @@ class OmniUndistort:
         undistortedCylindricalMsg   = bridge.cv2_to_imgmsg(undistortedCylindrical, encoding="bgr8")
         undistortedLongLatiMsg      = bridge.cv2_to_imgmsg(undistortedLongLati, encoding="bgr8")
         undistortedStereographicMsg = bridge.cv2_to_imgmsg(undistortedStereographic, encoding="bgr8")
-        imageMsg = bridge.cv2_to_imgmsg(image, encoding="bgr8")
+        # imageMsg = bridge.cv2_to_imgmsg(image, encoding="bgr8")
         
         # self.pubLeft.publish(imageMsg)
-        cv2.imshow("distort", image)
-        cv2.imshow("stereographic", undistortedStereographic)
-        cv2.waitKey(1)
+        # cv2.imshow("distort", image)
+        # cv2.imshow("stereographic", undistortedStereographic)
+        # cv2.waitKey(1)
         return undistortedPerspectiveMsg, undistortedCylindricalMsg, undistortedLongLatiMsg, undistortedStereographicMsg
 
+    # 2.026116912280306, 747.5605341318326, 748.8425464125638, 503.6087904711565, 379.31152707350475
     def undistortCallbackLeft(self, imageMsg):
-        k  = np.array([[1028.9773604091108, 0, 637.0711926542228], 
-                       [0, 1024.915013009914, 359.1709279099879], 
+        k  = np.array([[747.5605341318326, 0, 503.6087904711565], 
+                       [0, 748.8425464125638, 379.31152707350475], 
                        [0, 0, 1.0]], float)
-        d  = np.array([[-0.07990387890772704, 0.4140699440729293, -0.00033578870234897423, 8.044571858836192e-05]], float)
-        xi =  np.array([[2.1004668620326186]], float)
+        d  = np.array([[-0.10992433544726093, 0.4083965617819916, -0.0007173534337265417, -0.0006166026810620713]], float)
+        xi =  np.array([[2.026116912280306]], float)
         
         bridge = CvBridge()
         image = bridge.imgmsg_to_cv2(imageMsg, desired_encoding='passthrough')
@@ -84,20 +121,18 @@ class OmniUndistort:
         self.pubLeftLongLati.publish(undistortedLongLatiMsg)
         self.pubLeftStereographic.publish(undistortedStereographicMsg)
 
-
+    # 2.0119458339348713, 737.5308301015713, 738.6893351565132, 502.38453703944117, 379.0327864501004
     def undistortCallbackRight(self, imageMsg):
-        k  = np.array([[1016.881259866076, 0, 633.1888651587963],
-                       [0, 1012.9617023214325, 360.2427396970111],
+        k  = np.array([[737.5308301015713, 0, 502.38453703944117],
+                       [0, 738.6893351565132, 379.0327864501004],
                        [0, 0, 1]], float)
 
-        d  = np.array([[-0.09002922696408215, 0.46893422416016406, -0.0009798368219106355, 0.0005800480852674678]], float)
-        xi = np.array([[2.0892921078695146]], float) 
+        d  = np.array([[-0.12706231175543312, 0.4767368997245978, -0.0015363469862339065, 0.0005152349386779312]], float)
+        xi = np.array([[2.0119458339348713]], float)
         
         bridge = CvBridge()
         image = bridge.imgmsg_to_cv2(imageMsg, desired_encoding='passthrough')
         undistortedPerspectiveMsg, undistortedCylindricalMsg, undistortedLongLatiMsg, undistortedStereographicMsg = self.undistort(image, k, d, xi)
-        cv2.imshow("distort", image)
-        cv2.waitKey(1)
         
         self.pubRightPerspective.publish(undistortedPerspectiveMsg)
         self.pubRightCylindrical.publish(undistortedCylindricalMsg)
