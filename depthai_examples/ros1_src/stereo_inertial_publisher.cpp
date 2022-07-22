@@ -105,11 +105,11 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         auto xoutRgb = pipeline.create<dai::node::XLinkOut>();
         xoutRgb->setStreamName("rgb");
         camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
-        camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+        camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_12_MP);
         if(height < 720) {
             camRgb->setIspScale(1, 3);
         } else {
-            camRgb->setIspScale(2, 3);
+            camRgb->setIspScale(8, 39);
         }
         camRgb->isp.link(xoutRgb->input);
 
