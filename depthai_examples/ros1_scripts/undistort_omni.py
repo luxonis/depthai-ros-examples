@@ -1,4 +1,4 @@
-from cv2 import undistort
+import message_filters
 import rospy
 import cv2
 import numpy as np
@@ -14,9 +14,18 @@ from sensor_msgs.msg import Image
 class OmniUndistort:
     def __init__(self):
        rospy.init_node("my_node")
-       rospy.Subscriber("/stereo_inertial_publisher/left/image_raw", Image,  self.undistortCallbackLeft, queue_size=1)
-       rospy.Subscriber("/stereo_inertial_publisher/right/image_raw", Image, self.undistortCallbackRight, queue_size=1)
+       
+       left_sub  = message_filters.Subscriber("/stereo_inertial_publisher/left/image_raw",  Image)
+       right_sub = message_filters.Subscriber("/stereo_inertial_publisher/right/image_raw", Image)
  
+       ts = message_filters.ApproximateTimeSynchronizer([left_sub, right_sub], 10, 0.9)        
+       ts.registerCallback(self.stereoReconstructCallback)
+
+    #    rospy.Subscriber("/stereo_inertial_publisher/left/image_raw", Image,  self.undistortCallbackLeft, queue_size=1)
+    #    rospy.Subscriber("/stereo_inertial_publisher/right/image_raw", Image, self.undistortCallbackRight, queue_size=1)
+
+
+
        # On initialization, set up a Publisher for ImageMarkerArrays
        self.pubLeft = rospy.Publisher("left/original", Image, queue_size=1)
        self.pubLeftPerspective = rospy.Publisher("left/undistortPerspective", Image, queue_size=1)
@@ -35,7 +44,7 @@ class OmniUndistort:
         new_size = image.shape
         width =  new_size[1]
         height = new_size[0]
-        copy_image = image.copy()
+        # copy_image = image.copy()
         # cv2.imshow("original", copy_image)
         # cv2.waitKey(1)
 
@@ -104,6 +113,70 @@ class OmniUndistort:
         # cv2.waitKey(1)
         return undistortedPerspectiveMsg, undistortedCylindricalMsg, undistortedLongLatiMsg, undistortedStereographicMsg
 
+    def stereoReconstructCallback(self, leftImgMsg, rightImageMsg):
+        kLeft  = np.array([[747.5605341318326, 0, 503.6087904711565], 
+                           [0, 748.8425464125638, 379.31152707350475], 
+                           [0, 0, 1.0]], float)
+        dLeft  = np.array([[-0.10992433544726093, 0.4083965617819916, -0.0007173534337265417, -0.0006166026810620713]], float)
+        xiLeft = np.array([[2.026116912280306]], float)
+
+        kRight  = np.array([[737.5308301015713, 0, 502.38453703944117],
+                            [0, 738.6893351565132, 379.0327864501004],
+                            [0, 0, 1]], float)
+
+        dRight  = np.array([[-0.12706231175543312, 0.4767368997245978, -0.0015363469862339065, 0.0005152349386779312]], float)
+        xiRight = np.array([[2.0119458339348713]], float)
+
+        transformation = np.array([[0.9999378975984609, -0.004352271870197581, -0.010259565094392187, 0.04263875562328708],
+                                   [0.004565082250721026, 0.9997729992246492, 0.020811296100477848, 0.000654833800297008],
+                                   [0.010166659746560596, -0.02085683942752352, 0.9997307793994743, 0.0003253521964047307]], float)
+
+
+        R = transformation[:3, :3]
+        t = transformation[:, 3]
+        print("Prinyiny R")
+        print(R)
+        print("Prinyiny T")
+        print(t)
+        flag = cv2.omnidir.RECTIFY_PERSPECTIVE
+        bridge = CvBridge()
+        imageLeft  = bridge.imgmsg_to_cv2(leftImgMsg, desired_encoding='passthrough')
+        bridge = CvBridge()
+        imageRight = bridge.imgmsg_to_cv2(rightImageMsg, desired_encoding='passthrough')
+        numDisparities = 256
+        SADWindowSize = 5
+
+        if 0: # stereo mode with direct reconstruction. Not working. there seems to be offset. 
+            disp, imgLeftRect, imgRightRect, pointCloud = cv2.omnidir.stereoReconstruct(imageLeft, imageRight, kLeft, dLeft, xiLeft, kRight, dRight, xiRight, R, t, flag, numDisparities, SADWindowSize)
+
+            cv2.imshow("disp", disp)
+            cv2.imshow("imgLeftRect", imgLeftRect)
+            cv2.imshow("imgRightRect", imgRightRect)
+            cv2.imshow("undistortedPerspective", undistortedPerspective)
+            cv2.waitKey(1)
+        # undistortedPerspective = cv2.omnidir.undistortImage(image, k, d, xi, cv2.omnidir.RECTIFY_PERSPECTIVE, R = rot)
+
+        R1, R2 = cv2.omnidir.stereoRectify(R, t)
+        
+        from scipy.spatial.transform import Rotation
+        print('R1----->')
+        print(R1)
+        rot = Rotation.from_matrix(R1)
+        print(rot.as_euler('xyz', degrees=True))
+        print('R2----->')
+        print(R2)
+        rot = Rotation.from_matrix(R2)
+        print(rot.as_euler('xyz', degrees=True))
+
+        undistortedPerspectiveLeft = cv2.omnidir.undistortImage(imageLeft, kLeft, dLeft, xiLeft, cv2.omnidir.RECTIFY_PERSPECTIVE)
+        undistortedPerspectiveRight = cv2.omnidir.undistortImage(imageRight, kRight, dRight, xiRight, cv2.omnidir.RECTIFY_PERSPECTIVE)
+
+        cv2.imshow("imageRight", imageRight)
+        cv2.imshow("undistortedPerspectiveLeft", undistortedPerspectiveLeft)
+        cv2.imshow("undistortedPerspectiveRight", undistortedPerspectiveRight)
+        cv2.waitKey(1)
+
+
     # 2.026116912280306, 747.5605341318326, 748.8425464125638, 503.6087904711565, 379.31152707350475
     def undistortCallbackLeft(self, imageMsg):
         k  = np.array([[747.5605341318326, 0, 503.6087904711565], 
@@ -138,7 +211,6 @@ class OmniUndistort:
         self.pubRightCylindrical.publish(undistortedCylindricalMsg)
         self.pubRightLongLati.publish(undistortedLongLatiMsg)
         self.pubRightStereographic.publish(undistortedStereographicMsg)
-
         
 
 def main():
