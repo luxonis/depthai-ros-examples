@@ -34,7 +34,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
                                                    int LRchecktresh,
                                                    int detectionClassesCount,
                                                    std::string stereoResolution,
-                                                   std::string rgbResolution,
+                                                   std::string rgbResolutionStr,
                                                    int rgbScaleNumerator,
                                                    int rgbScaleDinominator,
                                                    int previewWidth, 
@@ -112,25 +112,25 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         camRgb->setBoardSocket(dai::CameraBoardSocket::RGB);
         dai::node::ColorCamera::Properties::SensorResolution rgbResolution;
 
-        if(rgbResolution == "1080p") {
+        if(rgbResolutionStr == "1080p") {
             rgbResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_1080_P;
             rgbWidth = 1920;
             rgbHeight = 1080;
-        } else if(rgbResolution == "4K") {
+        } else if(rgbResolutionStr == "4K") {
             rgbResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_4_K;
             rgbWidth = 3840;
             rgbHeight = 2160;
-        } else if(rgbResolution == "12MP") {
+        } else if(rgbResolutionStr == "12MP") {
             rgbResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_12_MP;
             rgbWidth = 4056;
             rgbHeight = 3040;
-        } else if(rgbResolution == "13MP") {
+        } else if(rgbResolutionStr == "13MP") {
             rgbResolution = dai::node::ColorCamera::Properties::SensorResolution::THE_13_MP;
             rgbWidth = 4208;
             rgbHeight = 3120;
         } else {
-            ROS_ERROR("Invalid parameter. -> monoResolution: %s", rgbResolution.c_str());
-            throw std::runtime_error("Invalid mono camera resolution.");
+            ROS_ERROR("Invalid parameter. -> rgbResolution: %s", rgbResolutionStr.c_str());
+            throw std::runtime_error("Invalid color camera resolution.");
         }
 
         camRgb->setResolution(rgbResolution);
@@ -179,10 +179,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             }
         }
 
-        if(rgbWidth > stereoWidth || rgbHeight > sterdeoHeight) {
+        if(rgbWidth > stereoWidth || rgbHeight > stereoHeight) {
             ROS_WARN_STREAM(
                 "RGB Camera resolution is heigher than the configured stereo resolution. Upscaling the stereo depth/disparity to match RGB camera resolution.");
-        } else if(rgbWidth > stereoWidth || rgbHeight > sterdeoHeight) {
+        } else if(rgbWidth > stereoWidth || rgbHeight > stereoHeight) {
             ROS_WARN_STREAM(
                 "RGB Camera resolution is heigher than the configured stereo resolution. Downscaling the stereo depth/disparity to match RGB camera resolution.");
         }
@@ -533,6 +533,8 @@ int main(int argc, char** argv) {
     } else {
         std::string tfSuffix = depth_aligned ? "_rgb_camera_optical_frame" : "_right_camera_optical_frame";
         dai::rosBridge::DisparityConverter dispConverter(tfPrefix + tfSuffix, 880, 7.5, 20, 2000);  // TODO(sachin): undo hardcoding of baseline
+
+        auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, width, height);
         auto disparityCameraInfo =
             depth_aligned ? rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, width, height) : rightCameraInfo;
         auto depthconverter = depth_aligned ? rgbConverter : rightconverter;
@@ -545,6 +547,7 @@ int main(int argc, char** argv) {
             disparityCameraInfo,
             "stereo");
         dispPublish.addPublisherCallback();
+
         if(depth_aligned) {
             auto rgbCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, width, height);
             auto imgQueue = device->getOutputQueue("rgb", 30, false);
@@ -558,6 +561,33 @@ int main(int argc, char** argv) {
                 rgbCameraInfo,
                 "color");
             rgbPublish.addPublisherCallback();
+            
+            if(enableSpatialDetection) {
+                auto previewQueue = device->getOutputQueue("preview", 30, false);
+                auto detectionQueue = device->getOutputQueue("detections", 30, false);
+                auto previewCameraInfo = rgbConverter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RGB, previewWidth, previewHeight);
+
+                dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> previewPublish(
+                    previewQueue,
+                    pnh,
+                    std::string("color/preview/image"),
+                    std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &rgbConverter, std::placeholders::_1, std::placeholders::_2),
+                    30,
+                    previewCameraInfo,
+                    "color/preview");
+                previewPublish.addPublisherCallback();
+
+                dai::rosBridge::SpatialDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 416, 416, false);
+                dai::rosBridge::BridgePublisher<depthai_ros_msgs::SpatialDetectionArray, dai::SpatialImgDetections> detectionPublish(
+                    detectionQueue,
+                    pnh,
+                    std::string("color/yolov4_Spatial_detections"),
+                    std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detConverter, std::placeholders::_1, std::placeholders::_2),
+                    30);
+                detectionPublish.addPublisherCallback();
+                ros::spin();
+            }
+            
             ros::spin();
         } else {
             auto leftCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::LEFT, width, height);
