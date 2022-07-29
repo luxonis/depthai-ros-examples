@@ -10,6 +10,8 @@
 #include <functional>
 #include <iostream>
 #include <tuple>
+#include <cassert> // assert
+#include <bits/stdc++.h>
 
 // Inludes common necessary includes for development using depthai library
 #include <depthai_bridge/BridgePublisher.hpp>
@@ -135,14 +137,15 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
 
         camRgb->setResolution(rgbResolution);
 
-        // camRgb->setResolution(dai::ColorCameraProperties::SensorResolution::THE_12_MP);
         rgbWidth = rgbWidth * rgbScaleNumerator / rgbScaleDinominator;
         rgbHeight = rgbHeight * rgbScaleNumerator / rgbScaleDinominator;
         camRgb->setIspScale(rgbScaleNumerator, rgbScaleDinominator);
 
         camRgb->isp.link(xoutRgb->input);
 
-        if(rgbWidth % 16 != 0) {
+        // std::cout << (rgbWidth % 2 == 0 && rgbHeight % 3 == 0) << std::endl;
+        // assert(("Needs Width to be multiple of 2 and height to be multiple of 3 since the Image is NV12 format here.", (rgbWidth % 2 == 0 && rgbHeight % 3 == 0)));
+        if(rgbWidth  % 16 != 0) {
             if(rgbResolution == dai::node::ColorCamera::Properties::SensorResolution::THE_12_MP) {
                 ROS_ERROR_STREAM("RGB Camera width should be multiple of 16. Please choose a different scaling factor."
                                  << std::endl
@@ -177,6 +180,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             } else {
                 ROS_ERROR_STREAM("RGB Camera width should be multiple of 16. Please choose a different scaling factor.");
             }
+            throw std::runtime_error("Adjust RGB Camaera scaling.");
         }
 
         if(rgbWidth > stereoWidth || rgbHeight > stereoHeight) {
@@ -190,6 +194,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         if(enableSpatialDetection) {
             if (previewWidth > rgbWidth or  previewHeight > rgbHeight) {
                 ROS_ERROR_STREAM("Preview Image size should be smaller than the scaled resolution. Please adjust the scale parameters or the preview size accordingly.");
+                throw std::runtime_error("Invalid Image Size");
             }
 
             camRgb->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
@@ -226,6 +231,8 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
             stereo->depth.link(spatialDetectionNetwork->inputDepth);
         }
 
+        stereoWidth = rgbWidth;
+        stereoHeight = rgbHeight;
     } else {
         // Stereo imges
         auto xoutLeft = pipeline.create<dai::node::XLinkOut>();
@@ -254,7 +261,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     }
 
     imu->out.link(xoutImu->input);
-
+    std::cout << stereoWidth << " " << stereoHeight << " " << rgbWidth << " " << rgbHeight << std::endl;
     return std::make_tuple(pipeline, stereoWidth, stereoHeight);
 }
 
@@ -301,6 +308,7 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("angularVelCovariance", angularVelCovariance);
     badParams += !pnh.getParam("linearAccelCovariance", linearAccelCovariance);
     badParams += !pnh.getParam("enableSpatialDetection", enableSpatialDetection);
+    badParams += !pnh.getParam("detectionClassesCount", detectionClassesCount);
     badParams += !pnh.getParam("syncNN", syncNN);
     badParams += !pnh.getParam("resourceBaseFolder", resourceBaseFolder);
 
@@ -309,7 +317,6 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("enableFloodLight", enableFloodLight);
     badParams += !pnh.getParam("dotProjectormA", dotProjectormA);
     badParams += !pnh.getParam("floodLightmA", floodLightmA);
-    badParams += !pnh.getParam("detectionClassesCount", detectionClassesCount);
 
     if(badParams > 0) {
         std::cout << " Bad parameters -> " << badParams << std::endl;
