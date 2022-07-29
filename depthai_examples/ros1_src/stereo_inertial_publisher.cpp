@@ -449,7 +449,6 @@ int main(int argc, char** argv) {
     */
 
     dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
-
     if(enableDepth) {
         auto rightCameraInfo = converter.calibrationToCameraInfo(calibrationHandler, dai::CameraBoardSocket::RIGHT, width, height);
 
