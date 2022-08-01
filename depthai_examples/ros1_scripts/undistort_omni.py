@@ -13,32 +13,47 @@ from sensor_msgs.msg import Image
 
 class OmniUndistort:
     def __init__(self):
-       rospy.init_node("my_node")
-       
-       left_sub  = message_filters.Subscriber("/stereo_inertial_publisher/left/image_raw",  Image)
-       right_sub = message_filters.Subscriber("/stereo_inertial_publisher/right/image_raw", Image)
+        rospy.init_node("my_node")
+
+        maxDisparity = 190
+        blockSize = 5
+        K = 32
+        LRthreshold = 2
+        self.stereoProcessor = cv2.StereoSGBM_create(
+            minDisparity=1,
+            numDisparities=maxDisparity,
+            blockSize=blockSize,
+            P1=2 * (blockSize ** 2),
+            P2=K * (blockSize ** 2),
+            disp12MaxDiff=LRthreshold,
+            mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY
+        )
  
-       ts = message_filters.ApproximateTimeSynchronizer([left_sub, right_sub], 10, 0.9)        
-       ts.registerCallback(self.stereoReconstructCallback)
 
-    #    rospy.Subscriber("/stereo_inertial_publisher/left/image_raw", Image,  self.undistortCallbackLeft, queue_size=1)
-    #    rospy.Subscriber("/stereo_inertial_publisher/right/image_raw", Image, self.undistortCallbackRight, queue_size=1)
+        left_sub  = message_filters.Subscriber("/stereo_inertial_publisher/left/image_raw",  Image)
+        right_sub = message_filters.Subscriber("/stereo_inertial_publisher/right/image_raw", Image)
+    
+        ts = message_filters.ApproximateTimeSynchronizer([left_sub, right_sub], 10, 0.9)        
+        ts.registerCallback(self.stereoReconstructCallback)
+
+        #    rospy.Subscriber("/stereo_inertial_publisher/left/image_raw", Image,  self.undistortCallbackLeft, queue_size=1)
+        #    rospy.Subscriber("/stereo_inertial_publisher/right/image_raw", Image, self.undistortCallbackRight, queue_size=1)
 
 
 
-       # On initialization, set up a Publisher for ImageMarkerArrays
-       self.pubLeft = rospy.Publisher("left/original", Image, queue_size=1)
-       self.pubLeftPerspective = rospy.Publisher("left/undistortPerspective", Image, queue_size=1)
-       self.pubLeftCylindrical = rospy.Publisher("left/undistortCylindrical", Image, queue_size=1)
-       self.pubLeftLongLati = rospy.Publisher("left/undistortLongLati", Image, queue_size=1)
-       self.pubLeftStereographic = rospy.Publisher("left/undistortStereographic", Image, queue_size=1)
+        # On initialization, set up a Publisher for ImageMarkerArrays
+        self.pubLeft = rospy.Publisher("left/original", Image, queue_size=1)
+        self.pubLeftPerspective = rospy.Publisher("left/undistortPerspective", Image, queue_size=1)
+        self.pubLeftCylindrical = rospy.Publisher("left/undistortCylindrical", Image, queue_size=1)
+        self.pubLeftLongLati = rospy.Publisher("left/undistortLongLati", Image, queue_size=1)
+        self.pubLeftStereographic = rospy.Publisher("left/undistortStereographic", Image, queue_size=1)
 
-       self.pubRightPerspective = rospy.Publisher("right/undistortPerspective", Image, queue_size=1)
-       self.pubRightCylindrical = rospy.Publisher("right/undistortCylindrical", Image, queue_size=1)
-       self.pubRightLongLati = rospy.Publisher("right/undistortLongLati", Image, queue_size=1)
-       self.pubRightStereographic = rospy.Publisher("right/undistortStereographic", Image, queue_size=1)
+        self.pubRightPerspective = rospy.Publisher("right/undistortPerspective", Image, queue_size=1)
+        self.pubRightCylindrical = rospy.Publisher("right/undistortCylindrical", Image, queue_size=1)
+        self.pubRightLongLati = rospy.Publisher("right/undistortLongLati", Image, queue_size=1)
+        self.pubRightStereographic = rospy.Publisher("right/undistortStereographic", Image, queue_size=1)
 
-       rospy.spin()
+        rospy.spin()
 
     def undistort(self, image, k, d, xi):
         new_size = image.shape
@@ -201,7 +216,33 @@ class OmniUndistort:
             cv2.imshow("undistortedPerspectiveLeft", undistortedPerspectiveLeft)
             cv2.imshow("undistortedPerspectiveRight", undistortedPerspectiveRight)
             cv2.waitKey(1)
+        if 0:
+            R1, R2 = cv2.omnidir.stereoRectify(R, t)
+            print('R1----->')
+            print(R1)
+            rot = Rotation.from_matrix(R1)
+            print(rot.as_euler('xyz', degrees=True))
+            print('R2----->')
+            print(R2)
+            rot = Rotation.from_matrix(R2)
+            print(rot.as_euler('xyz', degrees=True))
 
+            undistortedPerspectiveLeft = cv2.omnidir.undistortImage(imageLeft, kLeft, dLeft, xiLeft, cv2.omnidir.RECTIFY_PERSPECTIVE     , R = R1)
+            undistortedPerspectiveRight = cv2.omnidir.undistortImage(imageRight, kRight, dRight, xiRight, cv2.omnidir.RECTIFY_PERSPECTIVE, R = R2)
+
+
+            subpixelBits = 16.
+            disparity = self.stereoProcessor.compute(left, right)
+            disparity = (disparity / subpixelBits).astype(np.uint8)
+
+            cv2.imshow("undistortedPerspectiveLeft", undistortedPerspectiveLeft)
+            cv2.imshow("undistortedPerspectiveRight", undistortedPerspectiveRight)
+            cv2.imshow("disparity", disparity)
+            key = cv2.waitKey(1)
+
+
+
+  
 
     # 2.026116912280306, 747.5605341318326, 748.8425464125638, 503.6087904711565, 379.31152707350475
     def undistortCallbackLeft(self, imageMsg):
