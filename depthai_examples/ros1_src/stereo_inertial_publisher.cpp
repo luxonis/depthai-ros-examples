@@ -167,8 +167,10 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
         monoRight->isp.link(xoutRight->input);
         // }
     }
-    monoLeft->setIspScale(1, 4);
-    monoRight->setIspScale(1, 4);
+    monoLeft->setIspScale (16, 39);
+    monoRight->setIspScale(16, 39);
+    // monoLeft->setIspScale (13, 16);
+    // monoRight->setIspScale(13, 16);
     // monoLeft->setIspScale(2, 3);
     // monoRight->setIspScale(2, 3);
 
@@ -184,7 +186,7 @@ std::tuple<dai::Pipeline, int, int> createPipeline(bool enableDepth,
     // }
 
     // imu->out.link(xoutImu->input);
-
+ 
     return std::make_tuple(pipeline, width, height);
 }
 

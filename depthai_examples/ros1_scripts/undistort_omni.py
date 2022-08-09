@@ -232,7 +232,7 @@ class OmniUndistort:
 
 
             subpixelBits = 16.
-            disparity = self.stereoProcessor.compute(left, right)
+            disparity = self.stereoProcessor.compute(undistortedPerspectiveLeft, undistortedPerspectiveRight)
             disparity = (disparity / subpixelBits).astype(np.uint8)
 
             cv2.imshow("undistortedPerspectiveLeft", undistortedPerspectiveLeft)
