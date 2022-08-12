@@ -283,6 +283,7 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("mxId", mxId);
     badParams += !pnh.getParam("usb2Mode", usb2Mode);
     badParams += !pnh.getParam("poeMode", poeMode);
+    badParams += !pnh.getParam("resourceBaseFolder", resourceBaseFolder);
 
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("mode", mode);
@@ -310,7 +311,6 @@ int main(int argc, char** argv) {
     badParams += !pnh.getParam("enableSpatialDetection", enableSpatialDetection);
     badParams += !pnh.getParam("detectionClassesCount", detectionClassesCount);
     badParams += !pnh.getParam("syncNN", syncNN);
-    badParams += !pnh.getParam("resourceBaseFolder", resourceBaseFolder);
 
     // Applies only to PRO model
     badParams += !pnh.getParam("enableDotProjector", enableDotProjector);
@@ -430,7 +430,7 @@ int main(int argc, char** argv) {
    
     dai::rosBridge::ImuConverter imuConverter(tfPrefix + "_imu_frame", imuMode, linearAccelCovariance, angularVelCovariance);
 
-    dai::rosBridge::BridgePublisher<sensor_msgs::Imu, dai::IMUData> ImuPublish(
+    dai::rosBridge::BridgePublisher<sensor_msgs::Imu, dai::IMUData> imuPublish(
         imuQueue,
         pnh,
         std::string("imu"),
@@ -439,7 +439,7 @@ int main(int argc, char** argv) {
         "",
         "imu");
 
-    ImuPublish.addPublisherCallback();
+    imuPublish.addPublisherCallback();
     /*     
     int colorWidth = 1280, colorHeight = 720;
     if(height < 720) {
