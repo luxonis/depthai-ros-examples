@@ -155,9 +155,9 @@ class OmniUndistort:
         return undistortedPerspectiveMsg, undistortedCylindricalMsg, undistortedLongLatiMsg, undistortedStereographicMsg
 
     def stereoReconstructCallback(self, leftImgMsg, rightImageMsg):
-        print("Printing Left message and right msg timestamps.." )
-        print(leftImgMsg.header.stamp)
-        print(rightImageMsg.header.stamp)
+        # print("Printing Left message and right msg timestamps.." )
+        # print(leftImgMsg.header.stamp)
+        # print(rightImageMsg.header.stamp)
         
         
         # kLeft  = np.array([[755.220194243529, 0, 503.7627638065912], 
@@ -241,8 +241,13 @@ class OmniUndistort:
             #             [0.2961981,  0.9396926,  0.1710101],
             #             [0.8137977, -0.3420202,  0.4698463]])
 
+            # -30 deg Y axis rotation
+            rot = np.array([[0.8660254,  0.0000000, -0.5000000],
+                            [0.0000000,  1.0000000,  0.0000000],
+                            [0.5000000,  0.0000000,  0.8660254]])
+
             R1 = np.matmul(R1, rot)
-            R2 = np.matmul(R2, rot)            
+            R2 = np.matmul(R2, rot)
 
             # print('R1----->')
             # print(R1)
@@ -258,11 +263,38 @@ class OmniUndistort:
 
             subpixelBits = 16.
             disparity = self.stereoProcessor.compute(undistortedPerspectiveLeft, undistortedPerspectiveRight)
-            disparity = (disparity / subpixelBits).astype(np.uint8)
+            print('disparity.shape')
+            print(disparity.shape)
+            # left_index = (disparity.shape 
+
+            # subsample = disparity[]
+
+            left_corner = (850, 600)
+            right_corner = (1000, 750)
+            color = (0, 0, 255)
+
+            disparity = (disparity / subpixelBits)
+            croppedArea = disparity[left_corner[0]:right_corner[0], left_corner[1]:right_corner[1]]
+            dispMedian = np.median(croppedArea)
+            # print(f'cropped area sioze {croppedArea.shape}')
+            print(f'dispMedian is {dispMedian}')
+            
+            depth = np.abs(self.t[0]) * self.kLeft[0,0] / dispMedian 
+            print(f'depth is {depth} with T being {self.t[0]} using left Intrinsics')
+            t_abs = np.linalg.norm(self.t)
+            depth = t_abs * self.kLeft[0,0] / dispMedian 
+            print(f'depth is {depth} with T being {t_abs} using abs')
+
+            disparity = disparity.astype(np.uint8)
+
+            im_color = cv2.applyColorMap(disparity, cv2.COLORMAP_JET)
+            im_color = cv2.rectangle(im_color, left_corner, right_corner, color, 2)
 
             cv2.imshow("undistortedPerspectiveLeft", undistortedPerspectiveLeft)
             cv2.imshow("undistortedPerspectiveRight", undistortedPerspectiveRight)
             cv2.imshow("disparity", disparity)
+            cv2.imshow("disparityColor", im_color)
+
             key = cv2.waitKey(1)
         print('Exiting Callback')
 
