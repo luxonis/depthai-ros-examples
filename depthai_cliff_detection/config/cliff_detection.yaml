@@ -1,0 +1,11 @@
+/oak:
+  ros__parameters:
+    camera:
+      i_nn_type: none
+      i_laser_dot_brightness: 1200
+    left:
+      i_publish_topic: true
+    stereo:
+      #i_extended_disp: true
+      #i_output_disparity: true
+      i_subpixel: true
