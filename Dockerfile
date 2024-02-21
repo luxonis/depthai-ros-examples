@@ -35,6 +35,6 @@ RUN cd /tmp \
    && cd /tmp/depthai-python && python3 -m pip install . \
    && cd /tmp \
    && rm -rf depthai-python
-RUN cd $WS/src/rtabmap/build && . /opt/ros/humble/setup.bash && cmake -DWITH_DEPTHAI=ON .. && make -j4 && make install && ldconfig
+RUN cd $WS/src/rtabmap/build && cmake -DWITH_DEPTHAI=ON .. && make -j4 && make install && ldconfig
 
 CMD ["zsh"]
