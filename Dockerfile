@@ -36,5 +36,5 @@ RUN cd /tmp \
    && cd /tmp \
    && rm -rf depthai-python
 RUN cd $WS/src/rtabmap/build && cmake -DWITH_DEPTHAI=ON .. && make -j4 && make install && ldconfig
-
+COPY ./config.ini /root/.rtabmap/rtabmap.ini
 CMD ["zsh"]
